@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// 4.1 DB1 — Companies Table (tbl_Companies)
+model Company {
+  id                Int                     @id @default(autoincrement()) @map("Acct_ID") // 6-8 digit auto-generated mapped to Acct_ID
+  organization      String                  @db.VarChar(255)
+  street            String?                 @db.VarChar(255)
+  city              String                  @db.VarChar(100)
+  state             String                  @db.VarChar(50) // US State dropdown
+  zip               String?                 @db.VarChar(10)
+  contactPhone      String                  @map("Contact_Phone") @db.VarChar(20)
+  contactFirstName  String                  @map("Contact_FirstName") @db.VarChar(100)
+  contactLastName   String                  @map("Contact_LastName") @db.VarChar(100)
+  contactEmail      String                  @map("Contact_Email") @db.VarChar(255)
+  contactTitle      String?                 @map("Contact_Title") @db.VarChar(100)
+  notes             String?                 @db.Text
+  createdDate       DateTime                @default(now()) @map("Created_Date")
+
+  // Relations
+  users                 User[]
+  referrals             Referral[]
+  mentalHealthReferrals MentalHealthReferral[]
+
+  @@map("tbl_Companies")
+}
+
+/// 4.2 DB2 — Users Table (tbl_Users)
+model User {
+  id                Int      @id @default(autoincrement()) @map("User_ID")
+  acctId            Int      @map("Acct_ID")
+  organization      String   @db.VarChar(255) // Auto-populated from company in application logic
+  street            String?  @db.VarChar(255)
+  city              String?  @db.VarChar(100)
+  state             String?  @db.VarChar(50)
+  zip               String?  @db.VarChar(10)
+  contactPhone      String   @map("Contact_Phone") @db.VarChar(20)
+  contactFirstName  String   @map("Contact_FirstName") @db.VarChar(100)
+  contactLastName   String   @map("Contact_LastName") @db.VarChar(100)
+  contactEmail      String   @unique @map("Contact_Email") @db.VarChar(255) // Login email address should be unique
+  contactTitle      String?  @map("Contact_Title") @db.VarChar(100)
+  password          String   @db.VarChar(255) // Encrypted / Hashed
+  userRole          String   @map("User_Role") @db.VarChar(50) // HWP Admin or Company User
+  notes             String?  @db.Text
+  isActive          Boolean  @default(true) @map("Is_Active")
+  createdDate       DateTime @default(now()) @map("Created_Date")
+
+  // Relations
+  company               Company                @relation(fields: [acctId], references: [id])
+  referrals             Referral[]
+  mentalHealthReferrals MentalHealthReferral[]
+
+  @@map("tbl_Users")
+}
+
+/// 4.3 DB3 — Referrals Table (tbl_Referrals)
+model Referral {
+  id                Int       @id @default(autoincrement()) @map("Referral_ID")
+  userId            Int       @map("User_ID")
+  companyAcctId     Int       @map("Company_Acct_ID")
+  serviceType       String    @map("Service_Type") @db.VarChar(100) // Drug Test / Physical / Behavioral Health / Medication Management / IOP
+  parentFirstName   String?   @map("Parent_FirstName") @db.VarChar(100)
+  parentLastName    String?   @map("Parent_LastName") @db.VarChar(100)
+  parentEmail       String?   @map("Parent_Email") @db.VarChar(255)
+  parentPhone       String?   @map("Parent_Phone") @db.VarChar(20)
+  patientFirstName  String    @map("Patient_FirstName") @db.VarChar(100)
+  patientLastName   String    @map("Patient_LastName") @db.VarChar(100)
+  dob               DateTime  @map("DOB") @db.Date
+  // Note: 'Age' is an auto-calculated formula field. In Prisma, you handle this with a database 
+  // generated column, middleware, or compute it dynamically in your API code.
+  grade             String    @db.VarChar(100) // Drop down
+  race              String    @db.VarChar(100) // Drop down
+  gender            String    @db.VarChar(20)  // Male / Female / Other
+  ssn               String    @map("SSN") @db.VarChar(255) // Encrypted full SS#
+  type              String    @db.VarChar(100) // Random / Pre-employment / Post-accident / Reasonable Suspicion
+  priority          String    @db.VarChar(50)  // Same-day / 24-hours
+  status            String    @default("Pending") @db.VarChar(50)
+  dateOfReferral    DateTime  @default(now()) @map("Date_of_Referral")
+  referName         String    @map("Refer_Name") @db.VarChar(200) // Who submitted the referral
+  datePatientContact DateTime? @map("Date_Patient_Contact") @db.Date
+  methodOfContact   String?   @map("Method_of_Contact") @db.VarChar(100) // Multi-select string representation
+  pdfResult         String?   @map("PDF_Result") @db.VarChar(512) // Path/URL to file uploaded by HWP Admin
+  clientAttachments String[]  @map("Client_Attachments") // Stores up to 5 File paths/URLs as an array
+  notes             String?   @db.Text
+  lastUpdated       DateTime  @updatedAt @map("Last_Updated")
+
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+  company           Company   @relation(fields: [companyAcctId], references: [id])
+
+  @@map("tbl_Referrals")
+}
+
+/// 4.4 DB4 — Mental Health Referrals Table (tbl_MentalHealthReferrals)
+model MentalHealthReferral {
+  id                Int       @id @default(autoincrement()) @map("MH_ID")
+  userId            Int       @map("User_ID")
+  companyAcctId     Int       @map("Company_Acct_ID")
+  firstName         String    @map("First_Name") @db.VarChar(100)
+  lastName          String    @map("Last_Name") @db.VarChar(100)
+  phone             String    @db.VarChar(20)
+  last4SSN          String    @map("Last_4_SSN") @db.VarChar(4) // Last 4 digits of SS# only
+  email             String?   @db.VarChar(255)
+  gender            String    @db.VarChar(20) // Male / Female / Other
+  status            String    @default("Pending") @db.VarChar(50)
+  appointmentDate   DateTime? @map("Appointment_Date") @db.Date // Set when status changes to In Progress
+  pdfReport         String?   @map("PDF_Report") @db.VarChar(512) // Path/URL to file uploaded by HWP Admin
+  clientAttachments String[]  @map("Client_Attachments") // Stores up to 5 File paths/URLs as an array
+  referName         String    @map("Refer_Name") @db.VarChar(200)
+  dateOfReferral    DateTime  @default(now()) @map("Date_of_Referral")
+  notes             String?   @db.Text
+  lastUpdated       DateTime  @updatedAt @map("Last_Updated")
+
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+  company           Company   @relation(fields: [companyAcctId], references: [id])
+
+  @@map("tbl_MentalHealthReferrals")
+}
