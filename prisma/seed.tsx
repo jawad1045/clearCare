@@ -2,10 +2,10 @@ import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const adapter=new PrismaPg({
-    connectionString:process.env.DATABASE_URL,
+const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
 })
-// If you are hardcoding your database connection string, pass it inside the object below:
+
 const prisma = new PrismaClient({
     adapter,
 });
@@ -37,6 +37,7 @@ async function main() {
   const saltRounds = 10;
   const adminHashedPassword = await bcrypt.hash('SuperAdminPassword123!', saltRounds);
   const userHashedPassword = await bcrypt.hash('StandardUserPassword123!', saltRounds);
+  const newCustomUserHashedPassword = await bcrypt.hash('12345', saltRounds); // Hashing '12345'
 
   // 4. Record 1: The Global HWP Admin Account
   const adminAccount = await prisma.user.create({
@@ -45,10 +46,10 @@ async function main() {
       organization: company.organization,
       contactFirstName: 'Chief',
       contactLastName: 'Admin',
-      contactEmail: 'admin@hwp-system.com', // Used to log in as admin
+      contactEmail: 'admin@hwp-system.com',
       contactPhone: '512-555-0101',
-      password: adminHashedPassword,       // Securely encrypted hash
-      userRole: 'Admin',               // Strict role match from specs
+      password: adminHashedPassword,
+      userRole: 'Admin',
       isActive: true,
     },
   });
@@ -61,14 +62,30 @@ async function main() {
       organization: company.organization,
       contactFirstName: 'Sarah',
       contactLastName: 'Coordinator',
-      contactEmail: 'sarah.c@company.com', // Used to log in as regular user
+      contactEmail: 'sarah.c@company.com',
       contactPhone: '512-555-0102',
-      password: userHashedPassword,        // Securely encrypted hash
-      userRole: 'User',            // Strict role match from specs
+      password: userHashedPassword,
+      userRole: 'User',
       isActive: true,
     },
   });
   console.log(`👤 Record 2 Added: Company User Account (${regularUserAccount.contactEmail})`);
+
+  // 6. Record 3: New Custom User Account
+  const newCustomUser = await prisma.user.create({
+    data: {
+      acctId: company.id,
+      organization: company.organization,
+      contactFirstName: 'Test',
+      contactLastName: 'User',
+      contactEmail: 'xyz@abc.com', // Your new test email
+      contactPhone: '512-555-0103',
+      password: newCustomUserHashedPassword, // Securely encrypted '12345'
+      userRole: 'User',
+      isActive: true,
+    },
+  });
+  console.log(`👤 Record 3 Added: Custom User Account (${newCustomUser.contactEmail})`);
 
   console.log('\n🎉 System records successfully provisioned! Ready to test login.');
 }
