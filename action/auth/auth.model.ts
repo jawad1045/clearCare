@@ -1,6 +1,6 @@
 "use server"
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@/lib/generated/prisma/client'
 import bcrypt from 'bcryptjs' 
 import { PrismaPg } from '@prisma/adapter-pg';
 import { cookies } from 'next/headers'
