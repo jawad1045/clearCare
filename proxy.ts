@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 1. Grab the token or session identifier from the cookies
   // Replace 'session_token' with whatever cookie name your auth system sets
   const isAuthenticated = request.cookies.get('session_token')?.value
