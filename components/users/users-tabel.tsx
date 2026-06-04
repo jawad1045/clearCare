@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   Table,
   TableBody,
@@ -8,6 +10,7 @@ import {
 } from "@/components/ui/table";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type User = {
   id: number;
@@ -20,11 +23,13 @@ type User = {
   createdDate: Date;
 };
 
+type UsersTableProps = {
+  users: User[];
+};
+
 export function UsersTable({
   users,
-}: {
-  users: User[];
-}) {
+}: UsersTableProps) {
   return (
     <div className="rounded-lg border">
       <Table>
@@ -36,6 +41,9 @@ export function UsersTable({
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead className="w-30">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
 
@@ -43,7 +51,7 @@ export function UsersTable({
           {users.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="text-center"
               >
                 No users found
@@ -66,7 +74,7 @@ export function UsersTable({
                 </TableCell>
 
                 <TableCell>
-                  <Badge>
+                  <Badge variant="outline">
                     {user.userRole}
                   </Badge>
                 </TableCell>
@@ -89,6 +97,19 @@ export function UsersTable({
                   {new Date(
                     user.createdDate
                   ).toLocaleDateString()}
+                </TableCell>
+
+                <TableCell>
+                  <Link
+                    href={`/admin/users/${user.id}/edit`}
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                    >
+                      Edit
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))

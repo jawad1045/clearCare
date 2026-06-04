@@ -238,3 +238,90 @@ export async function createUser(
 
   redirect("/admin/users");
 }
+
+export async function getUserById(
+  id: number
+) {
+  return prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
+//update user
+export async function updateUser(
+  id: number,
+  formData: FormData
+) {
+  const firstName =
+    formData.get(
+      "firstName"
+    ) as string;
+
+  const lastName =
+    formData.get(
+      "lastName"
+    ) as string;
+
+  const email =
+    formData.get(
+      "email"
+    ) as string;
+
+  const phone =
+    formData.get(
+      "phone"
+    ) as string;
+
+  const title =
+    formData.get(
+      "title"
+    ) as string;
+
+  const role =
+    formData.get(
+      "role"
+    ) as string;
+
+  const isActive =
+    formData.get(
+      "isActive"
+    ) === "true";
+
+  await prisma.user.update({
+    where: {
+      id,
+    },
+
+    data: {
+      contactFirstName:
+        firstName,
+
+      contactLastName:
+        lastName,
+
+      contactEmail:
+        email,
+
+      contactPhone:
+        phone,
+
+      contactTitle:
+        title,
+
+      userRole:
+        role,
+
+      isActive,
+    },
+  });
+
+  revalidatePath(
+    "/admin/users"
+  );
+
+  redirect(
+    "/admin/users"
+  );
+}
