@@ -325,3 +325,8 @@ export async function updateUser(
     "/admin/users"
   );
 }
+
+//get all user
+export async function getUsersCount() {
+  return prisma.user.count();
+}
