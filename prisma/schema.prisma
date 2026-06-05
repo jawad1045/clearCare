@@ -90,7 +90,7 @@ model Referral {
   referName         String    @map("Refer_Name") @db.VarChar(200) // Who submitted the referral
   datePatientContact DateTime? @map("Date_Patient_Contact") @db.Date
   methodOfContact   String?   @map("Method_of_Contact") @db.VarChar(100) // Multi-select string representation
-  pdfResult         String?   @map("PDF_Result") @db.VarChar(512) // Path/URL to file uploaded by HWP Admin
+  pdfResult         String?   @map("PDF_Result") @db.VarChar(512) // file uploaded by user or admin
   clientAttachments String[]  @map("Client_Attachments") // Stores up to 5 File paths/URLs as an array
   notes             String?   @db.Text
   lastUpdated       DateTime  @updatedAt @map("Last_Updated")
