@@ -8,10 +8,6 @@ export default async function ReferralsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <ReferralHeader
-        basePath="/admin/referrals"
-      />
-
       <AdminReferralsTable
         referrals={referrals}
         basePath="/admin/referrals"

@@ -2,22 +2,14 @@
 
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import { X } from "lucide-react";
+import { X, ArrowRight, Lock, Paperclip } from "lucide-react";
 
 import { createReferral } from "@/action/referral.action";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,400 +28,316 @@ const SERVICE_TYPES = [
   "Medication Management",
   "IOP",
 ];
-
 const REFERRAL_TYPES = [
   "Random",
   "Pre-employment",
   "Post-accident",
   "Reasonable Suspicion",
 ];
-
-const PRIORITIES = [
-  "Same-day",
-  "24-hours",
-];
-
-const GENDERS = [
-  "Male",
-  "Female",
+const PRIORITIES = ["Same-day", "24-hours"];
+const GENDERS = ["Male", "Female", "Other"];
+const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+const RACES = [
+  "American Indian or Alaska Native",
+  "Asian",
+  "Black or African American",
+  "Hispanic or Latino",
+  "Native Hawaiian or Other Pacific Islander",
+  "White",
+  "Two or More Races",
   "Other",
 ];
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
+      {children}
+    </p>
+  );
+}
+
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[11px] font-semibold uppercase tracking-wide text-foreground/60">
+        {label}
+        {required && <span className="ml-0.5 text-primary">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
 export function CreateReferralForm() {
-  const [isPending, startTransition] =
-    useTransition();
+  const [isPending, startTransition] = useTransition();
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [contactMethods, setContactMethods] = useState<string[]>([]);
 
-  const [attachments, setAttachments] =
-    useState<string[]>([]);
-
-  async function handleSubmit(
-    formData: FormData
-  ) {
+  async function handleSubmit(formData: FormData) {
+    contactMethods.forEach((m) => formData.append("contactMethod", m));
     startTransition(async () => {
       try {
-        await createReferral(
-          formData
-        );
-      } catch (error) {
-        toast.error(
-          "Failed to create referral"
-        );
+        await createReferral(formData);
+      } catch {
+        toast.error("Failed to create referral");
       }
     });
   }
 
-  function removeAttachment(
-    url: string
-  ) {
-    setAttachments((prev) =>
-      prev.filter(
-        (item) => item !== url
-      )
+  function removeAttachment(url: string) {
+    setAttachments((prev) => prev.filter((item) => item !== url));
+  }
+
+  function toggleContact(value: string) {
+    setContactMethods((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Create Referral
-        </CardTitle>
-      </CardHeader>
+    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card">
 
-      <CardContent>
-        <form
-          action={handleSubmit}
-          className="space-y-8"
+      {/* ── Header ── */}
+      <div className="bg-foreground px-6 py-4">
+        <h2 className="text-base font-bold text-primary-foreground">
+          CLEAR-CARE™ Healthcare Referral Form
+        </h2>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
+          <span>Fields marked * are required</span>
+          <span className="text-primary/50">·</span>
+          <Lock className="h-3 w-3" />
+          <span>HIPAA Compliant · All data is encrypted</span>
+        </div>
+      </div>
+
+      <form action={handleSubmit} className="px-6 py-6 space-y-6">
+
+        {/* Hidden attachment URLs */}
+        {attachments.map((url) => (
+          <input key={url} type="hidden" name="attachments" value={url} />
+        ))}
+
+        {/* ── Service Type ── */}
+        <Field label="Select Service Type" required>
+          <Select name="serviceType">
+            <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+              <SelectValue placeholder="Choose service type..." />
+            </SelectTrigger>
+            <SelectContent>
+              {SERVICE_TYPES.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        {/* ── Parent / Guardian ── */}
+        <div>
+          <SectionLabel>Parent / Guardian Information</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="First Name">
+              <Input name="parentFirstName" placeholder="Parent first name"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Last Name">
+              <Input name="parentLastName" placeholder="Parent last name"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Email">
+              <Input type="email" name="parentEmail" placeholder="parent@email.com"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Phone">
+              <Input name="parentPhone" placeholder="(555)000-0000"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+          </div>
+        </div>
+
+        {/* ── Patient Information ── */}
+        <div>
+          <SectionLabel>Patient Information</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="First Name" required>
+              <Input name="patientFirstName" placeholder="Patient first name" required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Last Name" required>
+              <Input name="patientLastName" placeholder="Patient last name" required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Date of Birth" required>
+              <Input type="date" name="dob" required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Age (Auto-Calculated)">
+              <Input
+                placeholder="Auto"
+                readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+              />
+            </Field>
+            <Field label="Race" required>
+              <Select name="race">
+                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {RACES.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Grade">
+              <Select name="grade">
+                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADES.map((g) => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Gender" required>
+              <Select name="gender">
+                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDERS.map((g) => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="SSN (Encrypted)" required>
+              <Input name="ssn" placeholder="XXX-XX-XXXX" required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+          </div>
+        </div>
+
+        {/* ── Test Details ── */}
+        <div>
+          <SectionLabel>Test Details</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Test Type" required>
+              <Select name="type">
+                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {REFERRAL_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Priority" required>
+              <Select name="priority">
+                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            {/* status is always Pending on creation — admin changes it later */}
+            <input type="hidden" name="status" value="Pending" />
+            <Field label="Referrer Name" required>
+              <Input name="referrerName" placeholder="Referring person name"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Date of Patient Contact">
+              <Input type="date" name="contactDate"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Method of Contact">
+              <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
+                {["Text", "Phone", "Email"].map((method) => (
+                  <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
+                    <Checkbox
+                      checked={contactMethods.includes(method)}
+                      onCheckedChange={() => toggleContact(method)}
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-xs text-foreground/80">{method}</span>
+                  </label>
+                ))}
+              </div>
+            </Field>
+          </div>
+        </div>
+
+        {/* ── Attachments ── */}
+        {attachments.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {attachments.map((url) => (
+              <div key={url} className="group relative overflow-hidden rounded-lg border border-border bg-muted/30">
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(url)}
+                  className="absolute right-1.5 top-1.5 z-10 rounded-full bg-background/90 p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+                <Image src={url} alt="Attachment" width={300} height={300}
+                  className="h-28 w-full object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <UploadButton
+          endpoint="imageUploader"
+          appearance={{
+            button: "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+            container: "w-fit",
+            allowedContent: "hidden",
+          }}
+          content={{ button() { return <span className="flex items-center gap-2"><Paperclip className="h-4 w-4" />Upload Attachments</span>; } }}
+          onClientUploadComplete={(res) => {
+            const urls = res.map((file) => file.ufsUrl);
+            setAttachments((prev) => [...prev, ...urls]);
+            toast.success("Files uploaded successfully");
+          }}
+          onUploadError={(error) => { toast.error(error.message); }}
+        />
+
+        {/* ── Submit ── */}
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="w-full bg-foreground text-primary-foreground hover:bg-foreground/90 transition-colors h-11 text-sm font-semibold tracking-wide"
         >
-          {/* Hidden uploaded URLs */}
-          {attachments.map((url) => (
-            <input
-              key={url}
-              type="hidden"
-              name="attachments"
-              value={url}
-            />
-          ))}
+          {isPending ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+              Submitting…
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              Submit Referral
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          )}
+        </Button>
 
-          {/* Service Information */}
-          <div>
-            <h3 className="mb-4 text-lg font-semibold">
-              Service Information
-            </h3>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <Label>
-                  Service Type
-                </Label>
-
-                <Select
-                  name="serviceType"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Service" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {SERVICE_TYPES.map(
-                      (service) => (
-                        <SelectItem
-                          key={service}
-                          value={
-                            service
-                          }
-                        >
-                          {service}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Type</Label>
-
-                <Select name="type">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {REFERRAL_TYPES.map(
-                      (type) => (
-                        <SelectItem
-                          key={type}
-                          value={
-                            type
-                          }
-                        >
-                          {type}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>
-                  Priority
-                </Label>
-
-                <Select
-                  name="priority"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Priority" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {PRIORITIES.map(
-                      (
-                        priority
-                      ) => (
-                        <SelectItem
-                          key={
-                            priority
-                          }
-                          value={
-                            priority
-                          }
-                        >
-                          {priority}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Parent Information */}
-          <div>
-            <h3 className="mb-4 text-lg font-semibold">
-              Parent Information
-            </h3>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input
-                name="parentFirstName"
-                placeholder="Parent First Name"
-              />
-
-              <Input
-                name="parentLastName"
-                placeholder="Parent Last Name"
-              />
-
-              <Input
-                type="email"
-                name="parentEmail"
-                placeholder="Parent Email"
-              />
-
-              <Input
-                name="parentPhone"
-                placeholder="Parent Phone"
-              />
-            </div>
-          </div>
-
-          {/* Patient Information */}
-          <div>
-            <h3 className="mb-4 text-lg font-semibold">
-              Patient Information
-            </h3>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input
-                name="patientFirstName"
-                placeholder="Patient First Name"
-                required
-              />
-
-              <Input
-                name="patientLastName"
-                placeholder="Patient Last Name"
-                required
-              />
-
-              <Input
-                type="date"
-                name="dob"
-                required
-              />
-
-              <Input
-                name="grade"
-                placeholder="Grade"
-                required
-              />
-
-              <Input
-                name="race"
-                placeholder="Race"
-                required
-              />
-
-              <div>
-                <Label>
-                  Gender
-                </Label>
-
-                <Select
-                  name="gender"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Gender" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {GENDERS.map(
-                      (
-                        gender
-                      ) => (
-                        <SelectItem
-                          key={
-                            gender
-                          }
-                          value={
-                            gender
-                          }
-                        >
-                          {gender}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Input
-                name="ssn"
-                placeholder="SSN"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Attachments */}
-          <div>
-            <h3 className="mb-4 text-lg font-semibold">
-              Attachments
-            </h3>
-
-            <UploadButton
-              endpoint="imageUploader"
-              appearance={{
-                button:
-                  "bg-primary text-primary-foreground rounded-md px-4 py-2",
-                container:
-                  "w-fit",
-                allowedContent:
-                  "hidden",
-              }}
-              content={{
-                button() {
-                  return "Upload Files";
-                },
-              }}
-              onClientUploadComplete={(
-                res
-              ) => {
-                const urls =
-                  res.map(
-                    (file) =>
-                      file.ufsUrl
-                  );
-
-                setAttachments(
-                  (
-                    prev
-                  ) => [
-                    ...prev,
-                    ...urls,
-                  ]
-                );
-
-                toast.success(
-                  "Files uploaded successfully"
-                );
-              }}
-              onUploadError={(
-                error
-              ) => {
-                toast.error(
-                  error.message
-                );
-              }}
-            />
-
-            {attachments.length >
-              0 && (
-              <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-                {attachments.map(
-                  (url) => (
-                    <div
-                      key={
-                        url
-                      }
-                      className="relative overflow-hidden rounded-lg border"
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeAttachment(
-                            url
-                          )
-                        }
-                        className="absolute right-2 top-2 z-10 rounded-full bg-background p-1 shadow"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-
-                      <Image
-                        src={url}
-                        alt="Attachment"
-                        width={
-                          300
-                        }
-                        height={
-                          300
-                        }
-                        className="h-32 w-full object-cover"
-                      />
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div>
-            <Label>
-              Notes
-            </Label>
-
-            <Textarea
-              name="notes"
-              rows={5}
-            />
-          </div>
-
-          <Button
-            type="submit"
-            disabled={isPending}
-          >
-            {isPending
-              ? "Creating..."
-              : "Create Referral"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      </form>
+    </div>
   );
 }

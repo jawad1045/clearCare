@@ -1,20 +1,16 @@
 "use client";
 
 import { useTransition } from "react";
+import { Building2, MapPin, User, FileText } from "lucide-react";
 
 import { updateCompany } from "@/action/company.action";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 
 type Company = {
   id: number;
@@ -31,202 +27,174 @@ type Company = {
   notes: string | null;
 };
 
-type Props = {
-  company: Company;
-};
+type Props = { company: Company };
 
-export function EditCompanyForm({
-  company,
-}: Props) {
-  const [isPending, startTransition] =
-    useTransition();
+function FieldGroup({ icon: Icon, title, children }: {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+          <Icon className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          {title}
+        </span>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {children}
+      </div>
+    </div>
+  );
+}
 
-  async function handleSubmit(
-    formData: FormData
-  ) {
+function Field({ label, required, children }: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium text-foreground/80">
+        {label}
+        {required && <span className="ml-0.5 text-primary">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+export function EditCompanyForm({ company }: Props) {
+  const [isPending, startTransition] = useTransition();
+
+  async function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await updateCompany(
-        company.id,
-        formData
-      );
+      await updateCompany(company.id, formData);
     });
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Edit Company
-        </CardTitle>
+    <Card className="overflow-hidden border-border shadow-sm">
+      <div className="h-1 w-full bg-primary" />
+
+      <CardHeader className="pb-4 pt-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
+              Edit Company
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Update organization details
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
 
-      <CardContent>
-        <form
-          action={handleSubmit}
-          className="space-y-6"
-        >
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Organization */}
+      <Separator />
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>
-                Organization
+      <CardContent className="pt-6">
+        <form action={handleSubmit} className="space-y-8">
+
+          {/* Organization */}
+          <FieldGroup icon={Building2} title="Organization">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-foreground/80">
+                Organization Name<span className="ml-0.5 text-primary">*</span>
               </Label>
-
               <Input
                 name="organization"
-                defaultValue={
-                  company.organization
-                }
+                defaultValue={company.organization}
                 required
+                className="border-border bg-background focus-visible:ring-primary"
               />
             </div>
+          </FieldGroup>
 
-            {/* Address */}
+          <Separator className="bg-border/60" />
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>
-                Street
-              </Label>
-
-              <Input
-                name="street"
-                defaultValue={
-                  company.street ??
-                  ""
-                }
-              />
+          {/* Address */}
+          <FieldGroup icon={MapPin} title="Address">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-foreground/80">Street</Label>
+              <Input name="street" defaultValue={company.street ?? ""}
+                className="border-border bg-background focus-visible:ring-primary" />
             </div>
+            <Field label="City" required>
+              <Input name="city" defaultValue={company.city} required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="State" required>
+              <Input name="state" defaultValue={company.state} required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Zip">
+              <Input name="zip" defaultValue={company.zip ?? ""}
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+          </FieldGroup>
 
-            <div className="space-y-2">
-              <Label>City</Label>
+          <Separator className="bg-border/60" />
 
-              <Input
-                name="city"
-                defaultValue={
-                  company.city
-                }
-                required
-              />
+          {/* Contact */}
+          <FieldGroup icon={User} title="Contact Person">
+            <Field label="First Name" required>
+              <Input name="firstName" defaultValue={company.contactFirstName} required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Last Name" required>
+              <Input name="lastName" defaultValue={company.contactLastName} required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Email" required>
+              <Input type="email" name="email" defaultValue={company.contactEmail} required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Phone" required>
+              <Input name="phone" defaultValue={company.contactPhone} required
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-foreground/80">Title</Label>
+              <Input name="title" defaultValue={company.contactTitle ?? ""}
+                className="border-border bg-background focus-visible:ring-primary" />
             </div>
+          </FieldGroup>
 
-            <div className="space-y-2">
-              <Label>State</Label>
+          <Separator className="bg-border/60" />
 
-              <Input
-                name="state"
-                defaultValue={
-                  company.state
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Zip</Label>
-
-              <Input
-                name="zip"
-                defaultValue={
-                  company.zip ??
-                  ""
-                }
-              />
-            </div>
-
-            {/* Contact */}
-
-            <div className="space-y-2">
-              <Label>
-                Contact First Name
-              </Label>
-
-              <Input
-                name="firstName"
-                defaultValue={
-                  company.contactFirstName
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                Contact Last Name
-              </Label>
-
-              <Input
-                name="lastName"
-                defaultValue={
-                  company.contactLastName
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Email</Label>
-
-              <Input
-                type="email"
-                name="email"
-                defaultValue={
-                  company.contactEmail
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Phone</Label>
-
-              <Input
-                name="phone"
-                defaultValue={
-                  company.contactPhone
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Title</Label>
-
-              <Input
-                name="title"
-                defaultValue={
-                  company.contactTitle ??
-                  ""
-                }
-              />
-            </div>
-
-            {/* Notes */}
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Notes</Label>
-
+          {/* Notes */}
+          <FieldGroup icon={FileText} title="Notes">
+            <div className="space-y-1.5 sm:col-span-2">
               <Textarea
                 name="notes"
-                defaultValue={
-                  company.notes ??
-                  ""
-                }
-                rows={5}
+                defaultValue={company.notes ?? ""}
+                rows={4}
+                className="resize-none border-border bg-background focus-visible:ring-primary"
               />
             </div>
-          </div>
+          </FieldGroup>
 
-          <div className="flex gap-3">
+          <div className="flex justify-end pt-2">
             <Button
               type="submit"
               disabled={isPending}
+              className="min-w-35 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
             >
-              {isPending
-                ? "Saving..."
-                : "Save Changes"}
+              {isPending ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  Saving…
+                </span>
+              ) : "Save Changes"}
             </Button>
           </div>
+
         </form>
       </CardContent>
     </Card>
