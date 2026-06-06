@@ -159,6 +159,11 @@ export async function createReferral(
     "/user/referrals"
   );
 
+console.log(
+  "CURRENT USER:",
+  currentUser
+);
+
   if (
     currentUser.role ===
     "Admin"
@@ -211,4 +216,44 @@ export async function getMyReferrals() {
 
 export async function getReferralsCount() {
   return prisma.referral.count();
+}
+
+export async function updateReferralStatus(
+  referralId: number,
+  status: string
+) {
+  await prisma.referral.update({
+    where: {
+      id: referralId,
+    },
+    data: {
+      status,
+    },
+  });
+
+  revalidatePath(
+    "/admin/referrals"
+  );
+
+  revalidatePath(
+    `/admin/referrals/${referralId}`
+  );
+
+  revalidatePath(
+    "/user/referrals"
+  );
+}
+
+export async function getReferralById(
+  id: number
+) {
+  return prisma.referral.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      user: true,
+      company: true,
+    },
+  });
 }

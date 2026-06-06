@@ -29,7 +29,7 @@ type Props = {
   basePath: string;
 };
 
-export function ReferralsTable({
+export function UserReferralsTable({
   referrals,
   basePath,
 }: Props) {
@@ -94,13 +94,13 @@ export function ReferralsTable({
 
                 <TableCell>
                   <Link
-                    href={`${basePath}/${referral.id}/edit`}
+                    href={`${basePath}/${referral.id}`}
                   >
                     <Button
                       size="sm"
                       variant="outline"
                     >
-                      Edit
+                      View
                     </Button>
                   </Link>
                 </TableCell>

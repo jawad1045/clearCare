@@ -1,7 +1,6 @@
 import { getReferrals } from "@/action/referral.action";
-
-import { ReferralsTable } from "@/components/referrals/referrals-table";
 import { ReferralHeader } from "@/components/referrals/referral-header";
+import { AdminReferralsTable } from "@/components/referrals/admin-referrals-table";
 
 export default async function ReferralsPage() {
   const referrals =
@@ -13,7 +12,7 @@ export default async function ReferralsPage() {
         basePath="/admin/referrals"
       />
 
-      <ReferralsTable
+      <AdminReferralsTable
         referrals={referrals}
         basePath="/admin/referrals"
       />

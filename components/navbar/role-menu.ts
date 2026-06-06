@@ -12,7 +12,7 @@ export const adminMenu = [
 
 export const userMenu = [
     { label: "Dashboard", href: "/user" },
-    { label: "M.H Referrals", href: "/admin/mhreferrals" },
-    { label: "Referrals", href: "/admin/referrals" },
+    { label: "M.H Referrals", href: "/user/mhreferrals" },
+    { label: "Referrals", href: "/user/referrals" },
     { label: "Reports", href: "/user/reports" },
 ];
