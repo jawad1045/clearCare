@@ -17,8 +17,9 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { UserMenu } from "./user-menu";
 
-export function NavLinks({ menu }: any) {
+export function NavLinks({ menu, role }: any) {
   const [openMobile, setOpenMobile] = React.useState(false);
 
   return (
@@ -64,10 +65,14 @@ export function NavLinks({ menu }: any) {
       {/* MOBILE NAVIGATION                          */}
       {/* ========================================== */}
       <div className="flex md:hidden items-center justify-between p-4 text-gray-300">
-        {/* If you have a mobile brand/logo, put it here */}
-        <span className="font-semibold text-[#7DDDD5] text-sm"></span>
+        <span className="font-semibold text-[#7DDDD5] text-sm">
+          {role === "admin" ? "Administrator" : "Company User"}
+        </span>
 
-        <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <div className="flex items-center gap-2">
+          <UserMenu role={role} />
+
+          <Sheet open={openMobile} onOpenChange={setOpenMobile}>
           <SheetTrigger asChild>
             <button className="p-2 -mr-2 text-gray-300 hover:text-[#7DDDD5] transition-colors focus:outline-none">
               <Menu className="h-6 w-6" />
@@ -117,8 +122,7 @@ export function NavLinks({ menu }: any) {
               ))}
             </nav>
           </SheetContent>
-        </Sheet>
-      </div>
+        </Sheet>        </div>      </div>
     </div>
   );
 }

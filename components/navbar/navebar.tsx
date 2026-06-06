@@ -10,15 +10,17 @@ export function Navbar({ role = "user" }: { role: "admin" | "user" }) {
   const menu = role === "admin" ? adminMenu : userMenu;
 
   return (
-    <header className="">
-      {/* Left */}
-      <div className="flex items-center gap-20 h-full bg-[#1C2D35]  text-gray-300 ">
-        <div className="font-bold">LOGO</div>
-        <NavLinks menu={menu} />
-      </div>
+    <header>
+      <div className="flex items-center justify-between gap-6 bg-[#1C2D35] px-4 py-3 text-gray-300 md:px-8">
+        <div className="flex items-center gap-20">
+          <div className="font-bold text-white">LOGO</div>
+          <NavLinks menu={menu} role={role} />
+        </div>
 
-      {/* Right */}
-   
+        <div className="hidden md:flex items-center">
+          <UserMenu role={role} />
+        </div>
+      </div>
     </header>
   );
 }
