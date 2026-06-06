@@ -1,26 +1,31 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { verifySessionToken } from '@/lib/auth'
 
-export function proxy(request: NextRequest) {
-  // 1. Grab the token or session identifier from the cookies
-  // Replace 'session_token' with whatever cookie name your auth system sets
-  const isAuthenticated = request.cookies.get('session_token')?.value
-
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const token = request.cookies.get('session_token')?.value
+  const currentUser = token ? verifySessionToken(token) : null
 
-  // 2. If the user is trying to access protected routes without being logged in
-  if (!isAuthenticated) {
-    if (pathname.startsWith('/admin') || pathname.startsWith('/user')) {
-      // Send them straight back to the login page
-      return NextResponse.redirect(new URL('/', request.url))
+  if (pathname === '/') {
+    if (currentUser) {
+      const destination = currentUser.role === 'Admin' ? '/admin' : '/user'
+      return NextResponse.redirect(new URL(destination, request.url))
+    }
+
+    return NextResponse.next()
+  }
+
+  if (pathname.startsWith('/admin')) {
+    if (!currentUser || currentUser.role !== 'Admin') {
+      return NextResponse.redirect(new URL('/user', request.url))
     }
   }
 
-  // 3. Optional: Prevent logged-in users from going back to the login page
-  if (isAuthenticated && pathname === '/') {
-    // You could decode your token here to check roles, 
-    // but for now, we'll just let them pass or default them
-    return NextResponse.next()
+  if (pathname.startsWith('/user')) {
+    if (!currentUser) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
   }
 
   return NextResponse.next()
@@ -29,7 +34,8 @@ export function proxy(request: NextRequest) {
 // 4. Configure the matcher to only trigger on your protected dashboards
 export const config = {
   matcher: [
-    '/admin/:path*', 
-    '/user/:path*'
+    '/admin/:path*',
+    '/user/:path*',
+    '/',
   ],
 }

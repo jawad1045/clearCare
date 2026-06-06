@@ -1,15 +1,22 @@
+import { redirect } from "next/navigation";
 import { Navbar } from "@/components/navbar/navebar";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
+  const user = await getCurrentUser();
 
-      <div className="min-h-full flex flex-col">
-        <Navbar role="admin"/>
-        {children}
-      </div>
-  )
+  if (!user || user.role !== "Admin") {
+    redirect("/user");
+  }
+
+  return (
+    <div className="min-h-full flex flex-col">
+      <Navbar role="admin" />
+      {children}
+    </div>
+  );
 }
