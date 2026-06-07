@@ -133,7 +133,18 @@ export function AdminReferralsTable({
                 </TableCell>
 
                 <TableCell>
-                  <Badge>
+                  <Badge
+                    variant={
+                      referral.status === "Approved"
+                        ? "default"
+                        : referral.status === "Rejected"
+                        ? "destructive"
+                        : referral.status === "Completed"
+                        ? "outline"
+                        : "secondary"
+                    }
+                    className="capitalize"
+                  >
                     {referral.status}
                   </Badge>
                 </TableCell>

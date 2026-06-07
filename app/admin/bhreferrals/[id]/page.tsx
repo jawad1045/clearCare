@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getReferralById } from "@/action/referral.action";
+import { getBHReferralById } from "@/action/referral.action";
 import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -39,17 +39,9 @@ const statusVariant: Record<
   Completed: "outline",
 };
 
-const statusDescription: Record<string, string> = {
-  Pending: "Your referral is awaiting review.",
-  Reviewing: "Your referral is under review.",
-  Approved: "Your referral has been approved.",
-  Rejected: "Your referral was not approved.",
-  Completed: "Your referral has been completed.",
-};
-
-export default async function UserReferralDetailsPage({ params }: PageProps) {
+export default async function BHReferralDetailsPage({ params }: PageProps) {
   const { id } = await params;
-  const referral = await getReferralById(Number(id));
+  const referral = await getBHReferralById(Number(id));
 
   if (!referral) {
     notFound();
@@ -69,20 +61,19 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
           </div>
 
           <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground">
-            <Link href="/referrals">
+            <Link href="/admin/bhreferrals">
               <ArrowLeft className="mr-1.5 h-4 w-4" />
-              Back to Referrals
+              Back to BH Referrals
             </Link>
           </Button>
 
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">
-                Referral <span className="text-muted-foreground font-normal">#{referral.id}</span>
+                Behavioral Health Referral <span className="text-muted-foreground font-normal">#{referral.id}</span>
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {referral.patientFirstName} {referral.patientLastName} &mdash; submitted by{" "}
-                {referral.user.contactFirstName} {referral.user.contactLastName}
+                {referral.patientFirstName} {referral.patientLastName} &mdash; submitted by {referral.user.contactFirstName} {referral.user.contactLastName}
               </p>
             </div>
             <Badge
@@ -159,10 +150,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Email</dt>
                   <dd className="font-medium truncate max-w-45">
-                    <a
-                      href={`mailto:${referral.user.contactEmail}`}
-                      className="hover:underline text-primary"
-                    >
+                    <a href={`mailto:${referral.user.contactEmail}`} className="hover:underline text-primary">
                       {referral.user.contactEmail}
                     </a>
                   </dd>
@@ -170,10 +158,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Phone</dt>
                   <dd className="font-medium">
-                    <a
-                      href={`tel:${referral.user.contactPhone}`}
-                      className="hover:underline text-primary"
-                    >
+                    <a href={`tel:${referral.user.contactPhone}`} className="hover:underline text-primary">
                       {referral.user.contactPhone}
                     </a>
                   </dd>
@@ -211,8 +196,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
                 <div>
                   <CardTitle className="text-base">Attachments</CardTitle>
                   <CardDescription className="text-xs">
-                    {referral.clientAttachments.length} file
-                    {referral.clientAttachments.length !== 1 ? "s" : ""} attached
+                    {referral.clientAttachments.length} file{referral.clientAttachments.length !== 1 ? "s" : ""} attached
                   </CardDescription>
                 </div>
               </div>
@@ -237,10 +221,9 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
               )}
             </CardContent>
           </Card>
-
         </div>
 
-        {/* Status — read-only, full width */}
+        {/* Status Management — full width */}
         <Card className="mt-4">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
@@ -248,33 +231,35 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
                 <Activity className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-base">Referral Status</CardTitle>
-                <CardDescription className="text-xs">Current state of your referral</CardDescription>
+                <CardTitle className="text-base">Status Management</CardTitle>
+                <CardDescription className="text-xs">Update the referral workflow status</CardDescription>
               </div>
             </div>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4 space-y-4">
-            <div className="flex items-center gap-4">
-              <Badge
-                variant={statusVariant[referral.status] ?? "secondary"}
-                className="capitalize text-sm px-3 py-1"
-              >
-                {referral.status.toLowerCase()}
-              </Badge>
-              <p className="text-sm text-muted-foreground">
-                {statusDescription[referral.status] ?? "Status is being processed."}
-              </p>
-            </div>
-            <div className="sm:min-w-70">
-              <UpdateStatusForm
-                referralId={referral.id}
-                currentStatus={referral.status}
-              />
+          <CardContent className="pt-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Current Status
+                </p>
+                <Badge
+                  variant={statusVariant[referral.status] ?? "secondary"}
+                  className="capitalize text-sm px-3 py-1"
+                >
+                  {referral.status.toLowerCase()}
+                </Badge>
+              </div>
+              <div className="sm:min-w-70">
+                <UpdateStatusForm
+                  referralId={referral.id}
+                  currentStatus={referral.status}
+                  isBH={true}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

@@ -2,8 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-import { updateReferralStatus } from "@/action/referral.action";
+import {
+  updateReferralStatus,
+  updateBHReferralStatus,
+} from "@/action/referral.action";
 
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +22,7 @@ import {
 type Props = {
   referralId: number;
   currentStatus: string;
+  isBH?: boolean;
 };
 
 const STATUSES = [
@@ -31,30 +36,35 @@ const STATUSES = [
 export function UpdateStatusForm({
   referralId,
   currentStatus,
+  isBH,
 }: Props) {
   const [status, setStatus] =
     useState(currentStatus);
 
-  const [isPending, startTransition] =
-    useTransition();
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleUpdate = () => {
     startTransition(async () => {
       try {
-        await updateReferralStatus(
-          referralId,
-          status
-        );
+        if (isBH) {
+          const redirectTo = await updateBHReferralStatus(referralId, status);
 
-        toast.success(
-          "Status updated successfully"
-        );
+          toast.success("Status updated successfully");
+
+          if (redirectTo) {
+            router.push(redirectTo);
+            return;
+          }
+        } else {
+          await updateReferralStatus(referralId, status);
+
+          toast.success("Status updated successfully");
+        }
       } catch (error) {
         console.error(error);
 
-        toast.error(
-          "Failed to update status"
-        );
+        toast.error("Failed to update status");
       }
     });
   };

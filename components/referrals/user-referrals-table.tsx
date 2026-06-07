@@ -59,8 +59,15 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                 <TableCell>
                   <Badge
                     variant={
-                      referral.status === "active" ? "default" : "secondary"
+                      referral.status === "Approved"
+                        ? "default"
+                        : referral.status === "Rejected"
+                        ? "destructive"
+                        : referral.status === "Completed"
+                        ? "outline"
+                        : "secondary"
                     }
+                    className="capitalize"
                   >
                     {referral.status}
                   </Badge>

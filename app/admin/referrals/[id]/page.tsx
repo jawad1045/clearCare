@@ -32,10 +32,11 @@ const statusVariant: Record<
   string,
   "default" | "secondary" | "destructive" | "outline"
 > = {
-  PENDING: "secondary",
-  APPROVED: "default",
-  REJECTED: "destructive",
-  COMPLETED: "outline",
+  Pending: "secondary",
+  Reviewing: "default",
+  Approved: "default",
+  Rejected: "destructive",
+  Completed: "outline",
 };
 
 export default async function ReferralDetailsPage({ params }: PageProps) {

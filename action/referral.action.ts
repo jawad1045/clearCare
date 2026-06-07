@@ -257,3 +257,170 @@ export async function getReferralById(
     },
   });
 }
+
+// BH Referral (Behavioral Health) Actions
+export async function createBHReferral(
+  formData: FormData
+) {
+  const currentUser =
+    await getCurrentUser();
+
+  if (!currentUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const user =
+    await prisma.user.findUnique({
+      where: {
+        id: currentUser.id,
+      },
+    });
+
+  if (!user) {
+    throw new Error(
+      "User not found"
+    );
+  }
+
+  // UploadThing URLs from hidden inputs
+  const uploadedFiles =
+    formData.getAll(
+      "attachments"
+    ) as string[];
+
+  if (
+    uploadedFiles.length > 5
+  ) {
+    throw new Error(
+      "Maximum 5 files allowed"
+    );
+  }
+
+  // Create BH Referral using Referral model with Behavioral Health service type
+  await prisma.referral.create({
+    data: {
+      userId: user.id,
+      companyAcctId: user.acctId,
+      serviceType: "Behavioral Health",
+      type: formData.get("type") as string,
+      priority: formData.get("priority") as string,
+      patientFirstName: formData.get(
+        "patientFirstName"
+      ) as string,
+      patientLastName: formData.get(
+        "patientLastName"
+      ) as string,
+      gender: formData.get("gender") as string,
+      dob: new Date(
+        formData.get("dob") as string
+      ),
+      grade: formData.get("grade") as string,
+      race: formData.get("race") as string,
+      ssn: "N/A",
+      parentFirstName: formData.get(
+        "parentFirstName"
+      ) as string,
+      parentLastName: formData.get(
+        "parentLastName"
+      ) as string,
+      parentEmail: formData.get(
+        "parentEmail"
+      ) as string,
+      parentPhone: formData.get(
+        "parentPhone"
+      ) as string,
+      referName: `${user.contactFirstName} ${user.contactLastName}`,
+      notes: formData.get("notes") as string,
+      clientAttachments: uploadedFiles,
+    },
+  });
+
+  revalidatePath("/admin/bhreferrals");
+  revalidatePath("/user/bhreferrals");
+
+  if (
+    currentUser.role === "Admin"
+  ) {
+    redirect("/admin/bhreferrals");
+  }
+
+  redirect("/user/bhreferrals");
+}
+
+export async function getBHReferrals() {
+  return prisma.referral.findMany({
+    where: {
+      serviceType: "Behavioral Health",
+    },
+    include: {
+      user: true,
+      company: true,
+    },
+    orderBy: {
+      dateOfReferral: "desc",
+    },
+  });
+}
+
+export async function getMyBHReferrals() {
+  const currentUser =
+    await getCurrentUser();
+
+  if (!currentUser) {
+    throw new Error("Unauthorized");
+  }
+
+  return prisma.referral.findMany({
+    where: {
+      userId: currentUser.id,
+      serviceType: "Behavioral Health",
+    },
+    include: {
+      company: true,
+    },
+    orderBy: {
+      dateOfReferral: "desc",
+    },
+  });
+}
+
+export async function getBHReferralById(
+  id: number
+) {
+  return prisma.referral.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      user: true,
+      company: true,
+    },
+  });
+}
+
+export async function updateBHReferralStatus(
+  referralId: number,
+  status: string
+) {
+  const currentUser = await getCurrentUser();
+
+  await prisma.referral.update({
+    where: {
+      id: referralId,
+    },
+    data: {
+      status,
+    },
+  });
+
+  revalidatePath("/admin/bhreferrals");
+  revalidatePath(`/admin/bhreferrals/${referralId}`);
+  revalidatePath("/user/bhreferrals");
+
+  // Return the path for the client to navigate to instead of performing a server redirect.
+  if (currentUser?.role === "Admin") {
+    return "/admin/bhreferrals";
+  }
+
+  return "/user/bhreferrals";
+}
