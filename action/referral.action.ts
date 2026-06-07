@@ -384,6 +384,24 @@ export async function getMyBHReferrals() {
   });
 }
 
+export async function getMyReferralCounts() {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const total = await prisma.referral.count({
+    where: { userId: currentUser.id },
+  });
+
+  const bh = await prisma.referral.count({
+    where: { userId: currentUser.id, serviceType: "Behavioral Health" },
+  });
+
+  return { total, bh };
+}
+
 export async function getBHReferralById(
   id: number
 ) {
