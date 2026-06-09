@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { UserMenu } from "./user-menu";
 
-export function NavLinks({ menu, role }: any) {
+export function NavLinks({ menu, role, name }: any) {
   const [openMobile, setOpenMobile] = React.useState(false);
 
   return (
@@ -70,7 +70,7 @@ export function NavLinks({ menu, role }: any) {
         </span>
 
         <div className="flex items-center gap-2">
-          <UserMenu role={role} />
+          <UserMenu role={role} name={name} />
 
           <Sheet open={openMobile} onOpenChange={setOpenMobile}>
           <SheetTrigger asChild>
