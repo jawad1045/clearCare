@@ -181,6 +181,9 @@ console.log(
 
 export async function getReferrals() {
   return prisma.referral.findMany({
+    where: {
+      serviceType: { not: "Behavioral Health" },
+    },
     include: {
       user: true,
       company: true,
@@ -203,6 +206,7 @@ export async function getMyReferrals() {
   return prisma.referral.findMany({
     where: {
       userId: currentUser.id,
+      serviceType: { not: "Behavioral Health" },
     },
     include: {
       company: true,
@@ -215,7 +219,15 @@ export async function getMyReferrals() {
 
 
 export async function getReferralsCount() {
-  return prisma.referral.count();
+  return prisma.referral.count({
+    where: { serviceType: { not: "Behavioral Health" } },
+  });
+}
+
+export async function getBHReferralsCount() {
+  return prisma.referral.count({
+    where: { serviceType: "Behavioral Health" },
+  });
 }
 
 export async function updateReferralStatus(
@@ -392,7 +404,7 @@ export async function getMyReferralCounts() {
   }
 
   const total = await prisma.referral.count({
-    where: { userId: currentUser.id },
+    where: { userId: currentUser.id, serviceType: { not: "Behavioral Health" } },
   });
 
   const bh = await prisma.referral.count({

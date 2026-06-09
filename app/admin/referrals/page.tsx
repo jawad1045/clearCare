@@ -3,11 +3,11 @@ import { ReferralHeader } from "@/components/referrals/referral-header";
 import { AdminReferralsTable } from "@/components/referrals/admin-referrals-table";
 
 export default async function ReferralsPage() {
-  const referrals =
-    await getReferrals();
+  const referrals = await getReferrals();
 
   return (
     <div className="space-y-6 p-6">
+      <ReferralHeader basePath="/admin/referrals" />
       <AdminReferralsTable
         referrals={referrals}
         basePath="/admin/referrals"

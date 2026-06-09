@@ -24,7 +24,6 @@ import { toast } from "sonner";
 const SERVICE_TYPES = [
   "Drug Test",
   "Physical",
-  "Behavioral Health",
   "Medication Management",
   "IOP",
 ];

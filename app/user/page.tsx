@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
@@ -23,20 +24,19 @@ export default async function UserDashboardPage() {
             <CardTitle>Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">All referral submissions</CardDescription>
           </CardHeader>
-          <CardContent>
+          <Separator />
+          <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold">{total}</p>
                 <p className="text-sm text-muted-foreground">Total referrals you've submitted</p>
               </div>
-              <div>
-                <Link href="/user/referrals">
-                  <Button variant="outline">
-                    View
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+              <Link href="/user/referrals">
+                <Button variant="outline">
+                  View
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -46,20 +46,19 @@ export default async function UserDashboardPage() {
             <CardTitle>B.H. Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">Behavioral Health referrals</CardDescription>
           </CardHeader>
-          <CardContent>
+          <Separator />
+          <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold">{bh}</p>
                 <p className="text-sm text-muted-foreground">Behavioral Health referrals you've submitted</p>
               </div>
-              <div>
-                <Link href="/user/bhreferrals">
-                  <Button variant="outline">
-                    View
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+              <Link href="/user/bhreferrals">
+                <Button variant="outline">
+                  View
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
