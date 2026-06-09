@@ -330,3 +330,55 @@ export async function updateUser(
 export async function getUsersCount() {
   return prisma.user.count();
 }
+
+import { getCurrentUser } from "@/lib/auth";
+
+export async function updateProfileName(formData: FormData) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("Unauthorized");
+
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+
+  if (!firstName?.trim() || !lastName?.trim()) {
+    throw new Error("First and last name are required");
+  }
+
+  await prisma.user.update({
+    where: { id: currentUser.id },
+    data: { contactFirstName: firstName.trim(), contactLastName: lastName.trim() },
+  });
+
+  revalidatePath("/admin/profile");
+  revalidatePath("/user/profile");
+}
+
+export async function updateProfilePassword(formData: FormData) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("Unauthorized");
+
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (newPassword !== confirmPassword) {
+    throw new Error("New passwords do not match");
+  }
+
+  if (newPassword.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
+  if (!user) throw new Error("User not found");
+
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) throw new Error("Current password is incorrect");
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+
+  await prisma.user.update({
+    where: { id: currentUser.id },
+    data: { password: hashed },
+  });
+}

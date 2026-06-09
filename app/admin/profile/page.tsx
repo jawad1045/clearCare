@@ -1,0 +1,27 @@
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { getUserById } from "@/action/user.action";
+import { ProfileForm } from "@/components/profile/profile-form";
+
+export default async function AdminProfilePage() {
+  const session = await getCurrentUser();
+  if (!session) redirect("/");
+
+  const user = await getUserById(session.id);
+  if (!user) redirect("/");
+
+  return (
+    <div className="space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-semibold">My Profile</h1>
+        <p className="text-muted-foreground text-sm">Manage your name and password</p>
+      </div>
+      <ProfileForm
+        firstName={user.contactFirstName}
+        lastName={user.contactLastName}
+        email={user.contactEmail}
+        redirectTo="/admin"
+      />
+    </div>
+  );
+}
