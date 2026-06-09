@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getMyReferralCounts, getMyReferralStatusCounts } from "@/action/referral.action";
+import { getMyReferralCounts, getMyReferralStatusCounts, getMyBHReferralStatusCounts } from "@/action/referral.action";
 import {
   Card,
   CardContent,
@@ -11,11 +11,13 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { StatusPieChart } from "@/components/charts/status-pie-chart";
+import { StatusBarChart } from "@/components/charts/status-bar-chart";
 
 export default async function UserDashboardPage() {
-  const [{ total, bh }, statusCounts] = await Promise.all([
+  const [{ total, bh }, statusCounts, bhStatusCounts] = await Promise.all([
     getMyReferralCounts(),
     getMyReferralStatusCounts(),
+    getMyBHReferralStatusCounts(),
   ]);
 
   return (
@@ -68,17 +70,30 @@ export default async function UserDashboardPage() {
         </Card>
       </div>
 
-      {/* Referral Status Pie Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>My Referrals by Status</CardTitle>
-          <CardDescription className="text-sm">Breakdown of all your referral statuses</CardDescription>
-        </CardHeader>
-        <Separator />
-        <CardContent className="pt-4 h-72">
-          <StatusPieChart data={statusCounts} />
-        </CardContent>
-      </Card>
+      {/* Charts */}
+      <div className="flex gap-6">
+        <Card className="w-[30%]">
+          <CardHeader>
+            <CardTitle>My Referrals by Status</CardTitle>
+            <CardDescription className="text-sm">Breakdown of your referral statuses</CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 h-72">
+            <StatusPieChart data={statusCounts} />
+          </CardContent>
+        </Card>
+
+        <Card className="w-[70%]">
+          <CardHeader>
+            <CardTitle>My B.H. Referrals by Status</CardTitle>
+            <CardDescription className="text-sm">Breakdown of your Behavioral Health referral statuses</CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 h-72">
+            <StatusBarChart data={bhStatusCounts} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

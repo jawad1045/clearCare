@@ -417,6 +417,7 @@ export async function getMyReferralCounts() {
 export async function getReferralStatusCounts() {
   const rows = await prisma.referral.groupBy({
     by: ["status"],
+    where: { serviceType: { not: "Behavioral Health" } },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));
@@ -431,7 +432,31 @@ export async function getMyReferralStatusCounts() {
 
   const rows = await prisma.referral.groupBy({
     by: ["status"],
-    where: { userId: currentUser.id },
+    where: { userId: currentUser.id, serviceType: { not: "Behavioral Health" } },
+    _count: { status: true },
+  });
+  return rows.map((r) => ({ status: r.status, count: r._count.status }));
+}
+
+export async function getBHReferralStatusCounts() {
+  const rows = await prisma.referral.groupBy({
+    by: ["status"],
+    where: { serviceType: "Behavioral Health" },
+    _count: { status: true },
+  });
+  return rows.map((r) => ({ status: r.status, count: r._count.status }));
+}
+
+export async function getMyBHReferralStatusCounts() {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const rows = await prisma.referral.groupBy({
+    by: ["status"],
+    where: { userId: currentUser.id, serviceType: "Behavioral Health" },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getUsersCount } from "@/action/user.action";
 import { getCompaniesCount } from "@/action/company.action";
-import { getReferralsCount, getBHReferralsCount, getReferralStatusCounts } from "@/action/referral.action";
+import { getReferralsCount, getBHReferralsCount, getReferralStatusCounts, getBHReferralStatusCounts } from "@/action/referral.action";
 
 import {
   Card,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
+import { StatusPieChart } from "@/components/charts/status-pie-chart";
 
 import {
   Users,
@@ -21,13 +22,14 @@ import {
 } from "lucide-react";
 
 export default async function AdminPage() {
-  const [totalUsers, totalCompanies, totalReferrals, totalBHReferrals, statusCounts] =
+  const [totalUsers, totalCompanies, totalReferrals, totalBHReferrals, statusCounts, bhStatusCounts] =
     await Promise.all([
       getUsersCount(),
       getCompaniesCount(),
       getReferralsCount(),
       getBHReferralsCount(),
       getReferralStatusCounts(),
+      getBHReferralStatusCounts(),
     ]);
 
   return (
@@ -115,15 +117,26 @@ export default async function AdminPage() {
         </Card>
       </div>
 
-      {/* Referral Status Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Referrals by Status</CardTitle>
-        </CardHeader>
-        <CardContent className="h-72">
-          <StatusBarChart data={statusCounts} />
-        </CardContent>
-      </Card>
+      {/* Charts */}
+      <div className="flex gap-4">
+        <Card className="w-[70%]">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Referrals by Status</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <StatusBarChart data={statusCounts} />
+          </CardContent>
+        </Card>
+
+        <Card className="w-[30%]">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">B.H. Referrals by Status</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <StatusPieChart data={bhStatusCounts} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
