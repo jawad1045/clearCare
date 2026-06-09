@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useTransition } from "react";
-import { X, ArrowRight, Lock, Paperclip } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 
 import { createReferral } from "@/action/referral.action";
 
@@ -18,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { UploadButton } from "@/lib/utils/uploadthing";
+import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { toast } from "sonner";
 
 const SERVICE_TYPES = [
@@ -89,10 +88,6 @@ export function CreateReferralForm() {
         toast.error("Failed to create referral");
       }
     });
-  }
-
-  function removeAttachment(url: string) {
-    setAttachments((prev) => prev.filter((item) => item !== url));
   }
 
   function toggleContact(value: string) {
@@ -283,39 +278,7 @@ export function CreateReferralForm() {
         </div>
 
         {/* ── Attachments ── */}
-        {attachments.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {attachments.map((url) => (
-              <div key={url} className="group relative overflow-hidden rounded-lg border border-border bg-muted/30">
-                <button
-                  type="button"
-                  onClick={() => removeAttachment(url)}
-                  className="absolute right-1.5 top-1.5 z-10 rounded-full bg-background/90 p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-                <Image src={url} alt="Attachment" width={300} height={300}
-                  className="h-28 w-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <UploadButton
-          endpoint="imageUploader"
-          appearance={{
-            button: "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-            container: "w-fit",
-            allowedContent: "hidden",
-          }}
-          content={{ button() { return <span className="flex items-center gap-2"><Paperclip className="h-4 w-4" />Upload Attachments</span>; } }}
-          onClientUploadComplete={(res) => {
-            const urls = res.map((file) => file.ufsUrl);
-            setAttachments((prev) => [...prev, ...urls]);
-            toast.success("Files uploaded successfully");
-          }}
-          onUploadError={(error) => { toast.error(error.message); }}
-        />
+        <AttachmentUploader value={attachments} onChange={setAttachments} />
 
         {/* ── Submit ── */}
         <Button
