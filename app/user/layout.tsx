@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Navbar } from "@/components/navbar/navebar";
 import { getCurrentUser } from "@/lib/auth";
+import { getUserById } from "@/action/user.action";
 
 export default async function RootLayout({
   children,
@@ -13,9 +14,12 @@ export default async function RootLayout({
     redirect("/");
   }
 
+  const dbUser = await getUserById(user.id);
+  const name = dbUser ? `${dbUser.contactFirstName} ${dbUser.contactLastName}` : "User";
+
   return (
     <div className="min-h-full flex flex-col">
-      <Navbar role={user.role === "Admin" ? "admin" : "user"} />
+      <Navbar role={user.role === "Admin" ? "admin" : "user"} name={name} />
       {children}
     </div>
   );

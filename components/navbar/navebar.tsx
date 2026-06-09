@@ -6,7 +6,7 @@ import { adminMenu, userMenu } from "./role-menu";
 import { NavLinks } from "./nav-link";
 import { UserMenu } from "./user-menu";
 
-export function Navbar({ role = "user" }: { role: "admin" | "user" }) {
+export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: string }) {
   const menu = role === "admin" ? adminMenu : userMenu;
 
   return (
@@ -18,7 +18,7 @@ export function Navbar({ role = "user" }: { role: "admin" | "user" }) {
         </div>
 
         <div className="hidden md:flex items-center">
-          <UserMenu role={role} />
+          <UserMenu role={role} name={name} />
         </div>
       </div>
     </header>

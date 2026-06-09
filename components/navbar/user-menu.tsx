@@ -17,7 +17,7 @@ import {
 import { logoutAction } from "@/action/auth/auth.model";
 import { Shield, User, LogOut, Settings, ChevronDown } from "lucide-react";
 
-export function UserMenu({ role }: { role: "admin" | "user" }) {
+export function UserMenu({ role, name }: { role: "admin" | "user"; name: string }) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -49,16 +49,14 @@ export function UserMenu({ role }: { role: "admin" | "user" }) {
           >
             {isAdmin ? <Shield className="h-4 w-4" /> : <User className="h-4 w-4" />}
           </Avatar>
-          <span className="hidden md:inline">{isAdmin ? "Admin" : "User"}</span>
+          <span className="hidden md:inline">{name}</span>
           <ChevronDown className="h-4 w-4 text-slate-400" />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-56 bg-slate-950 border border-slate-800">
         <div className="space-y-1 px-4 py-3">
-          <p className="text-sm font-semibold text-slate-100">
-            {isAdmin ? "Administrator" : "Company User"}
-          </p>
+          <p className="text-sm font-semibold text-slate-100">{name}</p>
           <p className="text-xs text-slate-500">
             {isAdmin ? "Full access to admin tools" : "Access referrals and reports"}
           </p>
