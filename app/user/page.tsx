@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getMyReferralCounts } from "@/action/referral.action";
+import { getMyReferralCounts, getMyReferralStatusCounts } from "@/action/referral.action";
 import {
   Card,
   CardContent,
@@ -10,9 +10,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { StatusPieChart } from "@/components/charts/status-pie-chart";
 
 export default async function UserDashboardPage() {
-  const { total, bh } = await getMyReferralCounts();
+  const [{ total, bh }, statusCounts] = await Promise.all([
+    getMyReferralCounts(),
+    getMyReferralStatusCounts(),
+  ]);
 
   return (
     <div className="space-y-6 p-6">
@@ -63,6 +67,18 @@ export default async function UserDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Referral Status Pie Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>My Referrals by Status</CardTitle>
+          <CardDescription className="text-sm">Breakdown of all your referral statuses</CardDescription>
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-4 h-72">
+          <StatusPieChart data={statusCounts} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

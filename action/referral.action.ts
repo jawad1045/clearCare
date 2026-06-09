@@ -414,6 +414,29 @@ export async function getMyReferralCounts() {
   return { total, bh };
 }
 
+export async function getReferralStatusCounts() {
+  const rows = await prisma.referral.groupBy({
+    by: ["status"],
+    _count: { status: true },
+  });
+  return rows.map((r) => ({ status: r.status, count: r._count.status }));
+}
+
+export async function getMyReferralStatusCounts() {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    throw new Error("Unauthorized");
+  }
+
+  const rows = await prisma.referral.groupBy({
+    by: ["status"],
+    where: { userId: currentUser.id },
+    _count: { status: true },
+  });
+  return rows.map((r) => ({ status: r.status, count: r._count.status }));
+}
+
 export async function getBHReferralById(
   id: number
 ) {

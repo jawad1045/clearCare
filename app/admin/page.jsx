@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getUsersCount } from "@/action/user.action";
 import { getCompaniesCount } from "@/action/company.action";
-import { getReferralsCount, getBHReferralsCount } from "@/action/referral.action";
+import { getReferralsCount, getBHReferralsCount, getReferralStatusCounts } from "@/action/referral.action";
 
 import {
   Card,
@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StatusBarChart } from "@/components/charts/status-bar-chart";
 
 import {
   Users,
@@ -20,12 +21,13 @@ import {
 } from "lucide-react";
 
 export default async function AdminPage() {
-  const [totalUsers, totalCompanies, totalReferrals, totalBHReferrals] =
+  const [totalUsers, totalCompanies, totalReferrals, totalBHReferrals, statusCounts] =
     await Promise.all([
       getUsersCount(),
       getCompaniesCount(),
       getReferralsCount(),
       getBHReferralsCount(),
+      getReferralStatusCounts(),
     ]);
 
   return (
@@ -112,6 +114,16 @@ export default async function AdminPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Referral Status Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Referrals by Status</CardTitle>
+        </CardHeader>
+        <CardContent className="h-72">
+          <StatusBarChart data={statusCounts} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
