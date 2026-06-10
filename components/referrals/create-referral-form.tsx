@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { ArrowRight, Lock } from "lucide-react";
 
 import { createReferral } from "@/action/referral.action";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +85,8 @@ export function CreateReferralForm() {
     startTransition(async () => {
       try {
         await createReferral(formData);
-      } catch {
+      } catch (error) {
+        if (isRedirectError(error)) throw error;
         toast.error("Failed to create referral");
       }
     });

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { ArrowRight, Lock } from "lucide-react";
 
 import { createBHReferral } from "@/action/referral.action";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,7 +77,8 @@ export function CreateBHReferralForm() {
     startTransition(async () => {
       try {
         await createBHReferral(formData);
-      } catch {
+      } catch (error) {
+        if (isRedirectError(error)) throw error;
         toast.error("Failed to create behavioral health referral");
       }
     });

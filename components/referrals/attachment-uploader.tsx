@@ -5,8 +5,7 @@ import { useUploadThing } from "@/lib/utils/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Paperclip, X, Loader2, FileText, ImageIcon } from "lucide-react";
 
-const MAX_IMAGES = 5;
-const MAX_PDF = 1;
+const MAX_FILES = 5;
 
 interface UploadedFile {
   name: string;
@@ -19,8 +18,7 @@ interface Props {
 }
 
 export function AttachmentUploader({ value, onChange }: Props) {
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileNames, setFileNames] = useState<UploadedFile[]>([]);
@@ -32,48 +30,22 @@ export function AttachmentUploader({ value, onChange }: Props) {
     },
   });
 
-  function validate(files: File[]): string | null {
-    const newImages = files.filter((f) => f.type.startsWith("image/"));
-    const newPdfs = files.filter((f) => f.type === "application/pdf");
-    const other = files.filter(
-      (f) => !f.type.startsWith("image/") && f.type !== "application/pdf"
-    );
-
-    if (other.length > 0) {
-      return "Only images and PDF files are allowed.";
-    }
-    if (newImages.length > 0 && newPdfs.length > 0) {
-      return "Upload either images or a PDF — not both.";
-    }
-
-    const existingImages = fileNames.filter((f) => !isPdf(f.name));
-    const existingPdfs = fileNames.filter((f) => isPdf(f.name));
-
-    if (newPdfs.length > 0 && existingImages.length > 0) {
-      return "You already have images attached. Remove them before uploading a PDF.";
-    }
-    if (newImages.length > 0 && existingPdfs.length > 0) {
-      return "You already have a PDF attached. Remove it before uploading images.";
-    }
-    if (existingPdfs.length + newPdfs.length > MAX_PDF) {
-      return `You can only upload ${MAX_PDF} PDF file.`;
-    }
-    if (existingImages.length + newImages.length > MAX_IMAGES) {
-      return `You can only upload up to ${MAX_IMAGES} images total.`;
-    }
-
-    return null;
-  }
-
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     e.target.value = "";
-
     setError(null);
-    const err = validate(files);
-    if (err) {
-      setError(err);
+
+    const invalid = files.filter(
+      (f) => !f.type.startsWith("image/") && f.type !== "application/pdf"
+    );
+    if (invalid.length > 0) {
+      setError("Only images and PDF files are allowed.");
+      return;
+    }
+
+    if (fileNames.length + files.length > MAX_FILES) {
+      setError(`You can upload a maximum of ${MAX_FILES} files total.`);
       return;
     }
 
@@ -96,7 +68,6 @@ export function AttachmentUploader({ value, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Uploaded file list */}
       {fileNames.length > 0 && (
         <ul className="space-y-2">
           {fileNames.map((f) => (
@@ -124,63 +95,36 @@ export function AttachmentUploader({ value, onChange }: Props) {
         </ul>
       )}
 
-      {/* Upload buttons */}
       <div className="space-y-1.5">
         <input
-          ref={imageInputRef}
+          ref={inputRef}
           type="file"
           multiple
-          accept="image/*"
+          accept="image/*,application/pdf"
           className="hidden"
           onChange={handleChange}
         />
-        <input
-          ref={pdfInputRef}
-          type="file"
-          accept="application/pdf"
-          className="hidden"
-          onChange={handleChange}
-        />
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending || fileNames.some((f) => isPdf(f.name))}
-            onClick={() => imageInputRef.current?.click()}
-            className="gap-2"
-          >
-            {pending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ImageIcon className="h-4 w-4" />
-            )}
-            {pending ? "Uploading…" : "Images"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending || fileNames.some((f) => !isPdf(f.name))}
-            onClick={() => pdfInputRef.current?.click()}
-            className="gap-2"
-          >
-            {pending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <FileText className="h-4 w-4" />
-            )}
-            {pending ? "Uploading…" : "PDF"}
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={pending || fileNames.length >= MAX_FILES}
+          onClick={() => inputRef.current?.click()}
+          className="gap-2"
+        >
+          {pending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Paperclip className="h-4 w-4" />
+          )}
+          {pending ? "Uploading…" : "Attach Files"}
+        </Button>
 
         <p className="text-xs text-muted-foreground">
-          Upload up to {MAX_IMAGES} images <span className="text-muted-foreground/60">or</span> {MAX_PDF} PDF
+          Images &amp; PDFs accepted · up to {MAX_FILES} files
         </p>
 
-        {error && (
-          <p className="text-xs text-destructive">{error}</p>
-        )}
+        {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
     </div>
   );

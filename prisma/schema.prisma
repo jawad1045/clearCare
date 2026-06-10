@@ -60,6 +60,7 @@ model User {
   company               Company                @relation(fields: [acctId], references: [id])
   referrals             Referral[]
   mentalHealthReferrals MentalHealthReferral[]
+  notifications         Notification[]
 
   @@map("tbl_Users")
 }
@@ -127,4 +128,19 @@ model MentalHealthReferral {
   company           Company   @relation(fields: [companyAcctId], references: [id])
 
   @@map("tbl_MentalHealthReferrals")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("User_ID")
+  title     String   @db.VarChar(255)
+  message   String   @db.Text
+  type      String   @db.VarChar(50)
+  read      Boolean  @default(false)
+  link      String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("Created_At")
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("tbl_Notifications")
 }

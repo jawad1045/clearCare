@@ -6,6 +6,13 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createNotification } from "@/action/notification.action";
+import {
+  sendReferralSubmittedToUser,
+  sendReferralSubmittedToAdmin,
+  sendStatusChangedToUser,
+} from "@/lib/email";
+
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
 });
@@ -13,6 +20,99 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({
   adapter,
 });
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+
+async function getAdmins() {
+  return prisma.user.findMany({ where: { userRole: "Admin" } });
+}
+
+async function notifySubmission(opts: {
+  userId: number;
+  userEmail: string;
+  userName: string;
+  referralId: number;
+  patientName: string;
+  serviceType: string;
+  userViewPath: string;
+  adminViewPath: string;
+}) {
+  const admins = await getAdmins();
+
+  await Promise.allSettled([
+    // In-app: user
+    createNotification({
+      userId: opts.userId,
+      title: "Referral Submitted",
+      message: `Your referral for ${opts.patientName} (#${opts.referralId}) has been submitted and is pending review.`,
+      type: "referral_submitted",
+      link: opts.userViewPath,
+    }),
+    // In-app: each admin
+    ...admins.map((admin) =>
+      createNotification({
+        userId: admin.id,
+        title: "New Referral Received",
+        message: `${opts.userName} submitted a referral for ${opts.patientName} (#${opts.referralId}).`,
+        type: "referral_submitted",
+        link: opts.adminViewPath,
+      })
+    ),
+    // Email: user
+    sendReferralSubmittedToUser({
+      toEmail: opts.userEmail,
+      toName: opts.userName,
+      patientName: opts.patientName,
+      referralId: opts.referralId,
+      serviceType: opts.serviceType,
+      viewUrl: `${APP_URL}${opts.userViewPath}`,
+    }),
+    // Email: each admin
+    ...admins.map((admin) =>
+      sendReferralSubmittedToAdmin({
+        toEmail: admin.contactEmail,
+        patientName: opts.patientName,
+        submittedBy: opts.userName,
+        referralId: opts.referralId,
+        serviceType: opts.serviceType,
+        viewUrl: `${APP_URL}${opts.adminViewPath}`,
+      })
+    ),
+  ]);
+}
+
+async function notifyStatusChange(opts: {
+  referralId: number;
+  newStatus: string;
+  userViewPath: string;
+  patientName: string;
+}) {
+  const referral = await prisma.referral.findUnique({
+    where: { id: opts.referralId },
+    include: { user: true },
+  });
+  if (!referral) return;
+
+  const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+
+  await Promise.allSettled([
+    createNotification({
+      userId: referral.userId,
+      title: "Referral Status Updated",
+      message: `Your referral for ${opts.patientName} (#${opts.referralId}) is now ${opts.newStatus}.`,
+      type: "status_changed",
+      link: opts.userViewPath,
+    }),
+    sendStatusChangedToUser({
+      toEmail: referral.user.contactEmail,
+      toName: userName,
+      patientName: opts.patientName,
+      referralId: opts.referralId,
+      newStatus: opts.newStatus,
+      viewUrl: `${APP_URL}${opts.userViewPath}`,
+    }),
+  ]);
+}
 
 
 export async function createReferral(
@@ -64,7 +164,7 @@ export async function createReferral(
       10
     );
 
-  await prisma.referral.create({
+  const referral = await prisma.referral.create({
     data: {
       userId: user.id,
 
@@ -151,6 +251,20 @@ export async function createReferral(
     },
   });
 
+  const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
+  const userName = `${user.contactFirstName} ${user.contactLastName}`;
+
+  notifySubmission({
+    userId: user.id,
+    userEmail: user.contactEmail,
+    userName,
+    referralId: referral.id,
+    patientName,
+    serviceType: referral.serviceType,
+    userViewPath: `/user/referrals/${referral.id}`,
+    adminViewPath: `/admin/referrals/${referral.id}`,
+  }).catch(() => {});
+
   revalidatePath(
     "/admin/referrals"
   );
@@ -158,11 +272,6 @@ export async function createReferral(
   revalidatePath(
     "/user/referrals"
   );
-
-console.log(
-  "CURRENT USER:",
-  currentUser
-);
 
   if (
     currentUser.role ===
@@ -234,26 +343,21 @@ export async function updateReferralStatus(
   referralId: number,
   status: string
 ) {
-  await prisma.referral.update({
-    where: {
-      id: referralId,
-    },
-    data: {
-      status,
-    },
+  const updated = await prisma.referral.update({
+    where: { id: referralId },
+    data: { status },
   });
 
-  revalidatePath(
-    "/admin/referrals"
-  );
+  notifyStatusChange({
+    referralId,
+    newStatus: status,
+    patientName: `${updated.patientFirstName} ${updated.patientLastName}`,
+    userViewPath: `/user/referrals/${referralId}`,
+  }).catch(() => {});
 
-  revalidatePath(
-    `/admin/referrals/${referralId}`
-  );
-
-  revalidatePath(
-    "/user/referrals"
-  );
+  revalidatePath("/admin/referrals");
+  revalidatePath(`/admin/referrals/${referralId}`);
+  revalidatePath("/user/referrals");
 }
 
 export async function getReferralById(
@@ -309,50 +413,48 @@ export async function createBHReferral(
   }
 
   // Create BH Referral using Referral model with Behavioral Health service type
-  await prisma.referral.create({
+  const bhReferral = await prisma.referral.create({
     data: {
       userId: user.id,
       companyAcctId: user.acctId,
       serviceType: "Behavioral Health",
       type: formData.get("type") as string,
       priority: formData.get("priority") as string,
-      patientFirstName: formData.get(
-        "patientFirstName"
-      ) as string,
-      patientLastName: formData.get(
-        "patientLastName"
-      ) as string,
+      patientFirstName: formData.get("patientFirstName") as string,
+      patientLastName: formData.get("patientLastName") as string,
       gender: formData.get("gender") as string,
-      dob: new Date(
-        formData.get("dob") as string
-      ),
+      dob: new Date(formData.get("dob") as string),
       grade: formData.get("grade") as string,
       race: formData.get("race") as string,
       ssn: "N/A",
-      parentFirstName: formData.get(
-        "parentFirstName"
-      ) as string,
-      parentLastName: formData.get(
-        "parentLastName"
-      ) as string,
-      parentEmail: formData.get(
-        "parentEmail"
-      ) as string,
-      parentPhone: formData.get(
-        "parentPhone"
-      ) as string,
+      parentFirstName: formData.get("parentFirstName") as string,
+      parentLastName: formData.get("parentLastName") as string,
+      parentEmail: formData.get("parentEmail") as string,
+      parentPhone: formData.get("parentPhone") as string,
       referName: `${user.contactFirstName} ${user.contactLastName}`,
       notes: formData.get("notes") as string,
       clientAttachments: uploadedFiles,
     },
   });
 
+  const patientName = `${bhReferral.patientFirstName} ${bhReferral.patientLastName}`;
+  const userName = `${user.contactFirstName} ${user.contactLastName}`;
+
+  notifySubmission({
+    userId: user.id,
+    userEmail: user.contactEmail,
+    userName,
+    referralId: bhReferral.id,
+    patientName,
+    serviceType: "Behavioral Health",
+    userViewPath: `/user/bhreferrals/${bhReferral.id}`,
+    adminViewPath: `/admin/bhreferrals/${bhReferral.id}`,
+  }).catch(() => {});
+
   revalidatePath("/admin/bhreferrals");
   revalidatePath("/user/bhreferrals");
 
-  if (
-    currentUser.role === "Admin"
-  ) {
+  if (currentUser.role === "Admin") {
     redirect("/admin/bhreferrals");
   }
 
@@ -482,20 +584,22 @@ export async function updateBHReferralStatus(
 ) {
   const currentUser = await getCurrentUser();
 
-  await prisma.referral.update({
-    where: {
-      id: referralId,
-    },
-    data: {
-      status,
-    },
+  const updated = await prisma.referral.update({
+    where: { id: referralId },
+    data: { status },
   });
+
+  notifyStatusChange({
+    referralId,
+    newStatus: status,
+    patientName: `${updated.patientFirstName} ${updated.patientLastName}`,
+    userViewPath: `/user/bhreferrals/${referralId}`,
+  }).catch(() => {});
 
   revalidatePath("/admin/bhreferrals");
   revalidatePath(`/admin/bhreferrals/${referralId}`);
   revalidatePath("/user/bhreferrals");
 
-  // Return the path for the client to navigate to instead of performing a server redirect.
   if (currentUser?.role === "Admin") {
     return "/admin/bhreferrals";
   }

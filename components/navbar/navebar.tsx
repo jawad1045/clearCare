@@ -5,6 +5,7 @@
 import { adminMenu, userMenu } from "./role-menu";
 import { NavLinks } from "./nav-link";
 import { UserMenu } from "./user-menu";
+import { NotificationBell } from "./notification-bell";
 
 export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: string }) {
   const menu = role === "admin" ? adminMenu : userMenu;
@@ -17,7 +18,8 @@ export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: 
           <NavLinks menu={menu} role={role} name={name} />
         </div>
 
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center gap-2">
+          <NotificationBell />
           <UserMenu role={role} name={name} />
         </div>
       </div>
