@@ -7,7 +7,7 @@ export default async function BHReferralsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <ReferralHeader basePath="/admin/bhreferrals" title="Behavioral Health Referrals" />
+      <ReferralHeader basePath="/admin/bhreferrals" title="Behavioral Health Referrals" showCreate={false} />
       <AdminReferralsTable
         referrals={referrals}
         basePath="/admin/bhreferrals"
