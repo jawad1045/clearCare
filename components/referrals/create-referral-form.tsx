@@ -181,7 +181,7 @@ export function CreateReferralForm() {
             </Field>
             <Field label="Race" required>
               <Select name="race">
-                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,7 +193,7 @@ export function CreateReferralForm() {
             </Field>
             <Field label="Grade">
               <Select name="grade">
-                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,7 +205,7 @@ export function CreateReferralForm() {
             </Field>
             <Field label="Gender" required>
               <Select name="gender">
-                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,7 +228,7 @@ export function CreateReferralForm() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Test Type" required>
               <Select name="type">
-                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select type..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,7 +240,7 @@ export function CreateReferralForm() {
             </Field>
             <Field label="Priority" required>
               <Select name="priority">
-                <SelectTrigger className="border-border bg-background focus:ring-primary">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
