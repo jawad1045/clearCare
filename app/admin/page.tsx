@@ -118,7 +118,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Charts */}
-      <div className="flex gap-4">
+      {/* <div className="flex gap-4">
         <Card className="w-[70%]">
           <CardHeader>
             <CardTitle className="text-sm font-medium">Referrals by Status</CardTitle>
@@ -136,7 +136,7 @@ export default async function AdminPage() {
             <StatusPieChart data={bhStatusCounts} />
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

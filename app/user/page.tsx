@@ -71,7 +71,7 @@ export default async function UserDashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="flex gap-6">
+      {/* <div className="flex gap-6">
         <Card className="w-[30%]">
           <CardHeader>
             <CardTitle>My Referrals by Status</CardTitle>
@@ -93,7 +93,7 @@ export default async function UserDashboardPage() {
             <StatusBarChart data={bhStatusCounts} />
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -7,6 +7,14 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { updateProfileName, updateProfilePassword } from "@/action/user.action";
 
 interface Props {
@@ -23,6 +31,9 @@ export function ProfileForm({ firstName, lastName, email, redirectTo }: Props) {
   const [namePending, startNameTransition] = useTransition();
   const [pwPending, startPwTransition] = useTransition();
   const pwFormRef = useRef<HTMLFormElement>(null);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function handleNameSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -98,24 +109,64 @@ export function ProfileForm({ firstName, lastName, email, redirectTo }: Props) {
           <form ref={pwFormRef} onSubmit={handlePwSubmit} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="currentPassword">Current Password</Label>
-              <Input id="currentPassword" name="currentPassword" type="password" required />
+              <div className="relative">
+                <Input id="currentPassword" name="currentPassword" type={showCurrent ? "text" : "password"} required className="pr-10" />
+                <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground">
+                  {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-1">
               <Label htmlFor="newPassword">New Password</Label>
-              <Input id="newPassword" name="newPassword" type="password" required />
+              <div className="relative">
+                <Input id="newPassword" name="newPassword" type={showNew ? "text" : "password"} required className="pr-10" />
+                <button type="button" onClick={() => setShowNew((v) => !v)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground">
+                  {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-1">
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input id="confirmPassword" name="confirmPassword" type="password" required />
+              <div className="relative">
+                <Input id="confirmPassword" name="confirmPassword" type={showConfirm ? "text" : "password"} required className="pr-10" />
+                <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground">
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             {pwMsg && (
               <p className={`text-sm ${pwMsg.ok ? "text-green-500" : "text-destructive"}`}>
                 {pwMsg.text}
               </p>
             )}
-            <Button type="submit" disabled={pwPending}>
-              {pwPending ? "Updating…" : "Update Password"}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button type="submit" disabled={pwPending}>
+                {pwPending ? "Updating…" : "Update Password"}
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button type="button" variant="outline">
+                    Reset Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Reset Password</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center gap-4 py-4 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <ShieldAlert className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Contact your Administrator</p>
+                      <p className="text-sm text-muted-foreground">
+                        To reset your password, please ask your admin to reset it for you from the Users section.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -353,6 +353,21 @@ export async function updateProfileName(formData: FormData) {
   revalidatePath("/user/profile");
 }
 
+export async function resetUserPassword(userId: number, newPassword: string) {
+  if (newPassword.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashed },
+  });
+
+  revalidatePath("/admin/users");
+}
+
 export async function updateProfilePassword(formData: FormData) {
   const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("Unauthorized");

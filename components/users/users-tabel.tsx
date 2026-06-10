@@ -11,6 +11,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ResetPasswordDialog } from "@/components/users/reset-password-dialog";
 
 type User = {
   id: number;
@@ -41,7 +42,7 @@ export function UsersTable({
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead className="w-30">
+            <TableHead className="w-56">
               Actions
             </TableHead>
           </TableRow>
@@ -100,16 +101,17 @@ export function UsersTable({
                 </TableCell>
 
                 <TableCell>
-                  <Link
-                    href={`/admin/users/${user.id}/edit`}
-                  >
-                    <Button
-                      size="sm"
-                      variant="outline"
-                    >
-                      Edit
-                    </Button>
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/users/${user.id}/edit`}>
+                      <Button size="sm" variant="outline">
+                        Edit
+                      </Button>
+                    </Link>
+                    <ResetPasswordDialog
+                      userId={user.id}
+                      userName={`${user.contactFirstName} ${user.contactLastName}`}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             ))
