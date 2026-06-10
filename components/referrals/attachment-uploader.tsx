@@ -19,7 +19,8 @@ interface Props {
 }
 
 export function AttachmentUploader({ value, onChange }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileNames, setFileNames] = useState<UploadedFile[]>([]);
@@ -123,34 +124,58 @@ export function AttachmentUploader({ value, onChange }: Props) {
         </ul>
       )}
 
-      {/* Upload button */}
+      {/* Upload buttons */}
       <div className="space-y-1.5">
         <input
-          ref={inputRef}
+          ref={imageInputRef}
           type="file"
           multiple
-          accept="image/*,application/pdf"
+          accept="image/*"
           className="hidden"
           onChange={handleChange}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={() => inputRef.current?.click()}
-          className="gap-2"
-        >
-          {pending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Paperclip className="h-4 w-4" />
-          )}
-          {pending ? "Uploading…" : "Attach Files"}
-        </Button>
+        <input
+          ref={pdfInputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={handleChange}
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending || fileNames.some((f) => isPdf(f.name))}
+            onClick={() => imageInputRef.current?.click()}
+            className="gap-2"
+          >
+            {pending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="h-4 w-4" />
+            )}
+            {pending ? "Uploading…" : "Images"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending || fileNames.some((f) => !isPdf(f.name))}
+            onClick={() => pdfInputRef.current?.click()}
+            className="gap-2"
+          >
+            {pending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            {pending ? "Uploading…" : "PDF"}
+          </Button>
+        </div>
 
         <p className="text-xs text-muted-foreground">
-          Upload up to {MAX_IMAGES} images <span className="text-muted-foreground/60">or</span> {MAX_PDF} PDF 
+          Upload up to {MAX_IMAGES} images <span className="text-muted-foreground/60">or</span> {MAX_PDF} PDF
         </p>
 
         {error && (
