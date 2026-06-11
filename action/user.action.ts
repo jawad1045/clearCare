@@ -1,20 +1,12 @@
 "use server";
 
-import { PrismaClient, Prisma } from "@/lib/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { prisma } from "@/lib/prisma";
 
 import bcrypt from "bcryptjs";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-});
-
-const prisma = new PrismaClient({
-  adapter,
-});
 
 type GetUsersParams = {
   page?: number;

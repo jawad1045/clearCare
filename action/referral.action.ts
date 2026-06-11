@@ -1,8 +1,7 @@
 "use server"
 
 import { getCurrentUser } from "@/lib/auth";
-import { PrismaClient } from "@/lib/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,14 +11,6 @@ import {
   sendReferralSubmittedToAdmin,
   sendStatusChangedToUser,
 } from "@/lib/email";
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-});
-
-const prisma = new PrismaClient({
-  adapter,
-});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 

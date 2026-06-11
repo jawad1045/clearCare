@@ -1,17 +1,8 @@
 "use server"
 
-import { PrismaClient } from '@/lib/generated/prisma/client'
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs'
-import { PrismaPg } from '@prisma/adapter-pg';
 import { setSessionCookie, clearSession } from '@/lib/auth';
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-})
-
-const prisma = new PrismaClient({
-    adapter,
-})
 // Inside /action/auth/auth.model.ts
 
 export async function loginAction(formData: Record<string, string>) {
