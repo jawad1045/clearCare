@@ -1,7 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Building2, MapPin, User, FileText } from "lucide-react";
+
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { updateCompany } from "@/action/company.action";
 
@@ -69,11 +71,25 @@ function Field({ label, required, children }: {
 
 export function EditCompanyForm({ company }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<FormData | null>(null);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await updateCompany(company.id, formData);
     });
+  }
+
+  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPendingData(new FormData(e.currentTarget));
+    setConfirmOpen(true);
+  }
+
+  function onConfirm() {
+    setConfirmOpen(false);
+    if (pendingData) handleSubmit(pendingData);
+    setPendingData(null);
   }
 
   return (
@@ -99,7 +115,15 @@ export function EditCompanyForm({ company }: Props) {
       <Separator />
 
       <CardContent className="pt-6">
-        <form action={handleSubmit} className="space-y-8">
+        <ConfirmDialog
+          open={confirmOpen}
+          onConfirm={onConfirm}
+          onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+          title="Save Changes"
+          description="Are you sure you want to save these changes to the company? This will update the record immediately."
+          confirmLabel="Save Changes"
+        />
+        <form onSubmit={onFormSubmit} className="space-y-8">
 
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">

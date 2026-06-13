@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ShieldAlert, Eye, EyeOff } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { updateProfileName, updateProfilePassword } from "@/action/user.action";
 
 interface Props {
@@ -34,37 +35,68 @@ export function ProfileForm({ firstName, lastName, email, redirectTo }: Props) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMeta, setConfirmMeta] = useState<{ title: string; description: string; label: string; action: () => void } | null>(null);
+
+  const openConfirm = useCallback((title: string, description: string, label: string, action: () => void) => {
+    setConfirmMeta({ title, description, label, action });
+    setConfirmOpen(true);
+  }, []);
 
   function handleNameSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    setNameMsg(null);
-    startNameTransition(async () => {
-      try {
-        await updateProfileName(formData);
-        router.push(redirectTo);
-      } catch (err: unknown) {
-        setNameMsg({ ok: false, text: err instanceof Error ? err.message : "Something went wrong." });
+    openConfirm(
+      "Save Name",
+      "Are you sure you want to update your name?",
+      "Save Name",
+      () => {
+        setConfirmOpen(false);
+        setNameMsg(null);
+        startNameTransition(async () => {
+          try {
+            await updateProfileName(formData);
+            router.push(redirectTo);
+          } catch (err: unknown) {
+            setNameMsg({ ok: false, text: err instanceof Error ? err.message : "Something went wrong." });
+          }
+        });
       }
-    });
+    );
   }
 
   function handlePwSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    setPwMsg(null);
-    startPwTransition(async () => {
-      try {
-        await updateProfilePassword(formData);
-        router.push(redirectTo);
-      } catch (err: unknown) {
-        setPwMsg({ ok: false, text: err instanceof Error ? err.message : "Something went wrong." });
+    openConfirm(
+      "Update Password",
+      "Are you sure you want to change your password? You will need to use the new password on your next login.",
+      "Update Password",
+      () => {
+        setConfirmOpen(false);
+        setPwMsg(null);
+        startPwTransition(async () => {
+          try {
+            await updateProfilePassword(formData);
+            router.push(redirectTo);
+          } catch (err: unknown) {
+            setPwMsg({ ok: false, text: err instanceof Error ? err.message : "Something went wrong." });
+          }
+        });
       }
-    });
+    );
   }
 
   return (
     <div className="space-y-6 max-w-xl">
+      <ConfirmDialog
+        open={confirmOpen}
+        onConfirm={() => confirmMeta?.action()}
+        onCancel={() => setConfirmOpen(false)}
+        title={confirmMeta?.title}
+        description={confirmMeta?.description}
+        confirmLabel={confirmMeta?.label}
+      />
       {/* Name */}
       <Card>
         <CardHeader>

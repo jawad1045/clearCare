@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const SERVICE_TYPES = [
@@ -79,6 +80,8 @@ export function CreateReferralForm() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [contactMethods, setContactMethods] = useState<string[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<FormData | null>(null);
 
   async function handleSubmit(formData: FormData) {
     contactMethods.forEach((m) => formData.append("contactMethod", m));
@@ -90,6 +93,18 @@ export function CreateReferralForm() {
         toast.error("Failed to create referral");
       }
     });
+  }
+
+  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPendingData(new FormData(e.currentTarget));
+    setConfirmOpen(true);
+  }
+
+  function onConfirm() {
+    setConfirmOpen(false);
+    if (pendingData) handleSubmit(pendingData);
+    setPendingData(null);
   }
 
   function toggleContact(value: string) {
@@ -114,7 +129,15 @@ export function CreateReferralForm() {
         </div>
       </div>
 
-      <form action={handleSubmit} className="px-6 py-6 space-y-6">
+      <ConfirmDialog
+        open={confirmOpen}
+        onConfirm={onConfirm}
+        onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+        title="Submit Referral"
+        description="Are you sure you want to submit this referral? Please review all patient information before proceeding."
+        confirmLabel="Submit Referral"
+      />
+      <form onSubmit={onFormSubmit} className="px-6 py-6 space-y-6">
 
         {/* Hidden attachment URLs */}
         {attachments.map((url) => (

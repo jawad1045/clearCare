@@ -1,7 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Building2, MapPin, User, FileText } from "lucide-react";
+
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { createCompany } from "@/action/company.action";
 
@@ -52,11 +54,25 @@ function Field({ label, required, children }: {
 
 export function CreateCompanyForm() {
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<FormData | null>(null);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await createCompany(formData);
     });
+  }
+
+  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPendingData(new FormData(e.currentTarget));
+    setConfirmOpen(true);
+  }
+
+  function onConfirm() {
+    setConfirmOpen(false);
+    if (pendingData) handleSubmit(pendingData);
+    setPendingData(null);
   }
 
   return (
@@ -83,7 +99,15 @@ export function CreateCompanyForm() {
       <Separator />
 
       <CardContent className="pt-6">
-        <form action={handleSubmit} className="space-y-8">
+        <ConfirmDialog
+          open={confirmOpen}
+          onConfirm={onConfirm}
+          onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+          title="Create Company"
+          description="Are you sure you want to create this company? Please review all details before proceeding."
+          confirmLabel="Create Company"
+        />
+        <form onSubmit={onFormSubmit} className="space-y-8">
 
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">

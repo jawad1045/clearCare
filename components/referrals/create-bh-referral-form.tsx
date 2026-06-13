@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const BH_REFERRAL_TYPES = [
@@ -72,6 +73,8 @@ function Field({
 export function CreateBHReferralForm() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<FormData | null>(null);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -82,6 +85,18 @@ export function CreateBHReferralForm() {
         toast.error("Failed to create behavioral health referral");
       }
     });
+  }
+
+  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPendingData(new FormData(e.currentTarget));
+    setConfirmOpen(true);
+  }
+
+  function onConfirm() {
+    setConfirmOpen(false);
+    if (pendingData) handleSubmit(pendingData);
+    setPendingData(null);
   }
 
   return (
@@ -100,7 +115,15 @@ export function CreateBHReferralForm() {
         </div>
       </div>
 
-      <form action={handleSubmit} className="px-6 py-6 space-y-6">
+      <ConfirmDialog
+        open={confirmOpen}
+        onConfirm={onConfirm}
+        onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+        title="Submit BH Referral"
+        description="Are you sure you want to submit this behavioral health referral? Please review all patient information before proceeding."
+        confirmLabel="Submit BH Referral"
+      />
+      <form onSubmit={onFormSubmit} className="px-6 py-6 space-y-6">
 
         {/* Hidden attachment URLs */}
         {attachments.map((url) => (

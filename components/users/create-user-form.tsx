@@ -2,15 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, UserPlus, Building2, MapPin, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, UserPlus, Building2, MapPin, ShieldCheck, FileText } from "lucide-react";
 
 import { createUser } from "@/action/user.action";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -71,6 +73,8 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<FormData | null>(null);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -78,6 +82,18 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
       router.push("/admin/users");
       router.refresh();
     });
+  }
+
+  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPendingData(new FormData(e.currentTarget));
+    setConfirmOpen(true);
+  }
+
+  function onConfirm() {
+    setConfirmOpen(false);
+    if (pendingData) handleSubmit(pendingData);
+    setPendingData(null);
   }
 
   return (
@@ -103,7 +119,15 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
       <Separator />
 
       <CardContent className="pt-6">
-        <form action={handleSubmit} className="space-y-8">
+        <ConfirmDialog
+          open={confirmOpen}
+          onConfirm={onConfirm}
+          onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+          title="Create User"
+          description="Are you sure you want to create this user? Please review all details before proceeding."
+          confirmLabel="Create User"
+        />
+        <form onSubmit={onFormSubmit} className="space-y-8">
 
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">
@@ -236,6 +260,20 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 </Button>
               </div>
             </Field>
+          </FieldGroup>
+
+          <Separator className="bg-border/60" />
+
+          {/* Notes */}
+          <FieldGroup icon={FileText} title="Notes">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Textarea
+                name="notes"
+                placeholder="Any additional notes about this user…"
+                rows={4}
+                className="resize-none border-border bg-background focus-visible:ring-primary"
+              />
+            </div>
           </FieldGroup>
 
           <div className="flex justify-end pt-2">

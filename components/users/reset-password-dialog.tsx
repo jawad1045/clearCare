@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   userId: number;
@@ -28,20 +29,10 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
   const [success, setSuccess] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
+  async function doReset() {
+    setConfirmOpen(false);
     setPending(true);
     try {
       await resetUserPassword(userId, newPassword);
@@ -59,6 +50,22 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
     }
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    setConfirmOpen(true);
+  }
+
   function handleOpenChange(val: boolean) {
     setOpen(val);
     if (!val) {
@@ -70,6 +77,15 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
   }
 
   return (
+    <>
+    <ConfirmDialog
+      open={confirmOpen}
+      onConfirm={doReset}
+      onCancel={() => setConfirmOpen(false)}
+      title="Reset Password"
+      description={`Are you sure you want to reset the password for ${userName}? They will need to use the new password immediately.`}
+      confirmLabel="Reset Password"
+    />
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="gap-1.5">
@@ -136,5 +152,6 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
         )}
       </DialogContent>
     </Dialog>
+    </>
   );
 }

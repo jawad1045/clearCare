@@ -155,6 +155,9 @@ export async function createUser(
       "confirmPassword"
     ) as string;
 
+  const notes =
+    formData.get("notes") as string | null;
+
   // Password Match
   if (password !== confirmPassword) {
     throw new Error(
@@ -219,6 +222,8 @@ export async function createUser(
     userRole: role,
 
     password: hashedPassword,
+
+    notes: notes || null,
 
     isActive: true,
   },

@@ -6,6 +6,7 @@ import { UserCog, Building2, MapPin, ShieldCheck, ToggleLeft } from "lucide-reac
 import { updateUser } from "@/action/user.action";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,12 +90,26 @@ export function EditUserForm({ user, companies }: Props) {
     companies.find((c) => c.id === user.acctId) || null
   );
   const [isActive, setIsActive] = useState(user.isActive);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<FormData | null>(null);
 
   async function handleSubmit(formData: FormData) {
     formData.set("isActive", String(isActive));
     startTransition(async () => {
       await updateUser(user.id, formData);
     });
+  }
+
+  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPendingData(new FormData(e.currentTarget));
+    setConfirmOpen(true);
+  }
+
+  function onConfirm() {
+    setConfirmOpen(false);
+    if (pendingData) handleSubmit(pendingData);
+    setPendingData(null);
   }
 
   return (
@@ -130,7 +145,15 @@ export function EditUserForm({ user, companies }: Props) {
       <Separator />
 
       <CardContent className="pt-6">
-        <form action={handleSubmit} className="space-y-8">
+        <ConfirmDialog
+          open={confirmOpen}
+          onConfirm={onConfirm}
+          onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+          title="Save Changes"
+          description="Are you sure you want to save these changes to the user? This will update the record immediately."
+          confirmLabel="Save Changes"
+        />
+        <form onSubmit={onFormSubmit} className="space-y-8">
 
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">

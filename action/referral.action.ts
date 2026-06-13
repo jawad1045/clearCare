@@ -245,7 +245,7 @@ export async function createReferral(
   const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
 
-  notifySubmission({
+  await notifySubmission({
     userId: user.id,
     userEmail: user.contactEmail,
     userName,
@@ -339,7 +339,7 @@ export async function updateReferralStatus(
     data: { status },
   });
 
-  notifyStatusChange({
+  await notifyStatusChange({
     referralId,
     newStatus: status,
     patientName: `${updated.patientFirstName} ${updated.patientLastName}`,
@@ -431,7 +431,7 @@ export async function createBHReferral(
   const patientName = `${bhReferral.patientFirstName} ${bhReferral.patientLastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
 
-  notifySubmission({
+  await notifySubmission({
     userId: user.id,
     userEmail: user.contactEmail,
     userName,
@@ -580,7 +580,7 @@ export async function updateBHReferralStatus(
     data: { status },
   });
 
-  notifyStatusChange({
+  await notifyStatusChange({
     referralId,
     newStatus: status,
     patientName: `${updated.patientFirstName} ${updated.patientLastName}`,
