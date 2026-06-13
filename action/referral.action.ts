@@ -10,6 +10,7 @@ import {
   sendReferralSubmittedToUser,
   sendReferralSubmittedToAdmin,
   sendStatusChangedToUser,
+  sendResultUploadedToUser,
 } from "@/lib/email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -566,10 +567,35 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
     throw new Error("Unauthorized: only admins can upload results");
   }
 
-  await prisma.referral.update({
+  const referral = await prisma.referral.update({
     where: { id: referralId },
     data: { pdfResult: pdfUrl },
+    include: { user: true },
   });
+
+  const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
+  const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  const isBH = referral.serviceType === "Behavioral Health";
+  const userViewPath = isBH
+    ? `/user/bhreferrals/${referralId}`
+    : `/user/referrals/${referralId}`;
+
+  await Promise.allSettled([
+    createNotification({
+      userId: referral.userId,
+      title: "Result Available",
+      message: `The result for ${patientName} (#${referralId}) has been uploaded and is ready to download.`,
+      type: "result_uploaded",
+      link: userViewPath,
+    }),
+    sendResultUploadedToUser({
+      toEmail: referral.user.contactEmail,
+      toName: userName,
+      patientName,
+      referralId,
+      viewUrl: `${APP_URL}${userViewPath}`,
+    }),
+  ]);
 
   revalidatePath(`/admin/referrals/${referralId}`);
   revalidatePath(`/admin/bhreferrals/${referralId}`);

@@ -23,30 +23,12 @@ import {
 } from "lucide-react";
 import { appConfig } from "@/next.config";
 import { parseAttachment } from "@/lib/parse-attachment";
+import { STATUS_COLORS, STATUS_DESCRIPTIONS } from "@/lib/referral-statuses";
 
 type PageProps = {
   params: Promise<{
     id: string;
   }>;
-};
-
-const statusVariant: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  Pending: "secondary",
-  Reviewing: "default",
-  Approved: "default",
-  Rejected: "destructive",
-  Completed: "outline",
-};
-
-const statusDescription: Record<string, string> = {
-  Pending: "Your BH referral is awaiting review.",
-  Reviewing: "Your BH referral is under review.",
-  Approved: "Your BH referral has been approved.",
-  Rejected: "Your BH referral was not approved.",
-  Completed: "Your BH referral has been completed.",
 };
 
 export default async function UserBHReferralDetailsPage({ params }: PageProps) {
@@ -87,7 +69,7 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
               </p>
             </div>
             <Badge
-              variant={statusVariant[referral.status] ?? "secondary"}
+              variant="outline" style={{ backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22", color: STATUS_COLORS[referral.status] ?? "#6b7280", borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55" }}
               className="mt-1 shrink-0 capitalize"
             >
               {referral.status.toLowerCase()}
@@ -281,13 +263,13 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
           <CardContent className="pt-4">
             <div className="flex items-center gap-4">
               <Badge
-                variant={statusVariant[referral.status] ?? "secondary"}
+                variant="outline" style={{ backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22", color: STATUS_COLORS[referral.status] ?? "#6b7280", borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55" }}
                 className="capitalize text-sm px-3 py-1"
               >
                 {referral.status.toLowerCase()}
               </Badge>
               <p className="text-sm text-muted-foreground">
-                {statusDescription[referral.status] ?? "Status is being processed."}
+                {STATUS_DESCRIPTIONS[referral.status] ?? "Status is being processed."}
               </p>
             </div>
           </CardContent>

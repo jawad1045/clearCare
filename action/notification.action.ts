@@ -7,7 +7,7 @@ export async function createNotification(opts: {
   userId: number;
   title: string;
   message: string;
-  type: "referral_submitted" | "status_changed";
+  type: "referral_submitted" | "status_changed" | "result_uploaded";
   link?: string;
 }) {
   return prisma.notification.create({
@@ -58,5 +58,23 @@ export async function markAllNotificationsRead() {
   await prisma.notification.updateMany({
     where: { userId: session.id, read: false },
     data: { read: true },
+  });
+}
+
+export async function deleteNotification(id: number) {
+  const session = await getCurrentUser();
+  if (!session) return;
+
+  await prisma.notification.deleteMany({
+    where: { id, userId: session.id },
+  });
+}
+
+export async function deleteAllNotifications() {
+  const session = await getCurrentUser();
+  if (!session) return;
+
+  await prisma.notification.deleteMany({
+    where: { userId: session.id },
   });
 }

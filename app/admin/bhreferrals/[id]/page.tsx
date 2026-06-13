@@ -24,22 +24,12 @@ import {
 import { appConfig } from "@/next.config";
 import { ResultUploader } from "@/components/referrals/result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
+import { STATUS_COLORS } from "@/lib/referral-statuses";
 
 type PageProps = {
   params: Promise<{
     id: string;
   }>;
-};
-
-const statusVariant: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  Pending: "secondary",
-  Reviewing: "default",
-  Approved: "default",
-  Rejected: "destructive",
-  Completed: "outline",
 };
 
 export default async function BHReferralDetailsPage({ params }: PageProps) {
@@ -80,7 +70,7 @@ export default async function BHReferralDetailsPage({ params }: PageProps) {
               </p>
             </div>
             <Badge
-              variant={statusVariant[referral.status] ?? "secondary"}
+              variant="outline" style={{ backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22", color: STATUS_COLORS[referral.status] ?? "#6b7280", borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55" }}
               className="mt-1 shrink-0 capitalize"
             >
               {referral.status.toLowerCase()}
@@ -269,7 +259,7 @@ export default async function BHReferralDetailsPage({ params }: PageProps) {
                   Current Status
                 </p>
                 <Badge
-                  variant={statusVariant[referral.status] ?? "secondary"}
+                  variant="outline" style={{ backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22", color: STATUS_COLORS[referral.status] ?? "#6b7280", borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55" }}
                   className="capitalize text-sm px-3 py-1"
                 >
                   {referral.status.toLowerCase()}

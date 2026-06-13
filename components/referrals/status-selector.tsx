@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { REFERRAL_STATUSES } from "@/lib/referral-statuses";
 
 type Props = {
   referralId: number;
@@ -25,21 +26,14 @@ type Props = {
   isBH?: boolean;
 };
 
-const STATUSES = [
-  "Pending",
-  "Reviewing",
-  "Approved",
-  "Rejected",
-  "Completed",
-];
-
 export function UpdateStatusForm({
   referralId,
   currentStatus,
   isBH,
 }: Props) {
-  const [status, setStatus] =
-    useState(currentStatus);
+  const [status, setStatus] = useState(
+    (REFERRAL_STATUSES as readonly string[]).includes(currentStatus) ? currentStatus : "Pending"
+  );
 
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -81,7 +75,7 @@ export function UpdateStatusForm({
           </SelectTrigger>
 
           <SelectContent>
-            {STATUSES.map(
+            {REFERRAL_STATUSES.map(
               (statusOption) => (
                 <SelectItem
                   key={statusOption}

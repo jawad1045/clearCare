@@ -15,10 +15,13 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const STATUS_COLORS: Record<string, string> = {
   Pending: "#f59e0b",
-  Reviewing: "#3b82f6",
-  Approved: "#22c55e",
-  Rejected: "#ef4444",
-  Completed: "#8b5cf6",
+  Clear: "#3b82f6",
+  Lab: "#22c55e",
+  NoShow: "#ef4444",
+  Confirmed: "#8b5cf6",
+  Refusal: "#e11d48",
+  inProgress: "#10b981",
+  referred: "#6366f1",
 };
 
 function colorFor(status: string) {

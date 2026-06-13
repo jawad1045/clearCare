@@ -23,9 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/format-date";
+import { REFERRAL_STATUSES, STATUS_COLORS } from "@/lib/referral-statuses";
 
 const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
-const STATUSES = ["Pending", "Approved", "Rejected", "Completed"];
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -126,7 +126,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {STATUSES.map((s) => (
+            {REFERRAL_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
             ))}
           </SelectContent>
@@ -218,16 +218,8 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
 
                   <TableCell>
                     <Badge
-                      variant={
-                        referral.status === "Approved"
-                          ? "default"
-                          : referral.status === "Rejected"
-                          ? "destructive"
-                          : referral.status === "Completed"
-                          ? "outline"
-                          : "secondary"
-                      }
-                      className="capitalize"
+                      style={{ backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22", color: STATUS_COLORS[referral.status] ?? "#6b7280", borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55" }}
+                      variant="outline"
                     >
                       {referral.status}
                     </Badge>

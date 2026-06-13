@@ -10,13 +10,7 @@ import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const STATUS_COLORS: Record<string, string> = {
-  Pending: "#f59e0b",
-  Reviewing: "#3b82f6",
-  Approved: "#22c55e",
-  Rejected: "#ef4444",
-  Completed: "#8b5cf6",
-};
+import { STATUS_COLORS } from "@/lib/referral-statuses";
 
 function colorFor(status: string) {
   return STATUS_COLORS[status] ?? "#8b5cf6";

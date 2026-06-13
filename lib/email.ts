@@ -105,6 +105,35 @@ export async function sendReferralSubmittedToAdmin(opts: {
   });
 }
 
+// ── Email: result PDF uploaded → sent to the referral's user ────────────────
+export async function sendResultUploadedToUser(opts: {
+  toEmail: string;
+  toName: string;
+  patientName: string;
+  referralId: number;
+  viewUrl: string;
+}) {
+  await resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Result Available – Referral #${opts.referralId}`,
+    html: baseLayout(`
+      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Your Result is Ready</h2>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;">
+        The result for your referral for <strong>${opts.patientName}</strong> (#${opts.referralId}) has been uploaded and is now available for download.
+      </p>
+      <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+      </table>
+      ${button("View & Download Result", opts.viewUrl)}
+    `),
+  });
+}
+
 // ── Email: status changed → sent to the referral's user ─────────────────────
 export async function sendStatusChangedToUser(opts: {
   toEmail: string;
