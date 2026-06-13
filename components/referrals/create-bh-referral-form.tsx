@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 
 import { createBHReferral } from "@/action/referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -9,7 +9,6 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -30,17 +29,6 @@ const BH_REFERRAL_TYPES = [
 ];
 const PRIORITIES = ["Same-day", "24-hours"];
 const GENDERS = ["Male", "Female", "Other"];
-const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
-const RACES = [
-  "American Indian or Alaska Native",
-  "Asian",
-  "Black or African American",
-  "Hispanic or Latino",
-  "Native Hawaiian or Other Pacific Islander",
-  "White",
-  "Two or More Races",
-  "Other",
-];
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -54,13 +42,15 @@ function Field({
   label,
   required,
   children,
+  full,
 }: {
   label: string;
   required?: boolean;
+  full?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1">
+    <div className={`space-y-1${full ? " sm:col-span-2" : ""}`}>
       <Label className="text-[11px] font-semibold uppercase tracking-wide text-foreground/60">
         {label}
         {required && <span className="ml-0.5 text-primary">*</span>}
@@ -73,8 +63,23 @@ function Field({
 export function CreateBHReferralForm() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [showSSN, setShowSSN] = useState(false);
+  const [age, setAge] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
+
+  function calcAge(e: React.ChangeEvent<HTMLInputElement>) {
+    const dob = new Date(e.target.value);
+    if (!isNaN(dob.getTime())) {
+      const today = new Date();
+      let a = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) a--;
+      setAge(String(a));
+    } else {
+      setAge("");
+    }
+  }
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -120,85 +125,65 @@ export function CreateBHReferralForm() {
         onConfirm={onConfirm}
         onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
         title="Submit BH Referral"
-        description="Are you sure you want to submit this behavioral health referral? Please review all patient information before proceeding."
+        description="Are you sure you want to submit this behavioral health referral? Please review all client information before proceeding."
         confirmLabel="Submit BH Referral"
       />
+
       <form onSubmit={onFormSubmit} className="px-6 py-6 space-y-6">
 
         {/* Hidden attachment URLs */}
         {attachments.map((url) => (
           <input key={url} type="hidden" name="attachments" value={url} />
         ))}
+        {/* Status is always Pending on creation — admin changes it later */}
+        <input type="hidden" name="status" value="Pending" />
 
-        {/* ── Parent / Guardian ── */}
+        {/* ── Client Information ── */}
         <div>
-          <SectionLabel>Parent / Guardian Information</SectionLabel>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name">
-              <Input name="parentFirstName" placeholder="Parent first name"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Last Name">
-              <Input name="parentLastName" placeholder="Parent last name"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Email">
-              <Input type="email" name="parentEmail" placeholder="parent@email.com"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Phone">
-              <Input name="parentPhone" placeholder="(555)000-0000"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-          </div>
-        </div>
-
-        {/* ── Patient Information ── */}
-        <div>
-          <SectionLabel>Patient Information</SectionLabel>
+          <SectionLabel>Client Information</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="First Name" required>
-              <Input name="patientFirstName" placeholder="Patient first name" required
+              <Input name="patientFirstName" placeholder="First name" required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Last Name" required>
-              <Input name="patientLastName" placeholder="Patient last name" required
+              <Input name="patientLastName" placeholder="Last name" required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Date of Birth" required>
-              <Input type="date" name="dob" required
+            <Field label="Date of Birth (DD/MM/YYYY)" required>
+              <Input type="date" name="dob" required onChange={calcAge}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Age (Auto-Calculated)">
-              <Input
-                placeholder="Auto"
-                readOnly
-                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
-              />
+              <Input value={age} placeholder="Auto" readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
             </Field>
-            <Field label="Race" required>
-              <Select name="race">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {RACES.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Phone #" required>
+              <Input type="tel" name="phone" placeholder="(555) 000-0000" required
+                className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Grade">
-              <Select name="grade">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADES.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Last 4 of SS#" required>
+              <div className="relative">
+                <Input
+                  type={showSSN ? "text" : "password"}
+                  name="ssn"
+                  placeholder="XXXX"
+                  maxLength={4}
+                  required
+                  className="border-border bg-background pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSSN(!showSSN)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </Field>
+            <Field label="Email">
+              <Input type="email" name="email" placeholder="client@email.com"
+                className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Gender" required>
               <Select name="gender">
@@ -243,20 +228,15 @@ export function CreateBHReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            {/* status is always Pending on creation — admin changes it later */}
-            <input type="hidden" name="status" value="Pending" />
+            <Field label="Notes" full>
+              <textarea
+                name="notes"
+                placeholder="Any additional notes or clinical information..."
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                rows={4}
+              />
+            </Field>
           </div>
-        </div>
-
-        {/* ── Notes ── */}
-        <div>
-          <SectionLabel>Additional Information</SectionLabel>
-          <Field label="Notes">
-            <textarea name="notes" placeholder="Any additional notes or clinical information..."
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              rows={4}
-            />
-          </Field>
         </div>
 
         {/* ── Attachments ── */}

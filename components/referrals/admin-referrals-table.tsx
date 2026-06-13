@@ -22,6 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatDate } from "@/lib/format-date";
+
+const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
+const STATUSES = ["Pending", "Approved", "Rejected", "Completed"];
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 type Referral = {
   id: number;
@@ -49,10 +57,19 @@ type Props = {
 export function AdminReferralsTable({ referrals, basePath }: Props) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "id-asc" | "id-desc">("newest");
+  const [filterService, setFilterService] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterOrg, setFilterOrg] = useState("all");
+  const [filterMonth, setFilterMonth] = useState("all");
+
+  const orgs = useMemo(() => {
+    const set = new Set(referrals.map((r) => r.company.organization));
+    return Array.from(set).sort();
+  }, [referrals]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    const result = q
+    let result = q
       ? referrals.filter((r) =>
           `${r.patientFirstName} ${r.patientLastName}`.toLowerCase().includes(q) ||
           `${r.user.contactFirstName} ${r.user.contactLastName}`.toLowerCase().includes(q) ||
@@ -62,27 +79,79 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
         )
       : [...referrals];
 
+    if (filterService !== "all") result = result.filter((r) => r.serviceType === filterService);
+    if (filterStatus !== "all") result = result.filter((r) => r.status === filterStatus);
+    if (filterOrg !== "all") result = result.filter((r) => r.company.organization === filterOrg);
+    if (filterMonth !== "all") {
+      const idx = MONTHS.indexOf(filterMonth);
+      result = result.filter((r) => new Date(r.dateOfReferral).getMonth() === idx);
+    }
+
     result.sort((a, b) => {
       if (sort === "newest") return new Date(b.dateOfReferral).getTime() - new Date(a.dateOfReferral).getTime();
       if (sort === "oldest") return new Date(a.dateOfReferral).getTime() - new Date(b.dateOfReferral).getTime();
       if (sort === "id-asc") return a.id - b.id;
-      return b.id - a.id; // id-desc
+      return b.id - a.id;
     });
 
     return result;
-  }, [referrals, search, sort]);
+  }, [referrals, search, sort, filterService, filterStatus, filterOrg, filterMonth]);
 
   return (
     <div className="space-y-4">
-      {/* Search & Sort */}
-      <div className="flex items-center gap-3">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
         <Input
           placeholder="Search by patient, user, company, service, or status…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="max-w-xs"
         />
-        <Select value={sort} onValueChange={(v) => setSort(v as "newest" | "oldest" | "id-asc" | "id-desc")}>
+        <Select value={filterService} onValueChange={setFilterService}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All Service Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Service Types</SelectItem>
+            {SERVICE_TYPES.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterOrg} onValueChange={setFilterOrg}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All Organizations" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Organizations</SelectItem>
+            {orgs.map((o) => (
+              <SelectItem key={o} value={o}>{o}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterMonth} onValueChange={setFilterMonth}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Months" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Months</SelectItem>
+            {MONTHS.map((m) => (
+              <SelectItem key={m} value={m}>{m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
           <SelectTrigger className="w-48">
             <ArrowUpDown className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
             <SelectValue />
@@ -156,7 +225,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                   </TableCell>
 
                   <TableCell>
-                    {new Date(referral.dateOfReferral).toLocaleDateString()}
+                    {formatDate(referral.dateOfReferral)}
                   </TableCell>
 
                   <TableCell>

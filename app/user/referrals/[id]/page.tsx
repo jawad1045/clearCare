@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getReferralById } from "@/action/referral.action";
-import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -69,7 +68,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
           </div>
 
           <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground">
-            <Link href="/referrals">
+            <Link href="/user/referrals">
               <ArrowLeft className="mr-1.5 h-4 w-4" />
               Back to Referrals
             </Link>
@@ -240,7 +239,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
 
         </div>
 
-        {/* Status — read-only, full width */}
+        {/* Status — read-only */}
         <Card className="mt-4">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
@@ -254,7 +253,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
             </div>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4 space-y-4">
+          <CardContent className="pt-4">
             <div className="flex items-center gap-4">
               <Badge
                 variant={statusVariant[referral.status] ?? "secondary"}
@@ -265,12 +264,6 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground">
                 {statusDescription[referral.status] ?? "Status is being processed."}
               </p>
-            </div>
-            <div className="sm:min-w-70">
-              <UpdateStatusForm
-                referralId={referral.id}
-                currentStatus={referral.status}
-              />
             </div>
           </CardContent>
         </Card>

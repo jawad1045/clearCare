@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 
 import { createReferral } from "@/action/referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -82,6 +82,21 @@ export function CreateReferralForm() {
   const [contactMethods, setContactMethods] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
+  const [showSSN, setShowSSN] = useState(false);
+  const [age, setAge] = useState("");
+
+  function calcAge(e: React.ChangeEvent<HTMLInputElement>) {
+    const dob = new Date(e.target.value);
+    if (!isNaN(dob.getTime())) {
+      const today = new Date();
+      let a = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) a--;
+      setAge(String(a));
+    } else {
+      setAge("");
+    }
+  }
 
   async function handleSubmit(formData: FormData) {
     contactMethods.forEach((m) => formData.append("contactMethod", m));
@@ -193,12 +208,13 @@ export function CreateReferralForm() {
               <Input name="patientLastName" placeholder="Patient last name" required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Date of Birth" required>
-              <Input type="date" name="dob" required
+            <Field label="Date of Birth (DD/MM/YYYY)" required>
+              <Input type="date" name="dob" required onChange={calcAge}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Age (Auto-Calculated)">
               <Input
+                value={age}
                 placeholder="Auto"
                 readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
@@ -240,9 +256,23 @@ export function CreateReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="SSN (Encrypted)" required>
-              <Input name="ssn" placeholder="XXX-XX-XXXX" required
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field label="SSN" required>
+              <div className="relative">
+                <Input
+                  type={showSSN ? "text" : "password"}
+                  name="ssn"
+                  placeholder="XXX-XX-XXXX"
+                  required
+                  className="border-border bg-background pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSSN(!showSSN)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </Field>
           </div>
         </div>

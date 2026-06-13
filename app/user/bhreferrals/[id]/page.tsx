@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getBHReferralById } from "@/action/referral.action";
-import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -231,7 +230,7 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
           </Card>
         </div>
 
-        {/* Status Management — full width */}
+        {/* Status — read-only */}
         <Card className="mt-4">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
@@ -239,32 +238,23 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
                 <Activity className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-base">Status Management</CardTitle>
-                <CardDescription className="text-xs">Update the referral workflow status</CardDescription>
+                <CardTitle className="text-base">Referral Status</CardTitle>
+                <CardDescription className="text-xs">Current state of your referral</CardDescription>
               </div>
             </div>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Current Status
-                </p>
-                <Badge
-                  variant={statusVariant[referral.status] ?? "secondary"}
-                  className="capitalize text-sm px-3 py-1"
-                >
-                  {referral.status.toLowerCase()}
-                </Badge>
-              </div>
-              <div className="sm:min-w-70">
-                <UpdateStatusForm
-                  referralId={referral.id}
-                  currentStatus={referral.status}
-                  isBH={true}
-                />
-              </div>
+            <div className="flex items-center gap-4">
+              <Badge
+                variant={statusVariant[referral.status] ?? "secondary"}
+                className="capitalize text-sm px-3 py-1"
+              >
+                {referral.status.toLowerCase()}
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                {statusDescription[referral.status] ?? "Status is being processed."}
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -334,6 +334,11 @@ export async function updateReferralStatus(
   referralId: number,
   status: string
 ) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error("Unauthorized: only admins can change referral status");
+  }
+
   const updated = await prisma.referral.update({
     where: { id: referralId },
     data: { status },
@@ -415,13 +420,13 @@ export async function createBHReferral(
       patientLastName: formData.get("patientLastName") as string,
       gender: formData.get("gender") as string,
       dob: new Date(formData.get("dob") as string),
-      grade: formData.get("grade") as string,
-      race: formData.get("race") as string,
-      ssn: "N/A",
-      parentFirstName: formData.get("parentFirstName") as string,
-      parentLastName: formData.get("parentLastName") as string,
-      parentEmail: formData.get("parentEmail") as string,
-      parentPhone: formData.get("parentPhone") as string,
+      grade: "N/A",
+      race: "N/A",
+      ssn: formData.get("ssn") as string,
+      parentFirstName: "",
+      parentLastName: "",
+      parentEmail: formData.get("email") as string,
+      parentPhone: formData.get("phone") as string,
       referName: `${user.contactFirstName} ${user.contactLastName}`,
       notes: formData.get("notes") as string,
       clientAttachments: uploadedFiles,
@@ -574,6 +579,9 @@ export async function updateBHReferralStatus(
   status: string
 ) {
   const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error("Unauthorized: only admins can change referral status");
+  }
 
   const updated = await prisma.referral.update({
     where: { id: referralId },
