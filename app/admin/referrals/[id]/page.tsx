@@ -19,8 +19,11 @@ import {
   Paperclip,
   UserCheck,
   Activity,
+  FileOutput,
 } from "lucide-react";
 import { appConfig } from "@/next.config";
+import { ResultUploader } from "@/components/referrals/result-uploader";
+import { parseAttachment } from "@/lib/parse-attachment";
 
 type PageProps = {
   params: Promise<{
@@ -215,22 +218,44 @@ export default async function ReferralDetailsPage({ params }: PageProps) {
                 <p className="text-sm text-muted-foreground italic">No attachments</p>
               ) : (
                 <ul className="space-y-2">
-                  {referral.clientAttachments.map((url, index) => (
-                    <li key={url}>
-                      <Button variant="outline" size="sm" asChild className="w-full justify-start gap-2 text-sm">
-                        <Link href={url} target="_blank" rel="noopener noreferrer">
-                          <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                          Attachment {index + 1}
-                        </Link>
-                      </Button>
-                    </li>
-                  ))}
+                  {referral.clientAttachments.map((stored, index) => {
+                    const { name, url } = parseAttachment(stored, index);
+                    return (
+                      <li key={stored}>
+                        <Button variant="outline" size="sm" asChild className="w-full justify-start gap-2 text-sm">
+                          <Link href={url} target="_blank" rel="noopener noreferrer">
+                            <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                            {name}
+                          </Link>
+                        </Button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </CardContent>
           </Card>
 
         </div>
+
+        {/* Result PDF — admin upload */}
+        <Card className="mt-4">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+                <FileOutput className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Result / Report</CardTitle>
+                <CardDescription className="text-xs">Upload the lab or test result PDF for this referral</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4">
+            <ResultUploader referralId={referral.id} currentResult={referral.pdfResult ?? null} />
+          </CardContent>
+        </Card>
 
         {/* Status Management — full width */}
         <Card className="mt-4">

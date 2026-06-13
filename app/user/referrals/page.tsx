@@ -7,7 +7,7 @@ export default async function MyReferralsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <ReferralHeader basePath="/user/referrals" />
+      <ReferralHeader basePath="/user/referrals" showCreate={false} />
       <UserReferralsTable referrals={referrals} basePath="/user/referrals" />
     </div>
   );

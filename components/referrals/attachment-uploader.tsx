@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useUploadThing } from "@/lib/utils/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Paperclip, X, Loader2, FileText, ImageIcon } from "lucide-react";
+import { encodeAttachment } from "@/lib/parse-attachment";
 
 const MAX_FILES = 5;
 
@@ -54,14 +55,16 @@ export function AttachmentUploader({ value, onChange }: Props) {
     if (res) {
       const uploaded = res.map((r, i) => ({ name: files[i]?.name ?? r.name, url: r.ufsUrl }));
       setFileNames((prev) => [...prev, ...uploaded]);
-      onChange([...value, ...uploaded.map((u) => u.url)]);
+      onChange([...value, ...uploaded.map((u) => encodeAttachment(u.name, u.url))]);
     }
     setPending(false);
   }
 
-  function remove(url: string) {
-    setFileNames((prev) => prev.filter((f) => f.url !== url));
-    onChange(value.filter((u) => u !== url));
+  function remove(actualUrl: string) {
+    setFileNames((prev) => prev.filter((f) => f.url !== actualUrl));
+    onChange(value.filter((stored) => {
+      try { return JSON.parse(stored).u !== actualUrl; } catch { return stored !== actualUrl; }
+    }));
   }
 
   const isPdf = (name: string) => name.toLowerCase().endsWith(".pdf");

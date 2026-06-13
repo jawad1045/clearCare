@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Plus, Download, Upload } from "lucide-react";
 
 import {
   Table,
@@ -39,6 +39,7 @@ type Referral = {
   priority: string;
   status: string;
   dateOfReferral: Date;
+  pdfResult: string | null;
   user: {
     contactFirstName: string;
     contactLastName: string;
@@ -99,8 +100,9 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filters + New button */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
         <Input
           placeholder="Search by patient, user, company, service, or status…"
           value={search}
@@ -163,6 +165,13 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
             <SelectItem value="id-desc">ID: Descending</SelectItem>
           </SelectContent>
         </Select>
+        </div>
+        <Link href={`${basePath}/create`}>
+          <Button size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Referral
+          </Button>
+        </Link>
       </div>
 
       <div className="rounded-lg border">
@@ -229,9 +238,26 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                   </TableCell>
 
                   <TableCell>
-                    <Link href={`${basePath}/${referral.id}`}>
-                      <Button size="sm" variant="outline">View</Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link href={`${basePath}/${referral.id}`}>
+                        <Button size="sm" variant="outline">View</Button>
+                      </Link>
+                      {referral.pdfResult ? (
+                        <Link href={referral.pdfResult} target="_blank" rel="noopener noreferrer" download>
+                          <Button size="sm" variant="outline" className="gap-1.5">
+                            <Download className="h-3.5 w-3.5" />
+                            Result
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link href={`${basePath}/${referral.id}`}>
+                          <Button size="sm" variant="outline" className="gap-1.5 text-muted-foreground">
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload Result
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

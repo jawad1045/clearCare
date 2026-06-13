@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { Plus, Download } from "lucide-react";
 import { getMyReferrals } from "@/action/referral.action";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,8 +57,9 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filters + New button */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
         <Select value={filterService} onValueChange={setFilterService}>
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All Service Types" />
@@ -91,6 +93,13 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
             ))}
           </SelectContent>
         </Select>
+        </div>
+        <Link href={`${basePath}/create`}>
+          <Button size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Referral
+          </Button>
+        </Link>
       </div>
 
       <div className="rounded-md border">
@@ -149,11 +158,21 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                     {formatDate(referral.dateOfReferral)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`${basePath}/${referral.id}`}>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`${basePath}/${referral.id}`}>
+                        <Button variant="outline" size="sm">View</Button>
+                      </Link>
+                      {referral.pdfResult ? (
+                        <Link href={referral.pdfResult} target="_blank" rel="noopener noreferrer" download>
+                          <Button variant="outline" size="sm" className="gap-1.5">
+                            <Download className="h-3.5 w-3.5" />
+                            Result
+                          </Button>
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No result</span>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

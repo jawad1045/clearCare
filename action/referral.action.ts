@@ -560,6 +560,23 @@ export async function getMyBHReferralStatusCounts() {
   return rows.map((r) => ({ status: r.status, count: r._count.status }));
 }
 
+export async function updateReferralResult(referralId: number, pdfUrl: string) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error("Unauthorized: only admins can upload results");
+  }
+
+  await prisma.referral.update({
+    where: { id: referralId },
+    data: { pdfResult: pdfUrl },
+  });
+
+  revalidatePath(`/admin/referrals/${referralId}`);
+  revalidatePath(`/admin/bhreferrals/${referralId}`);
+  revalidatePath(`/user/referrals/${referralId}`);
+  revalidatePath(`/user/bhreferrals/${referralId}`);
+}
+
 export async function getBHReferralById(
   id: number
 ) {
