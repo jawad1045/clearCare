@@ -9,6 +9,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,16 @@ const BH_REFERRAL_TYPES = [
 ];
 const PRIORITIES = ["Same-day", "24-hours"];
 const GENDERS = ["Male", "Female", "Other"];
+const RACES = [
+  "American Indian or Alaska Native",
+  "Asian",
+  "Black or African American",
+  "Hispanic or Latino",
+  "Native Hawaiian or Other Pacific Islander",
+  "White",
+  "Two or More Races",
+  "Other",
+];
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -65,6 +76,7 @@ export function CreateBHReferralForm() {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [showSSN, setShowSSN] = useState(false);
   const [age, setAge] = useState("");
+  const [contactMethods, setContactMethods] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
 
@@ -81,7 +93,14 @@ export function CreateBHReferralForm() {
     }
   }
 
+  function toggleContact(value: string) {
+    setContactMethods((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  }
+
   async function handleSubmit(formData: FormData) {
+    contactMethods.forEach((m) => formData.append("contactMethod", m));
     startTransition(async () => {
       try {
         await createBHReferral(formData);
@@ -197,6 +216,18 @@ export function CreateBHReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
+            <Field label="Race" required>
+              <Select name="race">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {RACES.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
           </div>
         </div>
 
@@ -227,6 +258,24 @@ export function CreateBHReferralForm() {
                   ))}
                 </SelectContent>
               </Select>
+            </Field>
+            <Field label="Date of Patient Contact">
+              <Input type="date" name="contactDate"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Method of Contact">
+              <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
+                {["Text", "Phone", "Email"].map((method) => (
+                  <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
+                    <Checkbox
+                      checked={contactMethods.includes(method)}
+                      onCheckedChange={() => toggleContact(method)}
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-xs text-foreground/80">{method}</span>
+                  </label>
+                ))}
+              </div>
             </Field>
             <Field label="Notes" full>
               <textarea

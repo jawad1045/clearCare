@@ -409,6 +409,8 @@ export async function createBHReferral(
     );
   }
 
+  const contactMethods = formData.getAll("contactMethod") as string[];
+
   // Create BH Referral using Referral model with Behavioral Health service type
   const bhReferral = await prisma.referral.create({
     data: {
@@ -422,7 +424,7 @@ export async function createBHReferral(
       gender: formData.get("gender") as string,
       dob: new Date(formData.get("dob") as string),
       grade: "N/A",
-      race: "N/A",
+      race: (formData.get("race") as string) || "N/A",
       ssn: formData.get("ssn") as string,
       parentFirstName: "",
       parentLastName: "",
@@ -430,6 +432,10 @@ export async function createBHReferral(
       parentPhone: formData.get("phone") as string,
       referName: `${user.contactFirstName} ${user.contactLastName}`,
       notes: formData.get("notes") as string,
+      datePatientContact: formData.get("contactDate")
+        ? new Date(formData.get("contactDate") as string)
+        : null,
+      methodOfContact: contactMethods.length > 0 ? contactMethods.join(", ") : null,
       clientAttachments: uploadedFiles,
     },
   });
