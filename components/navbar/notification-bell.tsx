@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Bell, Trash2, X } from "lucide-react";
+import { Bell, Trash2, X, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   getMyNotifications,
@@ -195,6 +195,11 @@ export function NotificationBell() {
                           <p className="mt-1 text-[10px] text-muted-foreground/60">
                             {timeAgo(n.createdAt)}
                           </p>
+                          {n.link && (
+                            <span className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary hover:underline">
+                              View <ArrowRight className="h-2.5 w-2.5" />
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>

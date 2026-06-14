@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { calcAge } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -85,18 +87,6 @@ export function CreateReferralForm() {
   const [showSSN, setShowSSN] = useState(false);
   const [age, setAge] = useState("");
 
-  function calcAge(e: React.ChangeEvent<HTMLInputElement>) {
-    const dob = new Date(e.target.value);
-    if (!isNaN(dob.getTime())) {
-      const today = new Date();
-      let a = today.getFullYear() - dob.getFullYear();
-      const m = today.getMonth() - dob.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) a--;
-      setAge(String(a));
-    } else {
-      setAge("");
-    }
-  }
 
   async function handleSubmit(formData: FormData) {
     contactMethods.forEach((m) => formData.append("contactMethod", m));
@@ -208,9 +198,13 @@ export function CreateReferralForm() {
               <Input name="patientLastName" placeholder="Patient last name" required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Date of Birth (DD/MM/YYYY)" required>
-              <Input type="date" name="dob" required onChange={calcAge}
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field label="Date of Birth (MM/DD/YYYY)" required>
+              <DatePicker
+                name="dob"
+                required
+                onDateChange={(iso) => setAge(iso ? calcAge(iso) : "")}
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
             <Field label="Age (Auto-Calculated)">
               <Input
@@ -312,8 +306,10 @@ export function CreateReferralForm() {
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Date of Patient Contact">
-              <Input type="date" name="contactDate"
-                className="border-border bg-background focus-visible:ring-primary" />
+              <DatePicker
+                name="contactDate"
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
             <Field label="Method of Contact">
               <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">

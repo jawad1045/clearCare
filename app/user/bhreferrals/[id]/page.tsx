@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBHReferralById } from "@/action/referral.action";
+import { getBHReferralById } from "@/action/bh-referral.action";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {

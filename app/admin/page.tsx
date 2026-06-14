@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getUsersCount } from "@/action/user.action";
 import { getCompaniesCount } from "@/action/company.action";
-import { getReferralsCount, getBHReferralsCount, getReferralStatusCounts, getBHReferralStatusCounts } from "@/action/referral.action";
+import { getReferralsCount, getReferralStatusCounts } from "@/action/referral.action";
+import { getBHReferralsCount, getBHReferralStatusCounts } from "@/action/bh-referral.action";
 
 import {
   Card,

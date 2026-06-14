@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getMyReferralCounts, getMyReferralStatusCounts, getMyBHReferralStatusCounts } from "@/action/referral.action";
+import { getMyReferralCounts, getMyReferralStatusCounts } from "@/action/referral.action";
+import { getMyBHReferralStatusCounts } from "@/action/bh-referral.action";
 import {
   Card,
   CardContent,

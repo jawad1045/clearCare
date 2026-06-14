@@ -4,10 +4,8 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import {
-  updateReferralStatus,
-  updateBHReferralStatus,
-} from "@/action/referral.action";
+import { updateReferralStatus } from "@/action/referral.action";
+import { updateBHReferralStatus } from "@/action/bh-referral.action";
 
 import { Button } from "@/components/ui/button";
 

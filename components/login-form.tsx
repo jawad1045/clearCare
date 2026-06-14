@@ -3,10 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react"
 import { loginAction } from "@/action/auth/auth.model"
 import { toast } from "sonner"
 
@@ -45,70 +42,130 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1C2D35]">
-      <div className="w-full max-w-sm px-8 py-10 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Image src="/logo.png" alt="Logo" width={140} height={50} className="object-contain" priority />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{
+        background: "radial-gradient(ellipse at 50% 45%, #0d6e72 0%, #073d42 45%, #030e12 100%)",
+      }}
+    >
+      {/* Logo + title above card */}
+      <div className="flex flex-col items-center mb-6 text-center">
+        <div className="mb-4 rounded-full ring-2 ring-white/20 shadow-lg shadow-black/40">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={72}
+            height={72}
+            className="rounded-full object-contain"
+            priority
+          />
         </div>
+        <h1 className="text-xl font-bold tracking-[0.2em] text-white uppercase">
+          HWP CLEAR-CARE™ PORTAL
+        </h1>
+        <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-cyan-400 uppercase">
+          Secure Access &nbsp;·&nbsp; HIPAA Compliant
+        </p>
+      </div>
 
-        <form onSubmit={onSubmit} className="space-y-5">
+      {/* Card */}
+      <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-2xl shadow-black/60">
+        {/* Top accent bar */}
+        <div className="h-0.75 bg-linear-to-r from-cyan-400 via-teal-400 to-cyan-500" />
+
+        <div className="bg-white px-10 py-10">
+          <div className="mb-6">
+            <h2 className="text-[17px] font-semibold text-gray-900">Sign in to your account</h2>
+            <p className="mt-0.5 text-sm text-gray-500">Enter your credentials to continue</p>
+          </div>
+
           {error && (
-            <div className="rounded-lg bg-destructive/15 px-4 py-3 text-sm font-medium text-destructive border border-destructive/20">
+            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-600 border border-red-200">
               {error}
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <Label htmlFor="contactEmail" className="text-sm font-medium">
-              Email
-            </Label>
-            <Input
-              id="contactEmail"
-              type="email"
-              placeholder="name@example.com"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              disabled={isLoading}
-              value={formData.contactEmail}
-              onChange={handleInputChange}
-              required
-              className="h-11"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-sm font-medium">
-              Password
-            </Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+          <form onSubmit={onSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="contactEmail"
+                className="block text-[10px] font-bold uppercase tracking-widest text-gray-400"
+              >
+                Email Address
+              </label>
+              <input
+                id="contactEmail"
+                type="email"
+                placeholder="your@email.com"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
                 disabled={isLoading}
-                value={formData.password}
+                value={formData.contactEmail}
                 onChange={handleInputChange}
                 required
-                className="h-11 pr-10"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/20 disabled:opacity-50"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
             </div>
-          </div>
 
-          <Button type="submit" className="w-full h-11" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="password"
+                className="block text-[10px] font-bold uppercase tracking-widest text-gray-400"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  disabled={isLoading}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/20 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a3a4a] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1f4a5e] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-[11px] text-gray-400">
+            🔒 256-bit SSL &nbsp;·&nbsp; HIPAA Compliant
+          </p>
+        </div>
       </div>
+
+      {/* Footer below card */}
+      <p className="mt-6 text-center text-[11px] text-white/40">
+        CLEAR-CARE® · Healthcare Coordination You Can Trust · HWP Enterprises, LLC
+      </p>
     </div>
   )
 }

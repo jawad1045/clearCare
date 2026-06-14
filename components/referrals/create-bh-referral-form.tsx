@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 
-import { createBHReferral } from "@/action/referral.action";
+import { createBHReferral } from "@/action/bh-referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { calcAge } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -30,6 +32,7 @@ const BH_REFERRAL_TYPES = [
 ];
 const PRIORITIES = ["Same-day", "24-hours"];
 const GENDERS = ["Male", "Female", "Other"];
+const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 const RACES = [
   "American Indian or Alaska Native",
   "Asian",
@@ -53,15 +56,13 @@ function Field({
   label,
   required,
   children,
-  full,
 }: {
   label: string;
   required?: boolean;
-  full?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className={`space-y-1${full ? " sm:col-span-2" : ""}`}>
+    <div className="space-y-1">
       <Label className="text-[11px] font-semibold uppercase tracking-wide text-foreground/60">
         {label}
         {required && <span className="ml-0.5 text-primary">*</span>}
@@ -74,30 +75,11 @@ function Field({
 export function CreateBHReferralForm() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
-  const [showSSN, setShowSSN] = useState(false);
-  const [age, setAge] = useState("");
   const [contactMethods, setContactMethods] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
-
-  function calcAge(e: React.ChangeEvent<HTMLInputElement>) {
-    const dob = new Date(e.target.value);
-    if (!isNaN(dob.getTime())) {
-      const today = new Date();
-      let a = today.getFullYear() - dob.getFullYear();
-      const m = today.getMonth() - dob.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) a--;
-      setAge(String(a));
-    } else {
-      setAge("");
-    }
-  }
-
-  function toggleContact(value: string) {
-    setContactMethods((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
-  }
+  const [showSSN, setShowSSN] = useState(false);
+  const [age, setAge] = useState("");
 
   async function handleSubmit(formData: FormData) {
     contactMethods.forEach((m) => formData.append("contactMethod", m));
@@ -121,6 +103,12 @@ export function CreateBHReferralForm() {
     setConfirmOpen(false);
     if (pendingData) handleSubmit(pendingData);
     setPendingData(null);
+  }
+
+  function toggleContact(value: string) {
+    setContactMethods((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
   }
 
   return (
@@ -147,62 +135,97 @@ export function CreateBHReferralForm() {
         description="Are you sure you want to submit this behavioral health referral? Please review all client information before proceeding."
         confirmLabel="Submit BH Referral"
       />
-
       <form onSubmit={onFormSubmit} className="px-6 py-6 space-y-6">
 
         {/* Hidden attachment URLs */}
         {attachments.map((url) => (
           <input key={url} type="hidden" name="attachments" value={url} />
         ))}
-        {/* Status is always Pending on creation — admin changes it later */}
-        <input type="hidden" name="status" value="Pending" />
 
-        {/* ── Client Information ── */}
+        {/* ── Service Type ── */}
+        <input type="hidden" name="serviceType" value="Behavioral Health" />
+        <Field label="Service Type">
+          <Input
+            value="Behavioral Health"
+            readOnly
+            className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+          />
+        </Field>
+
+        {/* ── Parent / Guardian ── */}
         <div>
-          <SectionLabel>Client Information</SectionLabel>
+          <SectionLabel>Parent / Guardian Information</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="First Name">
+              <Input name="parentFirstName" placeholder="Parent first name"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Last Name">
+              <Input name="parentLastName" placeholder="Parent last name"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Email">
+              <Input type="email" name="parentEmail" placeholder="parent@email.com"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Phone">
+              <Input name="parentPhone" placeholder="(555)000-0000"
+                className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+          </div>
+        </div>
+
+        {/* ── Patient Information ── */}
+        <div>
+          <SectionLabel>Patient Information</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="First Name" required>
-              <Input name="patientFirstName" placeholder="First name" required
+              <Input name="patientFirstName" placeholder="Patient first name" required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Last Name" required>
-              <Input name="patientLastName" placeholder="Last name" required
+              <Input name="patientLastName" placeholder="Patient last name" required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Date of Birth (DD/MM/YYYY)" required>
-              <Input type="date" name="dob" required onChange={calcAge}
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field label="Date of Birth (MM/DD/YYYY)" required>
+              <DatePicker
+                name="dob"
+                required
+                onDateChange={(iso) => setAge(iso ? calcAge(iso) : "")}
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
             <Field label="Age (Auto-Calculated)">
-              <Input value={age} placeholder="Auto" readOnly
-                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
+              <Input
+                value={age}
+                placeholder="Auto"
+                readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+              />
             </Field>
-            <Field label="Phone #" required>
-              <Input type="tel" name="phone" placeholder="(555) 000-0000" required
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field label="Race" required>
+              <Select name="race">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {RACES.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
-            <Field label="Last 4 of SS#" required>
-              <div className="relative">
-                <Input
-                  type={showSSN ? "text" : "password"}
-                  name="ssn"
-                  placeholder="XXXX"
-                  maxLength={4}
-                  required
-                  className="border-border bg-background pr-10 focus-visible:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSSN(!showSSN)}
-                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                >
-                  {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </Field>
-            <Field label="Email">
-              <Input type="email" name="email" placeholder="client@email.com"
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field label="Grade">
+              <Select name="grade">
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADES.map((g) => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
             <Field label="Gender" required>
               <Select name="gender">
@@ -216,17 +239,23 @@ export function CreateBHReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Race" required>
-              <Select name="race">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {RACES.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="SSN" required>
+              <div className="relative">
+                <Input
+                  type={showSSN ? "text" : "password"}
+                  name="ssn"
+                  placeholder="XXX-XX-XXXX"
+                  required
+                  className="border-border bg-background pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSSN(!showSSN)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </Field>
           </div>
         </div>
@@ -259,9 +288,17 @@ export function CreateBHReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Date of Patient Contact">
-              <Input type="date" name="contactDate"
+            {/* status is always Pending on creation — admin changes it later */}
+            <input type="hidden" name="status" value="Pending" />
+            <Field label="Referrer Name" required>
+              <Input name="referrerName" placeholder="Referring person name"
                 className="border-border bg-background focus-visible:ring-primary" />
+            </Field>
+            <Field label="Date of Patient Contact">
+              <DatePicker
+                name="contactDate"
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
             <Field label="Method of Contact">
               <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
@@ -277,12 +314,12 @@ export function CreateBHReferralForm() {
                 ))}
               </div>
             </Field>
-            <Field label="Notes" full>
+            <Field label="Notes">
               <textarea
                 name="notes"
                 placeholder="Any additional notes or clinical information..."
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                rows={4}
+                rows={3}
               />
             </Field>
           </div>

@@ -1,4 +1,4 @@
-import { getBHReferrals } from "@/action/referral.action";
+import { getBHReferrals } from "@/action/bh-referral.action";
 import { ReferralHeader } from "@/components/referrals/referral-header";
 import { AdminReferralsTable } from "@/components/referrals/admin-referrals-table";
 
