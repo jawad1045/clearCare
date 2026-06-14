@@ -133,7 +133,7 @@ export async function createBHReferral(formData: FormData) {
   const bhReferral = await prisma.referral.create({
     data: {
       userId: user.id,
-      companyAcctId: user.acctId,
+      companyAcctId: user.acctId ?? undefined,
       serviceType: (formData.get("serviceType") as string) || "Behavioral Health",
       type: formData.get("type") as string,
       priority: formData.get("priority") as string,

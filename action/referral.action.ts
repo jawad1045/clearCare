@@ -161,7 +161,7 @@ export async function createReferral(
       userId: user.id,
 
       companyAcctId:
-        user.acctId,
+        user.acctId ?? undefined,
 
       serviceType:
         formData.get(
