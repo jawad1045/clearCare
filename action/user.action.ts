@@ -125,9 +125,8 @@ export async function getCompanies() {
 export async function createUser(
   formData: FormData
 ) {
-  const acctId = Number(
-    formData.get("acctId")
-  );
+  const acctIdRaw = formData.get("acctId") as string;
+  const acctId = acctIdRaw ? Number(acctIdRaw) : null;
 
   const firstName =
     formData.get("firstName") as string;
@@ -165,18 +164,20 @@ export async function createUser(
     );
   }
 
-  // Company Check
-  const company =
-    await prisma.company.findUnique({
-      where: {
-        id: acctId,
-      },
-    });
-
-  if (!company) {
-    throw new Error(
-      "Selected company not found"
-    );
+  // Company Check — required for non-Admin users
+  let company = null;
+  if (role === "Admin") {
+    if (acctId) {
+      company = await prisma.company.findUnique({ where: { id: acctId } });
+    }
+  } else {
+    if (!acctId) {
+      throw new Error("Company is required");
+    }
+    company = await prisma.company.findUnique({ where: { id: acctId } });
+    if (!company) {
+      throw new Error("Selected company not found");
+    }
   }
 
   // Email Check
@@ -203,14 +204,14 @@ export async function createUser(
   // Create User
   await prisma.user.create({
   data: {
-    acctId,
+    acctId: acctId || null,
 
-    organization: company.organization,
+    organization: company?.organization ?? "",
 
-    street: company.street,
-    city: company.city,
-    state: company.state,
-    zip: company.zip,
+    street: company?.street ?? null,
+    city: company?.city ?? null,
+    state: company?.state ?? null,
+    zip: company?.zip ?? null,
 
     contactFirstName: firstName,
     contactLastName: lastName,

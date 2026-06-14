@@ -28,7 +28,7 @@ type Company = {
 
 type User = {
   id: number;
-  acctId: number;
+  acctId: number | null;
   organization: string;
   street: string | null;
   city: string | null;
@@ -86,12 +86,19 @@ function Field({ label, required, full, children }: {
 
 export function EditUserForm({ user, companies }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [selectedRole, setSelectedRole] = useState<string>(user.userRole);
   const [selectedCompany, setSelectedCompany] = useState(
     companies.find((c) => c.id === user.acctId) || null
   );
   const [isActive, setIsActive] = useState(user.isActive);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
+  const [companyError, setCompanyError] = useState<string | null>(null);
+
+  function handleRoleChange(value: string) {
+    setSelectedRole(value);
+    setCompanyError(null);
+  }
 
   async function handleSubmit(formData: FormData) {
     formData.set("isActive", String(isActive));
@@ -102,6 +109,11 @@ export function EditUserForm({ user, companies }: Props) {
 
   function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (selectedRole !== "Admin" && !selectedCompany) {
+      setCompanyError("Organization is required for this role.");
+      return;
+    }
+    setCompanyError(null);
     setPendingData(new FormData(e.currentTarget));
     setConfirmOpen(true);
   }
@@ -158,12 +170,19 @@ export function EditUserForm({ user, companies }: Props) {
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs font-medium text-foreground/80">Organization</Label>
+              <Label className="text-xs font-medium text-foreground/80">
+                Organization
+                {selectedRole !== "Admin"
+                  ? <span className="ml-0.5 text-primary">*</span>
+                  : <span className="ml-1 text-xs text-muted-foreground">(optional for Admin)</span>
+                }
+              </Label>
               <Select
-                defaultValue={String(user.acctId)}
+                defaultValue={user.acctId ? String(user.acctId) : undefined}
                 onValueChange={(value) => {
                   const company = companies.find((c) => c.id === Number(value)) || null;
                   setSelectedCompany(company);
+                  setCompanyError(null);
                 }}
               >
                 <SelectTrigger className="border-border focus:ring-primary">
@@ -178,6 +197,9 @@ export function EditUserForm({ user, companies }: Props) {
                 </SelectContent>
               </Select>
               <input type="hidden" name="acctId" value={selectedCompany?.id || ""} />
+              {companyError && (
+                <p className="text-xs text-destructive">{companyError}</p>
+              )}
             </div>
           </FieldGroup>
 
@@ -234,7 +256,7 @@ export function EditUserForm({ user, companies }: Props) {
           {/* Role & Status */}
           <FieldGroup icon={ShieldCheck} title="Access & Status">
             <Field label="Role" required>
-              <Select name="role" defaultValue={user.userRole}>
+              <Select defaultValue={user.userRole} onValueChange={handleRoleChange}>
                 <SelectTrigger className="border-border focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
@@ -243,6 +265,7 @@ export function EditUserForm({ user, companies }: Props) {
                   <SelectItem value="User">User</SelectItem>
                 </SelectContent>
               </Select>
+              <input type="hidden" name="role" value={selectedRole} />
             </Field>
 
             <div className="space-y-1.5">

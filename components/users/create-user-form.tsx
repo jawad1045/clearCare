@@ -72,9 +72,17 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>("User");
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
+  const [companyError, setCompanyError] = useState<string | null>(null);
+
+  function handleRoleChange(value: string) {
+    setSelectedRole(value);
+    setSelectedCompany(null);
+    setCompanyError(null);
+  }
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -86,7 +94,15 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
 
   function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setPendingData(new FormData(e.currentTarget));
+    const formData = new FormData(e.currentTarget);
+    const role = formData.get("role") as string;
+    const acctId = formData.get("acctId") as string;
+    if (role !== "Admin" && !acctId) {
+      setCompanyError("Organization is required for this role.");
+      return;
+    }
+    setCompanyError(null);
+    setPendingData(formData);
     setConfirmOpen(true);
   }
 
@@ -133,12 +149,18 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           <FieldGroup icon={Building2} title="Organization">
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs font-medium text-foreground/80">
-                Organization<span className="ml-0.5 text-primary">*</span>
+                Organization
+                {selectedRole !== "Admin"
+                  ? <span className="ml-0.5 text-primary">*</span>
+                  : <span className="ml-1 text-xs text-muted-foreground">(optional for Admin)</span>
+                }
               </Label>
               <Select
+                key={selectedRole}
                 onValueChange={(value) => {
                   const company = companies.find((c) => c.id === Number(value)) || null;
                   setSelectedCompany(company);
+                  setCompanyError(null);
                 }}
               >
                 <SelectTrigger className="border-border focus:ring-primary">
@@ -153,6 +175,9 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 </SelectContent>
               </Select>
               <input type="hidden" name="acctId" value={selectedCompany?.id || ""} />
+              {companyError && (
+                <p className="text-xs text-destructive">{companyError}</p>
+              )}
             </div>
           </FieldGroup>
 
@@ -212,7 +237,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           {/* Role & Password */}
           <FieldGroup icon={ShieldCheck} title="Access & Security">
             <Field label="Role" required>
-              <Select name="role" defaultValue="User">
+              <Select defaultValue="User" onValueChange={handleRoleChange}>
                 <SelectTrigger className="border-border focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
@@ -221,6 +246,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                   <SelectItem value="User">User</SelectItem>
                 </SelectContent>
               </Select>
+              <input type="hidden" name="role" value={selectedRole} />
             </Field>
 
             <div /> {/* spacer */}

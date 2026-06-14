@@ -39,7 +39,7 @@ model Company {
 /// 4.2 DB2 — Users Table (tbl_Users)
 model User {
   id                Int      @id @default(autoincrement()) @map("User_ID")
-  acctId            Int      @map("Acct_ID")
+  acctId            Int?     @map("Acct_ID")
   organization      String   @db.VarChar(255) // Auto-populated from company in application logic
   street            String?  @db.VarChar(255)
   city              String?  @db.VarChar(100)
@@ -57,7 +57,7 @@ model User {
   createdDate       DateTime @default(now()) @map("Created_Date")
 
   // Relations
-  company               Company                @relation(fields: [acctId], references: [id])
+  company               Company?               @relation(fields: [acctId], references: [id])
   referrals             Referral[]
   mentalHealthReferrals MentalHealthReferral[]
   notifications         Notification[]
