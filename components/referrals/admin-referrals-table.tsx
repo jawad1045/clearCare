@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ArrowUpDown, Plus, Download, Upload } from "lucide-react";
+import { ArrowUpDown, Download, Upload } from "lucide-react";
 
 import {
   Table,
@@ -166,12 +166,6 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
           </SelectContent>
         </Select>
         </div>
-        <Link href={`${basePath}/create`}>
-          <Button size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" />
-            New Referral
-          </Button>
-        </Link>
       </div>
 
       <div className="rounded-lg border">

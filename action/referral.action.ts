@@ -156,12 +156,15 @@ export async function createReferral(
       10
     );
 
+  if (!user.acctId) {
+    throw new Error("No company associated with this account.");
+  }
+
   const referral = await prisma.referral.create({
     data: {
       userId: user.id,
 
-      companyAcctId:
-        user.acctId ?? undefined,
+      companyAcctId: user.acctId,
 
       serviceType:
         formData.get(

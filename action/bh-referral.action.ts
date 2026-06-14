@@ -130,10 +130,14 @@ export async function createBHReferral(formData: FormData) {
 
   const contactMethods = formData.getAll("contactMethod") as string[];
 
+  if (!user.acctId) {
+    throw new Error("No company associated with this account.");
+  }
+
   const bhReferral = await prisma.referral.create({
     data: {
       userId: user.id,
-      companyAcctId: user.acctId ?? undefined,
+      companyAcctId: user.acctId,
       serviceType: (formData.get("serviceType") as string) || "Behavioral Health",
       type: formData.get("type") as string,
       priority: formData.get("priority") as string,
