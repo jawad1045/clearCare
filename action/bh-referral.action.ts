@@ -186,6 +186,15 @@ export async function createBHReferral(formData: FormData) {
   redirect("/user/bhreferrals");
 }
 
+export async function getRecentBHReferrals(take = 6) {
+  return prisma.referral.findMany({
+    take,
+    where: { serviceType: "Behavioral Health" },
+    include: { company: true },
+    orderBy: { dateOfReferral: "desc" },
+  });
+}
+
 export async function getBHReferrals() {
   return prisma.referral.findMany({
     where: { serviceType: "Behavioral Health" },
