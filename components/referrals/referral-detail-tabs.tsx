@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { ResultUploader } from "@/components/referrals/result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
-import { STATUS_COLORS } from "@/lib/referral-statuses";
+import { getStatusColor } from "@/lib/referral-statuses";
 
 type Referral = {
   id: number;
@@ -267,9 +267,9 @@ function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
               <Badge
                 variant="outline"
                 style={{
-                  backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22",
-                  color: STATUS_COLORS[referral.status] ?? "#6b7280",
-                  borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55",
+                  backgroundColor: getStatusColor(referral.status) + "22",
+                  color: getStatusColor(referral.status),
+                  borderColor: getStatusColor(referral.status) + "55",
                 }}
                 className="capitalize text-sm px-3 py-1"
               >

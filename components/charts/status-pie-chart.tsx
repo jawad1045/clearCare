@@ -10,10 +10,10 @@ import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-import { STATUS_COLORS } from "@/lib/referral-statuses";
+import { getStatusColor } from "@/lib/referral-statuses";
 
 function colorFor(status: string) {
-  return STATUS_COLORS[status] ?? "#8b5cf6";
+  return getStatusColor(status);
 }
 
 interface Props {

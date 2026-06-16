@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { appConfig } from "@/next.config";
 import { parseAttachment } from "@/lib/parse-attachment";
-import { STATUS_COLORS, STATUS_DESCRIPTIONS } from "@/lib/referral-statuses";
+import { getStatusColor, getStatusDescription } from "@/lib/referral-statuses";
 
 type PageProps = {
   params: Promise<{
@@ -131,10 +131,10 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
               variant="outline"
               style={{
                 backgroundColor:
-                  (STATUS_COLORS[referral.status] ?? "#6b7280") + "22",
-                color: STATUS_COLORS[referral.status] ?? "#6b7280",
+                  (getStatusColor(referral.status)) + "22",
+                color: getStatusColor(referral.status),
                 borderColor:
-                  (STATUS_COLORS[referral.status] ?? "#6b7280") + "55",
+                  (getStatusColor(referral.status)) + "55",
               }}
               className="mt-1 shrink-0 capitalize"
             >
@@ -380,18 +380,17 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
                 variant="outline"
                 style={{
                   backgroundColor:
-                    (STATUS_COLORS[referral.status] ?? "#6b7280") + "22",
-                  color: STATUS_COLORS[referral.status] ?? "#6b7280",
+                    (getStatusColor(referral.status)) + "22",
+                  color: getStatusColor(referral.status),
                   borderColor:
-                    (STATUS_COLORS[referral.status] ?? "#6b7280") + "55",
+                    (getStatusColor(referral.status)) + "55",
                 }}
                 className="capitalize text-sm px-3 py-1"
               >
                 {referral.status.toLowerCase()}
               </Badge>
               <p className="text-sm text-muted-foreground">
-                {STATUS_DESCRIPTIONS[referral.status] ??
-                  "Status is being processed."}
+                {getStatusDescription(referral.status) || "Status is being processed."}
               </p>
             </div>
           </CardContent>

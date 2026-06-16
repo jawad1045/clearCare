@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { appConfig } from "@/next.config";
-import { STATUS_COLORS } from "@/lib/referral-statuses";
+import { getStatusColor } from "@/lib/referral-statuses";
 import { ReferralDetailTabs } from "@/components/referrals/referral-detail-tabs";
 
 type PageProps = {
@@ -48,9 +48,9 @@ export default async function ReferralDetailsPage({ params }: PageProps) {
             <Badge
               variant="outline"
               style={{
-                backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22",
-                color: STATUS_COLORS[referral.status] ?? "#6b7280",
-                borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55",
+                backgroundColor: getStatusColor(referral.status) + "22",
+                color: getStatusColor(referral.status),
+                borderColor: getStatusColor(referral.status) + "55",
               }}
               className="mt-1 shrink-0 capitalize"
             >

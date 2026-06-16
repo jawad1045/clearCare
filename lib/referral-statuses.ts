@@ -44,14 +44,14 @@ export const STATUS_DESCRIPTIONS: Record<ReferralStatus, string> = {
   Ready: "Referral is ready for the next step.",
 };
 
-export const getStatusColor = (status: ReferralStatus): string => {
-  return STATUS_COLORS[status];
+export const getStatusColor = (status: string): string => {
+  return STATUS_COLORS[status as ReferralStatus] ?? "#6b7280";
 };
 
-export const getStatusBadge = (status: ReferralStatus): string => {
-  return STATUS_BADGES[status];
+export const getStatusBadge = (status: string): string => {
+  return STATUS_BADGES[status as ReferralStatus] ?? "";
 };
 
-export const getStatusDescription = (status: ReferralStatus): string => {
-  return STATUS_DESCRIPTIONS[status];
+export const getStatusDescription = (status: string): string => {
+  return STATUS_DESCRIPTIONS[status as ReferralStatus] ?? "";
 };

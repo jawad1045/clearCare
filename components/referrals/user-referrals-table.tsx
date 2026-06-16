@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/format-date";
-import { REFERRAL_STATUSES, STATUS_COLORS } from "@/lib/referral-statuses";
+import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
 
 const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
 const MONTHS = [
@@ -140,7 +140,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                   <TableCell>{referral.priority}</TableCell>
                   <TableCell>
                     <Badge
-                      style={{ backgroundColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "22", color: STATUS_COLORS[referral.status] ?? "#6b7280", borderColor: (STATUS_COLORS[referral.status] ?? "#6b7280") + "55" }}
+                      style={{ backgroundColor: getStatusColor(referral.status) + "22", color: getStatusColor(referral.status), borderColor: getStatusColor(referral.status) + "55" }}
                       variant="outline"
                     >
                       {referral.status}
