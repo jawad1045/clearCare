@@ -331,36 +331,6 @@ export async function getReferralsCount() {
   });
 }
 
-export async function getRecentReferrals(take = 6) {
-  return prisma.referral.findMany({
-    take,
-    orderBy: { dateOfReferral: "desc" },
-    include: { company: true },
-    where: { serviceType: { not: "Behavioral Health" } },
-  });
-}
-
-export async function getReferralsByServiceType() {
-  const rows = await prisma.referral.groupBy({
-    by: ["serviceType"],
-    _count: { serviceType: true },
-  });
-  return rows.map((r) => ({ label: r.serviceType, count: r._count.serviceType }));
-}
-
-export async function getTopCompaniesByReferrals(take = 5) {
-  const rows = await prisma.referral.groupBy({
-    by: ["companyAcctId"],
-    _count: { companyAcctId: true },
-    orderBy: { _count: { companyAcctId: "desc" } },
-    take,
-  });
-  const ids = rows.map((r) => r.companyAcctId);
-  const companies = await prisma.company.findMany({ where: { id: { in: ids } } });
-  const map = Object.fromEntries(companies.map((c) => [c.id, c.organization]));
-  return rows.map((r) => ({ name: map[r.companyAcctId] ?? "Unknown", count: r._count.companyAcctId }));
-}
-
 export async function updateReferralStatus(
   referralId: number,
   status: string
@@ -419,20 +389,10 @@ export async function getMyReferralCounts() {
   return { total, bh };
 }
 
-export async function getReferralStatusCounts(month?: string) {
-  const dateFilter: { gte?: Date; lt?: Date } = {};
-  if (month) {
-    const [year, mon] = month.split("-").map(Number);
-    dateFilter.gte = new Date(year, mon - 1, 1);
-    dateFilter.lt = new Date(year, mon, 1);
-  }
-
+export async function getReferralStatusCounts() {
   const rows = await prisma.referral.groupBy({
     by: ["status"],
-    where: {
-      serviceType: { not: "Behavioral Health" },
-      ...(month ? { dateOfReferral: dateFilter } : {}),
-    },
+    where: { serviceType: { not: "Behavioral Health" } },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));
