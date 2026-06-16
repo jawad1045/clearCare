@@ -11,6 +11,20 @@ export const REFERRAL_STATUSES = [
 
 export type ReferralStatus = (typeof REFERRAL_STATUSES)[number];
 
+export const STATUS_LABELS: Record<ReferralStatus, string> = {
+  Pending: "Pending",
+  Clear: "Clear",
+  Lab: "Lab",
+  NoShow: "No Show",
+  Confirmed: "Confirmed",
+  Refusal: "Refusal",
+  inProgress: "In Progress",
+  Ready: "Ready",
+};
+
+export const getStatusLabel = (status: string): string =>
+  STATUS_LABELS[status as ReferralStatus] ?? status;
+
 export const STATUS_COLORS: Record<ReferralStatus, string> = {
   Pending: "#F59E0B",     // Amber
   Clear: "#10B981",       // Green

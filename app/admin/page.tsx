@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { getUsersCount } from "@/action/user.action";
 import { getCompaniesCount } from "@/action/company.action";
@@ -13,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 import { StatusPieChart } from "@/components/charts/status-pie-chart";
+import { MonthFilter } from "@/components/charts/month-filter";
 
 import {
   Users,
@@ -22,15 +24,20 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string; bhmonth?: string }>;
+}) {
+  const { month, bhmonth } = await searchParams;
   const [totalUsers, totalCompanies, totalReferrals, totalBHReferrals, statusCounts, bhStatusCounts] =
     await Promise.all([
       getUsersCount(),
       getCompaniesCount(),
       getReferralsCount(),
       getBHReferralsCount(),
-      getReferralStatusCounts(),
-      getBHReferralStatusCounts(),
+      getReferralStatusCounts(month),
+      getBHReferralStatusCounts(bhmonth),
     ]);
 
   return (
@@ -119,25 +126,31 @@ export default async function AdminPage() {
       </div>
 
       {/* Charts */}
-      {/* <div className="flex gap-4">
-        <Card className="w-[70%]">
-          <CardHeader>
+       <div className="flex gap-4">
+        <Card className="w-[60%]">
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">Referrals by Status</CardTitle>
+            <Suspense>
+              <MonthFilter />
+            </Suspense>
           </CardHeader>
           <CardContent className="h-72">
             <StatusBarChart data={statusCounts} />
           </CardContent>
         </Card>
 
-        <Card className="w-[30%]">
-          <CardHeader>
+        <Card className="w-[40%]">
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">B.H. Referrals by Status</CardTitle>
+            <Suspense>
+              <MonthFilter paramKey="bhmonth" />
+            </Suspense>
           </CardHeader>
           <CardContent className="h-72">
             <StatusPieChart data={bhStatusCounts} />
           </CardContent>
         </Card>
-      </div> */}
+      </div>
     </div>
   );
 }

@@ -247,10 +247,20 @@ export async function updateBHReferralStatus(referralId: number, status: string)
   return "/user/bhreferrals";
 }
 
-export async function getBHReferralStatusCounts() {
+export async function getBHReferralStatusCounts(month?: string) {
+  const dateFilter: { gte?: Date; lt?: Date } = {};
+  if (month) {
+    const [year, mon] = month.split("-").map(Number);
+    dateFilter.gte = new Date(year, mon - 1, 1);
+    dateFilter.lt = new Date(year, mon, 1);
+  }
+
   const rows = await prisma.referral.groupBy({
     by: ["status"],
-    where: { serviceType: "Behavioral Health" },
+    where: {
+      serviceType: "Behavioral Health",
+      ...(month ? { dateOfReferral: dateFilter } : {}),
+    },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));

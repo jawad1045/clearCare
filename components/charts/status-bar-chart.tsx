@@ -9,33 +9,20 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Bar } from "react-chartjs-2";
+import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-const STATUS_COLORS: Record<string, string> = {
-  Pending: "#f59e0b",
-  Clear: "#3b82f6",
-  Lab: "#22c55e",
-  NoShow: "#ef4444",
-  Confirmed: "#8b5cf6",
-  Refusal: "#e11d48",
-  inProgress: "#10b981",
-  referred: "#6366f1",
-};
-
-function colorFor(status: string) {
-  return STATUS_COLORS[status] ?? "#8b5cf6";
-}
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels);
 
 interface Props {
   data: { status: string; count: number }[];
 }
 
 export function StatusBarChart({ data }: Props) {
-  const labels = data.map((d) => d.status);
+  const labels = data.map((d) => getStatusLabel(d.status));
   const counts = data.map((d) => d.count);
-  const colors = labels.map(colorFor);
+  const colors = labels.map(getStatusColor);
 
   const chartData = {
     labels,
@@ -56,6 +43,13 @@ export function StatusBarChart({ data }: Props) {
     plugins: {
       legend: { display: false },
       title: { display: false },
+      datalabels: {
+        anchor: "center" as const,
+        align: "center" as const,
+        color: "#ffffff",
+        font: { weight: "bold" as const, size: 13 },
+        formatter: (value: number) => (value === 0 ? "" : value),
+      },
     },
     scales: {
       x: {

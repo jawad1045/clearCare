@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { REFERRAL_STATUSES } from "@/lib/referral-statuses";
+import { REFERRAL_STATUSES, getStatusLabel } from "@/lib/referral-statuses";
 
 type Props = {
   referralId: number;
@@ -79,7 +79,7 @@ export function UpdateStatusForm({
                   key={statusOption}
                   value={statusOption}
                 >
-                  {statusOption}
+                  {getStatusLabel(statusOption)}
                 </SelectItem>
               )
             )}
