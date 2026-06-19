@@ -60,7 +60,7 @@ export default function LoginPage() {
             priority
           />
         </div>
-        <h1 className="text-xl font-bold tracking-[0.2em] text-white uppercase">
+        <h1 className="text-2xl font-bold text-white uppercase">
           HWP CLEAR-CARE™ PORTAL
         </h1>
         <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-cyan-400 uppercase">
