@@ -279,7 +279,7 @@ export default async function AdminPage({
             <tbody className="divide-y divide-border">
               {recentBHReferrals.map((r) => (
                 <tr key={r.id}>
-                  <td className="py-2 font-medium">{r.patientFirstName} {r.patientLastName}</td>
+                  <td className="py-2 font-medium">{r.firstName} {r.lastName}</td>
                   <td className="py-2 text-muted-foreground">{r.company.organization}</td>
                   <td className="py-2">
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(r.status)}`}>
