@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { appConfig } from "@/next.config";
 import { getStatusColor } from "@/lib/referral-statuses";
-import { ReferralDetailTabs } from "@/components/referrals/referral-detail-tabs";
+import { MentalHealthReferralDetailTabs } from "@/components/referrals/mental-health-referral-detail-tabs";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -41,7 +41,7 @@ export default async function BHReferralDetailsPage({ params }: PageProps) {
                 Behavioral Health Referral <span className="text-muted-foreground font-normal">#{referral.id}</span>
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {referral.patientFirstName} {referral.patientLastName} &mdash; submitted by{" "}
+                {referral.firstName} {referral.lastName} &mdash; submitted by{" "}
                 {referral.user.contactFirstName} {referral.user.contactLastName}
               </p>
             </div>
@@ -59,7 +59,7 @@ export default async function BHReferralDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        <ReferralDetailTabs referral={referral} isBH={true} />
+        <MentalHealthReferralDetailTabs referral={referral} />
 
       </div>
     </div>

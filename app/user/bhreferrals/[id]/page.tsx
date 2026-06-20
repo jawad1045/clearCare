@@ -20,7 +20,7 @@ import {
   Activity,
   FileOutput,
   Download,
-  ShieldCheck,
+  Calendar,
   FileText,
   Hash,
 } from "lucide-react";
@@ -99,7 +99,7 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
                 <span className="text-muted-foreground font-normal">#{referral.id}</span>
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {referral.patientFirstName} {referral.patientLastName} &mdash; submitted by{" "}
+                {referral.firstName} {referral.lastName} &mdash; submitted by{" "}
                 {referral.user.contactFirstName} {referral.user.contactLastName}
               </p>
             </div>
@@ -119,48 +119,29 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
 
         <div className="grid gap-4 sm:grid-cols-2">
 
-          {/* Patient Information */}
+          {/* Client Information */}
           <Card>
-            <SectionHeader icon={User} title="Patient" description="Personal details" />
+            <SectionHeader icon={User} title="Client" description="Personal details" />
             <Separator />
             <CardContent className="pt-4">
               <dl className="space-y-3 text-sm">
-                <InfoRow label="Full Name" value={`${referral.patientFirstName} ${referral.patientLastName}`} />
-                <InfoRow label="Date of Birth" value={formatDate(referral.dob)} />
+                <InfoRow label="Full Name" value={`${referral.firstName} ${referral.lastName}`} />
+                <InfoRow label="Phone" value={referral.phone} />
+                <InfoRow label="Email" value={referral.email} />
                 <InfoRow label="Gender" value={referral.gender?.toLowerCase()} />
-                <InfoRow label="Race" value={referral.race} />
-                <InfoRow label="Grade" value={referral.grade} />
-                <InfoRow label="SSN" value="••••••••••" />
-              </dl>
-            </CardContent>
-          </Card>
-
-          {/* Parent / Guardian */}
-          <Card>
-            <SectionHeader icon={User} title="Parent / Guardian" description="Guardian contact info" />
-            <Separator />
-            <CardContent className="pt-4">
-              <dl className="space-y-3 text-sm">
-                <InfoRow label="First Name" value={referral.parentFirstName} />
-                <InfoRow label="Last Name" value={referral.parentLastName} />
-                <InfoRow label="Email" value={referral.parentEmail} />
-                <InfoRow label="Phone" value={referral.parentPhone} />
+                <InfoRow label="Last 4 of SSN" value={`••${referral.last4SSN}`} />
               </dl>
             </CardContent>
           </Card>
 
           {/* Referral Info */}
           <Card>
-            <SectionHeader icon={ShieldCheck} title="Referral Info" description="Type, priority & dates" />
+            <SectionHeader icon={Calendar} title="Referral Info" description="Dates & referrer" />
             <Separator />
             <CardContent className="pt-4">
               <dl className="space-y-3 text-sm">
-                <InfoRow label="Service Type" value={referral.serviceType} />
-                <InfoRow label="Type" value={referral.type} />
-                <InfoRow label="Priority" value={referral.priority} />
                 <InfoRow label="Date of Referral" value={formatDate(referral.dateOfReferral)} />
-                <InfoRow label="Date Patient Contacted" value={formatDate(referral.datePatientContact)} />
-                <InfoRow label="Method of Contact" value={referral.methodOfContact} />
+                <InfoRow label="Appointment Date" value={formatDate(referral.appointmentDate)} />
                 <InfoRow label="Referred By" value={referral.referName} />
               </dl>
             </CardContent>
@@ -256,9 +237,9 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
           <SectionHeader icon={FileOutput} title="Result / Report" description="Your referral result document" />
           <Separator />
           <CardContent className="pt-4">
-            {referral.pdfResult ? (
+            {referral.pdfReport ? (
               <Button variant="outline" size="sm" asChild className="gap-2">
-                <Link href={referral.pdfResult} target="_blank" rel="noopener noreferrer" download>
+                <Link href={referral.pdfReport} target="_blank" rel="noopener noreferrer" download>
                   <Download className="h-4 w-4" />
                   Download Result PDF
                 </Link>

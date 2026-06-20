@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { ArrowRight, Lock } from "lucide-react";
 
 import { createBHReferral } from "@/action/bh-referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -9,7 +12,6 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,47 +20,38 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { calcAge } from "@/lib/utils";
-import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
-const BH_REFERRAL_TYPES = [
-  "Initial Assessment",
-  "Follow-up",
-  "Crisis Intervention",
-  "Treatment Planning",
-];
-const PRIORITIES = ["Same-day", "24-hours"];
 const GENDERS = ["Male", "Female", "Other"];
-const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
-const RACES = [
-  "American Indian or Alaska Native",
-  "Asian",
-  "Black or African American",
-  "Hispanic or Latino",
-  "Native Hawaiian or Other Pacific Islander",
-  "White",
-  "Two or More Races",
-  "Other",
-];
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
-      {children}
-    </p>
-  );
-}
+const bhReferralSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phone: z.string().min(1, "Phone is required"),
+  last4SSN: z
+    .string()
+    .min(1, "Last 4 of SSN is required")
+    .max(4, "You can only enter 4 digits")
+    .regex(/^\d{4}$/, "Enter exactly 4 digits"),
+  email: z.string().email("Enter a valid email").optional().or(z.literal("")),
+  gender: z.string().min(1, "Gender is required"),
+  referrerName: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type BHReferralFormValues = z.infer<typeof bhReferralSchema>;
 
 function Field({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -68,6 +61,7 @@ function Field({
         {required && <span className="ml-0.5 text-primary">*</span>}
       </Label>
       {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
@@ -75,40 +69,59 @@ function Field({
 export function CreateBHReferralForm() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
-  const [contactMethods, setContactMethods] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingData, setPendingData] = useState<FormData | null>(null);
-  const [showSSN, setShowSSN] = useState(false);
-  const [age, setAge] = useState("");
+  const [pendingValues, setPendingValues] = useState<BHReferralFormValues | null>(null);
 
-  async function handleSubmit(formData: FormData) {
-    contactMethods.forEach((m) => formData.append("contactMethod", m));
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<BHReferralFormValues>({
+    resolver: zodResolver(bhReferralSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      last4SSN: "",
+      email: "",
+      gender: "",
+      referrerName: "",
+      notes: "",
+    },
+  });
+
+  async function submitReferral(values: BHReferralFormValues) {
+    const formData = new FormData();
+    formData.set("firstName", values.firstName);
+    formData.set("lastName", values.lastName);
+    formData.set("phone", values.phone);
+    formData.set("last4SSN", values.last4SSN);
+    formData.set("email", values.email ?? "");
+    formData.set("gender", values.gender);
+    formData.set("referrerName", values.referrerName ?? "");
+    formData.set("notes", values.notes ?? "");
+    attachments.forEach((url) => formData.append("attachments", url));
+
     startTransition(async () => {
       try {
         await createBHReferral(formData);
       } catch (error) {
         if (isRedirectError(error)) throw error;
-        toast.error("Failed to create behavioral health referral");
+        toast.error(error instanceof Error ? error.message : "Failed to create behavioral health referral");
       }
     });
   }
 
-  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setPendingData(new FormData(e.currentTarget));
+  function onFormSubmit(values: BHReferralFormValues) {
+    setPendingValues(values);
     setConfirmOpen(true);
   }
 
   function onConfirm() {
     setConfirmOpen(false);
-    if (pendingData) handleSubmit(pendingData);
-    setPendingData(null);
-  }
-
-  function toggleContact(value: string) {
-    setContactMethods((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    if (pendingValues) submitReferral(pendingValues);
+    setPendingValues(null);
   }
 
   return (
@@ -130,105 +143,62 @@ export function CreateBHReferralForm() {
       <ConfirmDialog
         open={confirmOpen}
         onConfirm={onConfirm}
-        onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+        onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
         title="Submit BH Referral"
         description="Are you sure you want to submit this behavioral health referral? Please review all client information before proceeding."
         confirmLabel="Submit BH Referral"
       />
-      <form onSubmit={onFormSubmit} className="pl-6 pr-10 py-6 space-y-6">
 
-        {/* Hidden attachment URLs */}
-        {attachments.map((url) => (
-          <input key={url} type="hidden" name="attachments" value={url} />
-        ))}
+      <form onSubmit={handleSubmit(onFormSubmit)} className="pl-6 pr-10 py-6 space-y-6">
 
-        {/* ── Service Type ── */}
-        <input type="hidden" name="serviceType" value="Behavioral Health" />
-        <Field label="Service Type">
-          <Input
-            value="Behavioral Health"
-            readOnly
-            className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
-          />
-        </Field>
-
-        {/* ── Parent / Guardian ── */}
+        {/* ── Client Information ── */}
         <div>
-          <SectionLabel>Parent / Guardian Information</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name">
-              <Input name="parentFirstName" placeholder="Parent first name"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Last Name">
-              <Input name="parentLastName" placeholder="Parent last name"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Email">
-              <Input type="email" name="parentEmail" placeholder="parent@email.com"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Phone">
-              <Input name="parentPhone" placeholder="(555)000-0000"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-          </div>
-        </div>
-
-        {/* ── Patient Information ── */}
-        <div>
-          <SectionLabel>Patient Information</SectionLabel>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name" required>
-              <Input name="patientFirstName" placeholder="Patient first name" required
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Last Name" required>
-              <Input name="patientLastName" placeholder="Patient last name" required
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Date of Birth (MM/DD/YYYY)" required>
-              <DatePicker
-                name="dob"
-                required
-                onDateChange={(iso) => setAge(iso ? calcAge(iso) : "")}
+            <Field label="First Name" required error={errors.firstName?.message}>
+              <Input
+                {...register("firstName")}
+                placeholder="Client first name"
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Age (Auto-Calculated)">
+            <Field label="Last Name" required error={errors.lastName?.message}>
               <Input
-                value={age}
-                placeholder="Auto"
-                readOnly
-                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+                {...register("lastName")}
+                placeholder="Client last name"
+                className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Race" required>
-              <Select name="race">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {RACES.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Phone" required error={errors.phone?.message}>
+              <Input
+                {...register("phone")}
+                placeholder="(555)000-0000"
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
-            <Field label="Grade">
-              <Select name="grade">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADES.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Email">
+              <Input
+                {...register("email")}
+                type="email"
+                placeholder="client@email.com"
+                className="border-border bg-background focus-visible:ring-primary"
+              />
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </Field>
-            <Field label="Gender" required>
-              <Select name="gender">
+            <Field label="Last 4 of SSN" required error={errors.last4SSN?.message}>
+              <Input
+                {...register("last4SSN", {
+                  onChange: (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  },
+                })}
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="XXXX"
+                className="border-border bg-background focus-visible:ring-primary"
+              />
+            </Field>
+            <Field label="Gender" required error={errors.gender?.message}>
+              <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -239,84 +209,22 @@ export function CreateBHReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="SSN" required>
-              <div className="relative">
-                <Input
-                  type={showSSN ? "text" : "password"}
-                  name="ssn"
-                  placeholder="XXX-XX-XXXX"
-                  required
-                  className="border-border bg-background pr-10 focus-visible:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSSN(!showSSN)}
-                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                >
-                  {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </Field>
           </div>
         </div>
 
         {/* ── Referral Details ── */}
         <div>
-          <SectionLabel>Referral Details</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Referral Type" required>
-              <Select name="type">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {BH_REFERRAL_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label="Priority" required>
-              <Select name="priority">
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            {/* status is always Pending on creation — admin changes it later */}
-            <input type="hidden" name="status" value="Pending" />
-            <Field label="Referrer Name" required>
-              <Input name="referrerName" placeholder="Referring person name"
-                className="border-border bg-background focus-visible:ring-primary" />
-            </Field>
-            <Field label="Date of Patient Contact">
-              <DatePicker
-                name="contactDate"
+            <Field label="Referrer Name">
+              <Input
+                {...register("referrerName")}
+                placeholder="Referring person name"
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Method of Contact">
-              <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
-                {["Text", "Phone", "Email"].map((method) => (
-                  <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
-                    <Checkbox
-                      checked={contactMethods.includes(method)}
-                      onCheckedChange={() => toggleContact(method)}
-                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <span className="text-xs text-foreground/80">{method}</span>
-                  </label>
-                ))}
-              </div>
-            </Field>
             <Field label="Notes">
               <textarea
-                name="notes"
+                {...register("notes")}
                 placeholder="Any additional notes or clinical information..."
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 rows={3}
