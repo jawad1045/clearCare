@@ -43,13 +43,13 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
+      className="min-h-screen flex flex-col items-center justify-center px-4 h-full overflow-none"
       style={{
         background: "radial-gradient(ellipse at 50% 45%, #0d6e72 0%, #073d42 45%, #030e12 100%)",
       }}
     >
       {/* Logo + title above card */}
-      <div className="flex flex-col items-center mb-6 text-center">
+      <div className="flex flex-col items-center w-md text-center bg-[#0D1F2D] px-4 py-2 rounded-t-lg shadow-lg shadow-black/40">
         <div className="mb-4 rounded-full ring-2 ring-white/20 shadow-lg shadow-black/40">
           <Image
             src="/logo.png"
@@ -60,7 +60,7 @@ export default function LoginPage() {
             priority
           />
         </div>
-        <h1 className="text-xl font-bold tracking-[0.2em] text-white uppercase">
+        <h1 className="text-xl font-bold  text-white uppercase">
           HWP CLEAR-CARE™ PORTAL
         </h1>
         <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-cyan-400 uppercase">
@@ -69,7 +69,7 @@ export default function LoginPage() {
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-2xl shadow-black/60">
+      <div className="w-full max-w-md overflow-hidden rounded-b-lg shadow-2xl shadow-black/60">
         {/* Top accent bar */}
         <div className="h-0.75 bg-linear-to-r from-cyan-400 via-teal-400 to-cyan-500" />
 

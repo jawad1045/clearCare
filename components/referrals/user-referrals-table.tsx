@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { getMyReferrals } from "@/action/referral.action";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -38,12 +39,22 @@ type Props = {
 };
 
 export function UserReferralsTable({ referrals, basePath }: Props) {
+  const [search, setSearch] = useState("");
   const [filterService, setFilterService] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
 
   const filtered = useMemo(() => {
-    let result = [...referrals];
+    const q = search.toLowerCase().trim();
+    let result = q
+      ? referrals.filter((r) =>
+          `${r.patientFirstName ?? ""} ${r.patientLastName ?? ""}`.toLowerCase().includes(q) ||
+          `${r.parentFirstName ?? ""} ${r.parentLastName ?? ""}`.toLowerCase().includes(q) ||
+          r.serviceType.toLowerCase().includes(q) ||
+          r.status.toLowerCase().includes(q) ||
+          String(r.id).includes(q)
+        )
+      : [...referrals];
 
     if (filterService !== "all") result = result.filter((r) => r.serviceType === filterService);
     if (filterStatus !== "all") result = result.filter((r) => r.status === filterStatus);
@@ -53,11 +64,11 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
     }
 
     return result;
-  }, [referrals, filterService, filterStatus, filterMonth]);
+  }, [referrals, search, filterService, filterStatus, filterMonth]);
 
   return (
     <div className="space-y-4">
-      {/* Filters + New button */}
+      {/* Filters + search/New button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
         <Select value={filterService} onValueChange={setFilterService}>
@@ -94,18 +105,21 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
           </SelectContent>
         </Select>
         </div>
-        <Link href={`${basePath}/create`}>
-          <Button size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" />
-            New Referral
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+        <Input
+          placeholder="Search by patient, parent, service, or status…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
+        />
+        </div>
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>ID</TableHead>
               <TableHead>Patient</TableHead>
               <TableHead>Parent</TableHead>
               <TableHead>Service Type</TableHead>
@@ -119,7 +133,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="text-center text-muted-foreground py-6"
                 >
                   No referrals found.
@@ -128,6 +142,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
             ) : (
               filtered.map((referral) => (
                 <TableRow key={referral.id}>
+                  <TableCell>#{referral.id}</TableCell>
                   <TableCell className="font-medium">
                     {referral.patientFirstName ?? "-"}{" "}
                     {referral.patientLastName ?? "-"}
