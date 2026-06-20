@@ -5,15 +5,16 @@ import { Button } from "@/components/ui/button";
 type Props = {
   basePath: string;
   title?: string;
+  subtitle?: string;
   showCreate?: boolean;
 };
 
-export function ReferralHeader({ basePath, title = "Referrals", showCreate = true }: Props) {
+export function ReferralHeader({ basePath, title = "Referrals", subtitle, showCreate = true }: Props) {
   return (
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-3xl font-bold">{title}</h1>
-        <p className="text-muted-foreground">Manage {title.toLowerCase()}</p>
+        <p className="text-muted-foreground">{subtitle ?? `Manage ${title.toLowerCase()}`}</p>
       </div>
       {showCreate && (
         <Link href={`${basePath}/create`}>

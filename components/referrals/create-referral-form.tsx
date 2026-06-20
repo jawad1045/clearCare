@@ -119,7 +119,7 @@ export function CreateReferralForm() {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card">
+    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card w-full sm:w-3/5">
 
       {/* ── Header ── */}
       <div className="bg-foreground px-6 py-4">
@@ -142,7 +142,7 @@ export function CreateReferralForm() {
         description="Are you sure you want to submit this referral? Please review all patient information before proceeding."
         confirmLabel="Submit Referral"
       />
-      <form onSubmit={onFormSubmit} className="px-6 py-6 space-y-6">
+      <form onSubmit={onFormSubmit} className="pl-6 pr-10 py-6 space-y-6">
 
         {/* Hidden attachment URLs */}
         {attachments.map((url) => (

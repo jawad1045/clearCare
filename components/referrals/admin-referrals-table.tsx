@@ -100,9 +100,9 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Filters + New button */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
         <Input
           placeholder="Search by patient, user, company, service, or status…"
           value={search}
