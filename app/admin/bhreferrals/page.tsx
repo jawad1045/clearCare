@@ -1,6 +1,6 @@
 import { getBHReferrals } from "@/action/bh-referral.action";
 import { ReferralHeader } from "@/components/referrals/referral-header";
-import { AdminReferralsTable } from "@/components/referrals/admin-referrals-table";
+import { AdminBHReferralsTable } from "@/components/referrals/admin-bh-referrals-table";
 
 export default async function BHReferralsPage() {
   const referrals = await getBHReferrals();
@@ -17,7 +17,7 @@ export default async function BHReferralsPage() {
         </div>
       </div>
 
-      <AdminReferralsTable
+      <AdminBHReferralsTable
         referrals={referrals}
         basePath="/admin/bhreferrals"
       />

@@ -25,25 +25,24 @@ import {
 import { formatDate } from "@/lib/format-date";
 import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
 
-const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
-type Referral = {
+type BHReferral = {
   id: number;
-  patientFirstName: string;
-  patientLastName: string;
-  serviceType: string;
-  priority: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  gender: string;
   status: string;
   dateOfReferral: Date;
-  pdfResult: string | null;
+  pdfReport: string | null;
   user: {
     contactFirstName: string;
     contactLastName: string;
-    contactEmail: string;
   };
   company: {
     organization: string;
@@ -51,14 +50,13 @@ type Referral = {
 };
 
 type Props = {
-  referrals: Referral[];
+  referrals: BHReferral[];
   basePath: string;
 };
 
-export function AdminReferralsTable({ referrals, basePath }: Props) {
+export function AdminBHReferralsTable({ referrals, basePath }: Props) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "id-asc" | "id-desc">("newest");
-  const [filterService, setFilterService] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterOrg, setFilterOrg] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
@@ -72,15 +70,14 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
     const q = search.toLowerCase().trim();
     let result = q
       ? referrals.filter((r) =>
-          `${r.patientFirstName} ${r.patientLastName}`.toLowerCase().includes(q) ||
+          `${r.firstName} ${r.lastName}`.toLowerCase().includes(q) ||
           `${r.user.contactFirstName} ${r.user.contactLastName}`.toLowerCase().includes(q) ||
           r.company.organization.toLowerCase().includes(q) ||
-          r.serviceType.toLowerCase().includes(q) ||
-          r.status.toLowerCase().includes(q)
+          r.status.toLowerCase().includes(q) ||
+          String(r.id).includes(q)
         )
       : [...referrals];
 
-    if (filterService !== "all") result = result.filter((r) => r.serviceType === filterService);
     if (filterStatus !== "all") result = result.filter((r) => r.status === filterStatus);
     if (filterOrg !== "all") result = result.filter((r) => r.company.organization === filterOrg);
     if (filterMonth !== "all") {
@@ -96,24 +93,13 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
     });
 
     return result;
-  }, [referrals, search, sort, filterService, filterStatus, filterOrg, filterMonth]);
+  }, [referrals, search, sort, filterStatus, filterOrg, filterMonth]);
 
   return (
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 overflow-x-auto">
-        <Select value={filterService} onValueChange={setFilterService}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="All Service Types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Service Types</SelectItem>
-            {SERVICE_TYPES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-36">
             <SelectValue placeholder="All Statuses" />
@@ -161,7 +147,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
         </Select>
         </div>
         <Input
-          placeholder="Search by patient, user, company, service, or status…"
+          placeholder="Search by name, user, company, or status…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
@@ -173,11 +159,10 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Patient</TableHead>
+              <TableHead>Client</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Company</TableHead>
-              <TableHead>Service</TableHead>
-              <TableHead>Priority</TableHead>
+              <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="w-20">Actions</TableHead>
@@ -187,7 +172,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                   No referrals found
                 </TableCell>
               </TableRow>
@@ -197,7 +182,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                   <TableCell>#{referral.id}</TableCell>
 
                   <TableCell>
-                    {referral.patientFirstName} {referral.patientLastName}
+                    {referral.firstName} {referral.lastName}
                   </TableCell>
 
                   <TableCell>
@@ -206,9 +191,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
 
                   <TableCell>{referral.company.organization}</TableCell>
 
-                  <TableCell>{referral.serviceType}</TableCell>
-
-                  <TableCell>{referral.priority}</TableCell>
+                  <TableCell>{referral.phone}</TableCell>
 
                   <TableCell>
                     <Badge
@@ -228,8 +211,8 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                       <Link href={`${basePath}/${referral.id}`}>
                         <Button size="sm" variant="outline">View</Button>
                       </Link>
-                      {referral.pdfResult ? (
-                        <Link href={referral.pdfResult} target="_blank" rel="noopener noreferrer" download>
+                      {referral.pdfReport ? (
+                        <Link href={referral.pdfReport} target="_blank" rel="noopener noreferrer" download>
                           <Button size="sm" variant="outline" className="gap-1.5">
                             <Download className="h-3.5 w-3.5" />
                             Result

@@ -13,6 +13,7 @@ import {
 } from "@/lib/email";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+const SERVICE_TYPE = "Behavioral Health";
 
 async function getAdmins() {
   return prisma.user.findMany({ where: { userRole: "Admin" } });
@@ -24,7 +25,6 @@ async function notifySubmission(opts: {
   userName: string;
   referralId: number;
   patientName: string;
-  serviceType: string;
   userViewPath: string;
   adminViewPath: string;
 }) {
@@ -34,7 +34,7 @@ async function notifySubmission(opts: {
     createNotification({
       userId: opts.userId,
       title: "Referral Submitted",
-      message: `Your referral for ${opts.patientName} (#${opts.referralId}) has been submitted and is pending review.`,
+      message: `Your behavioral health referral for ${opts.patientName} (#${opts.referralId}) has been submitted and is pending review.`,
       type: "referral_submitted",
       link: opts.userViewPath,
     }),
@@ -42,7 +42,7 @@ async function notifySubmission(opts: {
       createNotification({
         userId: admin.id,
         title: "New Referral Received",
-        message: `${opts.userName} submitted a referral for ${opts.patientName} (#${opts.referralId}).`,
+        message: `${opts.userName} submitted a behavioral health referral for ${opts.patientName} (#${opts.referralId}).`,
         type: "referral_submitted",
         link: opts.adminViewPath,
       })
@@ -52,7 +52,7 @@ async function notifySubmission(opts: {
       toName: opts.userName,
       patientName: opts.patientName,
       referralId: opts.referralId,
-      serviceType: opts.serviceType,
+      serviceType: SERVICE_TYPE,
       viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     ...admins.map((admin) =>
@@ -61,7 +61,7 @@ async function notifySubmission(opts: {
         patientName: opts.patientName,
         submittedBy: opts.userName,
         referralId: opts.referralId,
-        serviceType: opts.serviceType,
+        serviceType: SERVICE_TYPE,
         viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
@@ -74,7 +74,7 @@ async function notifyStatusChange(opts: {
   userViewPath: string;
   patientName: string;
 }) {
-  const referral = await prisma.referral.findUnique({
+  const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id: opts.referralId },
     include: { user: true },
   });
@@ -86,7 +86,7 @@ async function notifyStatusChange(opts: {
     createNotification({
       userId: referral.userId,
       title: "Referral Status Updated",
-      message: `Your referral for ${opts.patientName} (#${opts.referralId}) is now ${opts.newStatus}.`,
+      message: `Your behavioral health referral for ${opts.patientName} (#${opts.referralId}) is now ${opts.newStatus}.`,
       type: "status_changed",
       link: opts.userViewPath,
     }),
@@ -102,9 +102,7 @@ async function notifyStatusChange(opts: {
 }
 
 export async function getBHReferralsCount() {
-  return prisma.referral.count({
-    where: { serviceType: "Behavioral Health" },
-  });
+  return prisma.mentalHealthReferral.count();
 }
 
 export async function createBHReferral(formData: FormData) {
@@ -122,47 +120,38 @@ export async function createBHReferral(formData: FormData) {
     throw new Error("User not found");
   }
 
+  if (!user.acctId) {
+    throw new Error("No company associated with this account.");
+  }
+
   const uploadedFiles = formData.getAll("attachments") as string[];
 
   if (uploadedFiles.length > 5) {
     throw new Error("Maximum 5 files allowed");
   }
 
-  const contactMethods = formData.getAll("contactMethod") as string[];
-
-  if (!user.acctId) {
-    throw new Error("No company associated with this account.");
+  const last4SSN = (formData.get("last4SSN") as string) ?? "";
+  if (last4SSN.length !== 4) {
+    throw new Error("You can only enter the last 4 digits of the SSN");
   }
 
-  const bhReferral = await prisma.referral.create({
+  const bhReferral = await prisma.mentalHealthReferral.create({
     data: {
       userId: user.id,
       companyAcctId: user.acctId,
-      serviceType: (formData.get("serviceType") as string) || "Behavioral Health",
-      type: formData.get("type") as string,
-      priority: formData.get("priority") as string,
-      patientFirstName: formData.get("patientFirstName") as string,
-      patientLastName: formData.get("patientLastName") as string,
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      phone: formData.get("phone") as string,
+      last4SSN,
+      email: (formData.get("email") as string) || null,
       gender: formData.get("gender") as string,
-      dob: new Date(formData.get("dob") as string),
-      grade: (formData.get("grade") as string) || "N/A",
-      race: (formData.get("race") as string) || "N/A",
-      ssn: formData.get("ssn") as string,
-      parentFirstName: (formData.get("parentFirstName") as string) || "",
-      parentLastName: (formData.get("parentLastName") as string) || "",
-      parentEmail: (formData.get("parentEmail") as string) || "",
-      parentPhone: (formData.get("parentPhone") as string) || "",
       referName: (formData.get("referrerName") as string) || `${user.contactFirstName} ${user.contactLastName}`,
-      notes: formData.get("notes") as string,
-      datePatientContact: formData.get("contactDate")
-        ? new Date(formData.get("contactDate") as string)
-        : null,
-      methodOfContact: contactMethods.length > 0 ? contactMethods.join(", ") : null,
+      notes: (formData.get("notes") as string) || null,
       clientAttachments: uploadedFiles,
     },
   });
 
-  const patientName = `${bhReferral.patientFirstName} ${bhReferral.patientLastName}`;
+  const patientName = `${bhReferral.firstName} ${bhReferral.lastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
 
   await notifySubmission({
@@ -171,7 +160,6 @@ export async function createBHReferral(formData: FormData) {
     userName,
     referralId: bhReferral.id,
     patientName,
-    serviceType: "Behavioral Health",
     userViewPath: `/user/bhreferrals/${bhReferral.id}`,
     adminViewPath: `/admin/bhreferrals/${bhReferral.id}`,
   }).catch(() => {});
@@ -187,8 +175,7 @@ export async function createBHReferral(formData: FormData) {
 }
 
 export async function getBHReferrals() {
-  return prisma.referral.findMany({
-    where: { serviceType: "Behavioral Health" },
+  return prisma.mentalHealthReferral.findMany({
     include: { user: true, company: true },
     orderBy: { dateOfReferral: "desc" },
   });
@@ -201,18 +188,15 @@ export async function getMyBHReferrals() {
     throw new Error("Unauthorized");
   }
 
-  return prisma.referral.findMany({
-    where: {
-      userId: currentUser.id,
-      serviceType: "Behavioral Health",
-    },
+  return prisma.mentalHealthReferral.findMany({
+    where: { userId: currentUser.id },
     include: { company: true },
     orderBy: { dateOfReferral: "desc" },
   });
 }
 
 export async function getBHReferralById(id: number) {
-  return prisma.referral.findUnique({
+  return prisma.mentalHealthReferral.findUnique({
     where: { id },
     include: { user: true, company: true },
   });
@@ -224,7 +208,7 @@ export async function updateBHReferralStatus(referralId: number, status: string)
     throw new Error("Unauthorized: only admins can change referral status");
   }
 
-  const updated = await prisma.referral.update({
+  const updated = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { status },
   });
@@ -232,7 +216,7 @@ export async function updateBHReferralStatus(referralId: number, status: string)
   await notifyStatusChange({
     referralId,
     newStatus: status,
-    patientName: `${updated.patientFirstName} ${updated.patientLastName}`,
+    patientName: `${updated.firstName} ${updated.lastName}`,
     userViewPath: `/user/bhreferrals/${referralId}`,
   }).catch(() => {});
 
@@ -248,9 +232,8 @@ export async function updateBHReferralStatus(referralId: number, status: string)
 }
 
 export async function getBHReferralStatusCounts() {
-  const rows = await prisma.referral.groupBy({
+  const rows = await prisma.mentalHealthReferral.groupBy({
     by: ["status"],
-    where: { serviceType: "Behavioral Health" },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));
@@ -263,9 +246,9 @@ export async function getMyBHReferralStatusCounts() {
     throw new Error("Unauthorized");
   }
 
-  const rows = await prisma.referral.groupBy({
+  const rows = await prisma.mentalHealthReferral.groupBy({
     by: ["status"],
-    where: { userId: currentUser.id, serviceType: "Behavioral Health" },
+    where: { userId: currentUser.id },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));
@@ -277,13 +260,13 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
     throw new Error("Unauthorized: only admins can upload results");
   }
 
-  const referral = await prisma.referral.update({
+  const referral = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
-    data: { pdfResult: pdfUrl },
+    data: { pdfReport: pdfUrl },
     include: { user: true },
   });
 
-  const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
+  const patientName = `${referral.firstName} ${referral.lastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
   const userViewPath = `/user/bhreferrals/${referralId}`;
 

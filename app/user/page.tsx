@@ -15,11 +15,13 @@ import { StatusPieChart } from "@/components/charts/status-pie-chart";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 
 export default async function UserDashboardPage() {
-  const [{ total, bh }, statusCounts, bhStatusCounts] = await Promise.all([
+  const [{ total }, statusCounts, bhStatusCounts] = await Promise.all([
     getMyReferralCounts(),
     getMyReferralStatusCounts(),
     getMyBHReferralStatusCounts(),
   ]);
+
+  const bh = bhStatusCounts.reduce((sum, s) => sum + s.count, 0);
 
   return (
     <div className="space-y-6 p-6">
