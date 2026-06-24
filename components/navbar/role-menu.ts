@@ -7,7 +7,7 @@ export const adminMenu = [
     { label: "Referrals", href: "/admin/referrals" },
     { label: "B.H Referrals", href: "/admin/bhreferrals" },
     { label: "Reports", href: "/admin/reports" },
-    { label: "Setting", href: "/admin/setting" },
+    { label: "Setting", href: "/admin/settings" },
 ];
 
 export const userMenu = [

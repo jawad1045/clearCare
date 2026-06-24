@@ -174,6 +174,14 @@ export async function createBHReferral(formData: FormData) {
   redirect("/user/bhreferrals");
 }
 
+export async function getRecentBHReferrals(take = 6) {
+  return prisma.mentalHealthReferral.findMany({
+    take,
+    include: { company: true },
+    orderBy: { dateOfReferral: "desc" },
+  });
+}
+
 export async function getBHReferrals() {
   return prisma.mentalHealthReferral.findMany({
     include: { user: true, company: true },
@@ -231,9 +239,17 @@ export async function updateBHReferralStatus(referralId: number, status: string)
   return "/user/bhreferrals";
 }
 
-export async function getBHReferralStatusCounts() {
+export async function getBHReferralStatusCounts(month?: string) {
+  const dateFilter: { gte?: Date; lt?: Date } = {};
+  if (month) {
+    const [year, mon] = month.split("-").map(Number);
+    dateFilter.gte = new Date(year, mon - 1, 1);
+    dateFilter.lt = new Date(year, mon, 1);
+  }
+
   const rows = await prisma.mentalHealthReferral.groupBy({
     by: ["status"],
+    where: month ? { dateOfReferral: dateFilter } : undefined,
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));

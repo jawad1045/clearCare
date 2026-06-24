@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import {Barlow} from "next/font/google";
+import { Barlow } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/providers";
 
-const barlowFont = Barlow({
+const barlow = Barlow({
   variable: "--font-barlow",
   subsets: ["latin"],
-  weight: "600"
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,10 +24,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${barlowFont.variable} h-full antialiased`}
+      className={`${barlow.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}
-        <Toaster richColors />
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider>
+          {children}
+          <Toaster richColors />
+        </ThemeProvider>
       </body>
     </html>
   );
