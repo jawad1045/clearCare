@@ -12,7 +12,7 @@ export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: 
   const menu = role === "admin" ? adminMenu : userMenu;
 
   return (
-    <header>
+    <header className="print:hidden">
       <div className="flex items-center justify-between gap-6 bg-[#1C2D35] px-4 py-3 text-gray-300 md:px-8">
         <div className="flex items-center gap-20">
           <Image src="/logo.png" alt="HWP Logo" width={70} height={40} className="object-contain" priority />

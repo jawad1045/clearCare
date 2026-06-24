@@ -131,3 +131,17 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    width: 100%;
+    overflow: visible;
+    background: white;
+  }
+}

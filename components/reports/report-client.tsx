@@ -305,8 +305,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
         </CardHeader>
         <Separator />
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
               <thead>
                 <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
                   <th className="px-4 py-3 text-left font-medium">ID</th>
