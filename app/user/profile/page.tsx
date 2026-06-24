@@ -14,13 +14,14 @@ export default async function UserProfilePage() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold">My Profile</h1>
-        <p className="text-muted-foreground text-sm">Manage your name and password</p>
+        <p className="text-muted-foreground text-sm">View your name and manage your password</p>
       </div>
       <ProfileForm
         firstName={user.contactFirstName}
         lastName={user.contactLastName}
         email={user.contactEmail}
         redirectTo="/user"
+        canEditName={false}
       />
     </div>
   );

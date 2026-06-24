@@ -334,6 +334,9 @@ import { getCurrentUser } from "@/lib/auth";
 export async function updateProfileName(formData: FormData) {
   const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("Unauthorized");
+  if (currentUser.role !== "Admin") {
+    throw new Error("Your name is managed by your administrator. Contact them to make changes.");
+  }
 
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
