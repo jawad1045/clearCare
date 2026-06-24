@@ -10,6 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import { getStatusLabel } from "@/lib/referral-statuses";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -33,9 +34,9 @@ interface Props {
 }
 
 export function StatusBarChart({ data }: Props) {
-  const labels = data.map((d) => d.status);
+  const labels = data.map((d) => getStatusLabel(d.status));
   const counts = data.map((d) => d.count);
-  const colors = labels.map(colorFor);
+  const colors = data.map((d) => colorFor(d.status));
 
   const chartData = {
     labels,

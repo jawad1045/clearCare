@@ -74,29 +74,29 @@ export default async function UserDashboardPage() {
       </div>
 
       {/* Charts */}
-      {/* <div className="flex gap-6">
-        <Card className="w-[30%]">
+      <div className="flex gap-6">
+        <Card className="w-[50%]">
           <CardHeader>
             <CardTitle>My Referrals by Status</CardTitle>
             <CardDescription className="text-sm">Breakdown of your referral statuses</CardDescription>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4 h-72">
+          <CardContent className="pt-4 h-56">
             <StatusPieChart data={statusCounts} />
           </CardContent>
         </Card>
 
-        <Card className="w-[70%]">
+        <Card className="w-[50%]">
           <CardHeader>
             <CardTitle>My B.H. Referrals by Status</CardTitle>
             <CardDescription className="text-sm">Breakdown of your Behavioral Health referral statuses</CardDescription>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4 h-72">
+          <CardContent className="pt-4 h-56">
             <StatusBarChart data={bhStatusCounts} />
           </CardContent>
         </Card>
-      </div> */}
+      </div>
     </div>
   );
 }

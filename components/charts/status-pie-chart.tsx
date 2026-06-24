@@ -10,7 +10,7 @@ import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-import { getStatusColor } from "@/lib/referral-statuses";
+import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 
 function colorFor(status: string) {
   return getStatusColor(status);
@@ -21,9 +21,9 @@ interface Props {
 }
 
 export function StatusPieChart({ data }: Props) {
-  const labels = data.map((d) => d.status);
+  const labels = data.map((d) => getStatusLabel(d.status));
   const counts = data.map((d) => d.count);
-  const colors = labels.map(colorFor);
+  const colors = data.map((d) => colorFor(d.status));
 
   const chartData = {
     labels,
