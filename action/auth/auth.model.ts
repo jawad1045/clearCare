@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs'
 import { setSessionCookie, clearSession } from '@/lib/auth';
+import { getSessionTimeoutMinutes } from '@/action/settings.action';
 // Inside /action/auth/auth.model.ts
 
 export async function loginAction(formData: Record<string, string>) {
@@ -27,7 +28,8 @@ export async function loginAction(formData: Record<string, string>) {
       return { success: false, error: 'Invalid email or password.' }
     }
 
-    await setSessionCookie({ id: user.id, role: user.userRole })
+    const timeoutMinutes = await getSessionTimeoutMinutes();
+    await setSessionCookie({ id: user.id, role: user.userRole }, timeoutMinutes)
 
     return {
       success: true,

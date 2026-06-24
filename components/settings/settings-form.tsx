@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sun, Moon, Monitor, Bell, BellOff, Settings2, Save } from "lucide-react";
+import { Sun, Moon, Monitor, Bell, BellOff, Settings2, Save, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { updateSessionTimeoutMinutes } from "@/action/settings.action";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const NOTIF_KEY = "hwp:notif-prefs";
 
@@ -131,10 +133,22 @@ function AppearanceSection() {
   );
 }
 
-function SystemSection() {
+const SESSION_TIMEOUT_OPTIONS = [
+  { value: 15, label: "15 minutes" },
+  { value: 30, label: "30 minutes" },
+  { value: 60, label: "1 hour" },
+  { value: 240, label: "4 hours" },
+  { value: 480, label: "8 hours" },
+  { value: 1440, label: "24 hours" },
+  { value: 10080, label: "7 days" },
+];
+
+function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeoutMinutes: number }) {
   const [companyName, setCompanyName] = useState("HWP Portal");
   const [supportEmail, setSupportEmail] = useState("support@hwp.com");
+  const [sessionTimeout, setSessionTimeout] = useState(initialSessionTimeoutMinutes);
   const [saving, setSaving] = useState(false);
+  const [savingTimeout, setSavingTimeout] = useState(false);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -142,6 +156,18 @@ function SystemSection() {
     await new Promise((r) => setTimeout(r, 600));
     setSaving(false);
     toast.success("System settings saved");
+  }
+
+  async function handleSessionTimeoutSave() {
+    setSavingTimeout(true);
+    try {
+      await updateSessionTimeoutMinutes(sessionTimeout);
+      toast.success("Session timeout updated. New logins will use this duration.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update session timeout");
+    } finally {
+      setSavingTimeout(false);
+    }
   }
 
   return (
@@ -169,6 +195,37 @@ function SystemSection() {
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </form>
+
+      <Separator />
+
+      <div className="space-y-4 rounded-lg border p-4">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <Label className="text-base">Session Timeout</Label>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          How long a user can stay signed in before they're automatically logged out and must log in again.
+        </p>
+        <div className="flex items-center gap-3">
+          <Select value={String(sessionTimeout)} onValueChange={(v) => setSessionTimeout(Number(v))}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SESSION_TIMEOUT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            onClick={handleSessionTimeoutSave}
+            disabled={savingTimeout || sessionTimeout === initialSessionTimeoutMinutes}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {savingTimeout ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -221,13 +278,13 @@ function SidebarNav({ active, onChange }: { active: NavId; onChange: (id: NavId)
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
-export function SettingsForm() {
+export function SettingsForm({ initialSessionTimeoutMinutes }: { initialSessionTimeoutMinutes: number }) {
   const [active, setActive] = useState<NavId>("notifications");
 
   const sectionMap: Record<NavId, React.ReactNode> = {
     notifications: <NotificationsSection />,
     appearance: <AppearanceSection />,
-    system: <SystemSection />,
+    system: <SystemSection initialSessionTimeoutMinutes={initialSessionTimeoutMinutes} />,
   };
 
   return (

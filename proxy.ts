@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifySessionToken } from '@/lib/auth'
+import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/auth'
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const token = request.cookies.get('session_token')?.value
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value
   const currentUser = token ? verifySessionToken(token) : null
+  // A token is present but failed verification (bad signature or past its expiry) — the
+  // session has timed out, so send the user back to login with a flag to show that message.
+  const sessionExpired = Boolean(token) && !currentUser
 
   if (pathname === '/') {
     if (currentUser) {
@@ -18,13 +21,18 @@ export async function proxy(request: NextRequest) {
 
   if (pathname.startsWith('/admin')) {
     if (!currentUser || currentUser.role !== 'Admin') {
-      return NextResponse.redirect(new URL('/user', request.url))
+      const destination = !currentUser ? '/' : '/user'
+      const url = new URL(destination, request.url)
+      if (sessionExpired) url.searchParams.set('expired', '1')
+      return NextResponse.redirect(url)
     }
   }
 
   if (pathname.startsWith('/user')) {
     if (!currentUser) {
-      return NextResponse.redirect(new URL('/', request.url))
+      const url = new URL('/', request.url)
+      if (sessionExpired) url.searchParams.set('expired', '1')
+      return NextResponse.redirect(url)
     }
   }
 

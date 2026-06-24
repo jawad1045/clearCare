@@ -2,17 +2,24 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react"
 import { loginAction } from "@/action/auth/auth.model"
 import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [formData, setFormData] = React.useState({ contactEmail: "", password: "" })
+
+  React.useEffect(() => {
+    if (searchParams.get("expired") === "1") {
+      setError("Your session has expired. Please log in again.")
+    }
+  }, [searchParams])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target

@@ -130,6 +130,15 @@ model MentalHealthReferral {
   @@map("tbl_MentalHealthReferrals")
 }
 
+/// Singleton row (id always 1) holding global, admin-configurable app settings
+model AppSetting {
+  id                    Int      @id @default(1)
+  sessionTimeoutMinutes Int      @default(1440) @map("Session_Timeout_Minutes")
+  updatedAt             DateTime @updatedAt @map("Updated_At")
+
+  @@map("tbl_AppSettings")
+}
+
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("User_ID")

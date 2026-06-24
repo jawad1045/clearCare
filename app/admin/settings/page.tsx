@@ -2,10 +2,13 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Separator } from "@/components/ui/separator";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { getSessionTimeoutMinutes } from "@/action/settings.action";
 
 export default async function AdminSettingsPage() {
   const session = await getCurrentUser();
   if (!session || session.role !== "Admin") redirect("/user");
+
+  const sessionTimeoutMinutes = await getSessionTimeoutMinutes();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 pb-16">
@@ -16,7 +19,7 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
       <Separator />
-      <SettingsForm />
+      <SettingsForm initialSessionTimeoutMinutes={sessionTimeoutMinutes} />
     </div>
   );
 }
