@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate } from "@/lib/format-date";
+import { formatDateTime } from "@/lib/format-date";
 import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
 
 const MONTHS = [
@@ -39,6 +39,7 @@ type BHReferral = {
   gender: string;
   status: string;
   dateOfReferral: Date;
+  lastUpdated: Date;
   pdfReport: string | null;
   user: {
     contactFirstName: string;
@@ -164,7 +165,8 @@ export function AdminBHReferralsTable({ referrals, basePath }: Props) {
               <TableHead>Company</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Last Updated</TableHead>
               <TableHead className="w-20">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -172,7 +174,7 @@ export function AdminBHReferralsTable({ referrals, basePath }: Props) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   No referrals found
                 </TableCell>
               </TableRow>
@@ -202,8 +204,12 @@ export function AdminBHReferralsTable({ referrals, basePath }: Props) {
                     </Badge>
                   </TableCell>
 
-                  <TableCell>
-                    {formatDate(referral.dateOfReferral)}
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(referral.dateOfReferral)}
+                  </TableCell>
+
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(referral.lastUpdated)}
                   </TableCell>
 
                   <TableCell>

@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate } from "@/lib/format-date";
+import { formatDateTime } from "@/lib/format-date";
 import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
 
 const MONTHS = [
@@ -107,7 +107,8 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
               <TableHead>Client</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Last Updated</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -115,7 +116,7 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center text-muted-foreground py-6"
                 >
                   No referrals found.
@@ -137,8 +138,11 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
                       {referral.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {formatDate(referral.dateOfReferral)}
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(referral.dateOfReferral)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(referral.lastUpdated)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">

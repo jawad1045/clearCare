@@ -5,3 +5,9 @@ export function formatDate(date: Date | string): string {
   const year = d.getFullYear();
   return `${day}/${month}/${year}`;
 }
+
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return `${formatDate(d)} ${time}`;
+}

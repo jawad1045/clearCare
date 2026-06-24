@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate } from "@/lib/format-date";
+import { formatDateTime } from "@/lib/format-date";
 import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
 
 const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
@@ -39,6 +39,7 @@ type Referral = {
   priority: string;
   status: string;
   dateOfReferral: Date;
+  lastUpdated: Date;
   pdfResult: string | null;
   user: {
     contactFirstName: string;
@@ -179,7 +180,8 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
               <TableHead>Service</TableHead>
               <TableHead>Priority</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Last Updated</TableHead>
               <TableHead className="w-20">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -187,7 +189,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   No referrals found
                 </TableCell>
               </TableRow>
@@ -219,8 +221,12 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                     </Badge>
                   </TableCell>
 
-                  <TableCell>
-                    {formatDate(referral.dateOfReferral)}
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(referral.dateOfReferral)}
+                  </TableCell>
+
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(referral.lastUpdated)}
                   </TableCell>
 
                   <TableCell>
