@@ -106,7 +106,9 @@ function Field({
   );
 }
 
-export function CreateReferralForm() {
+type Props = { referrerName: string };
+
+export function CreateReferralForm({ referrerName }: Props) {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -137,7 +139,7 @@ export function CreateReferralForm() {
       ssn: "",
       type: "",
       priority: "",
-      referrerName: "",
+      referrerName,
       contactDate: "",
       contactMethod: [],
     },
@@ -379,9 +381,12 @@ export function CreateReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Referrer Name" required error={errors.referrerName?.message}>
-              <Input {...register("referrerName")} placeholder="Referring person name"
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field label="Referrer Name (from your profile)" required error={errors.referrerName?.message}>
+              <Input
+                {...register("referrerName")}
+                readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+              />
             </Field>
             <Field label="Date of Patient Contact">
               <DatePicker

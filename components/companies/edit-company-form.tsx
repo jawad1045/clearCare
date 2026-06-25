@@ -17,6 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
 
 type Company = {
   id: number;
@@ -279,8 +288,19 @@ export function EditCompanyForm({ company }: Props) {
             </Field>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs font-medium text-foreground/80">Title</Label>
-              <Input {...register("title")}
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Select
+                defaultValue={company.contactTitle ?? undefined}
+                onValueChange={(v) => setValue("title", v)}
+              >
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder="Select title..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {TITLES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </FieldGroup>
 

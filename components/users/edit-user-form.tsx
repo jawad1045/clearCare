@@ -46,6 +46,8 @@ type User = {
 
 type Props = { user: User; companies: Company[] };
 
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
+
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
   title: string;
@@ -96,6 +98,7 @@ export function EditUserForm({ user, companies }: Props) {
   const [pendingData, setPendingData] = useState<FormData | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
   const [phone, setPhone] = useState(formatPhoneInput(user.contactPhone));
+  const [contactTitle, setContactTitle] = useState(user.contactTitle ?? "");
 
   function handleRoleChange(value: string) {
     setSelectedRole(value);
@@ -254,8 +257,17 @@ export function EditUserForm({ user, companies }: Props) {
               />
             </Field>
             <Field label="Title" full>
-              <Input name="title" defaultValue={user.contactTitle ?? ""}
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Select defaultValue={contactTitle || undefined} onValueChange={setContactTitle}>
+                <SelectTrigger className="border-border focus:ring-primary">
+                  <SelectValue placeholder="Select title..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {TITLES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="title" value={contactTitle} />
             </Field>
           </FieldGroup>
 

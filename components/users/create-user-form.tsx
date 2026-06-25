@@ -29,6 +29,8 @@ type Company = {
 
 type CreateUserFormProps = { companies: Company[] };
 
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
+
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
   title: string;
@@ -79,6 +81,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
   const [pendingData, setPendingData] = useState<FormData | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
+  const [title, setTitle] = useState("");
 
   function handleRoleChange(value: string) {
     setSelectedRole(value);
@@ -235,8 +238,17 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
               />
             </Field>
             <Field label="Title" full>
-              <Input name="title" placeholder="e.g. Manager"
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Select onValueChange={setTitle}>
+                <SelectTrigger className="border-border focus:ring-primary">
+                  <SelectValue placeholder="Select title..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {TITLES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="title" value={title} />
             </Field>
           </FieldGroup>
 

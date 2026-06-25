@@ -70,7 +70,9 @@ function Field({
   );
 }
 
-export function CreateBHReferralForm() {
+type Props = { referrerName: string };
+
+export function CreateBHReferralForm({ referrerName }: Props) {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -90,7 +92,7 @@ export function CreateBHReferralForm() {
       last4SSN: "",
       email: "",
       gender: "",
-      referrerName: "",
+      referrerName,
       notes: "",
     },
   });
@@ -222,11 +224,11 @@ export function CreateBHReferralForm() {
         {/* ── Referral Details ── */}
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Referrer Name">
+            <Field label="Referrer Name (from your profile)">
               <Input
                 {...register("referrerName")}
-                placeholder="Referring person name"
-                className="border-border bg-background focus-visible:ring-primary"
+                readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
               />
             </Field>
             <Field label="Notes">
