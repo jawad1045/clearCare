@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 
 import { createReferral } from "@/action/referral.action";
@@ -18,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { calcAge } from "@/lib/utils";
+import { calcAge, formatPhoneInput } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -50,6 +53,28 @@ const RACES = [
   "Other",
 ];
 
+const referralSchema = z.object({
+  serviceType: z.string().min(1, "Service type is required"),
+  parentFirstName: z.string().optional(),
+  parentLastName: z.string().optional(),
+  parentEmail: z.string().email("Enter a valid email").optional().or(z.literal("")),
+  parentPhone: z.string().optional(),
+  patientFirstName: z.string().min(1, "Patient first name is required"),
+  patientLastName: z.string().min(1, "Patient last name is required"),
+  dob: z.string().min(1, "Date of birth is required"),
+  race: z.string().min(1, "Race is required"),
+  grade: z.string().optional(),
+  gender: z.string().min(1, "Gender is required"),
+  ssn: z.string().min(1, "SSN is required"),
+  type: z.string().min(1, "Test type is required"),
+  priority: z.string().min(1, "Priority is required"),
+  referrerName: z.string().min(1, "Referrer name is required"),
+  contactDate: z.string().optional(),
+  contactMethod: z.array(z.string()).optional(),
+});
+
+type ReferralFormValues = z.infer<typeof referralSchema>;
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
@@ -61,10 +86,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function Field({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -74,6 +101,7 @@ function Field({
         {required && <span className="ml-0.5 text-primary">*</span>}
       </Label>
       {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
@@ -81,15 +109,64 @@ function Field({
 export function CreateReferralForm() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
-  const [contactMethods, setContactMethods] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingData, setPendingData] = useState<FormData | null>(null);
+  const [pendingValues, setPendingValues] = useState<ReferralFormValues | null>(null);
   const [showSSN, setShowSSN] = useState(false);
   const [age, setAge] = useState("");
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<ReferralFormValues>({
+    resolver: zodResolver(referralSchema),
+    defaultValues: {
+      serviceType: "",
+      parentFirstName: "",
+      parentLastName: "",
+      parentEmail: "",
+      parentPhone: "",
+      patientFirstName: "",
+      patientLastName: "",
+      dob: "",
+      race: "",
+      grade: "",
+      gender: "",
+      ssn: "",
+      type: "",
+      priority: "",
+      referrerName: "",
+      contactDate: "",
+      contactMethod: [],
+    },
+  });
 
-  async function handleSubmit(formData: FormData) {
-    contactMethods.forEach((m) => formData.append("contactMethod", m));
+  const contactMethods = watch("contactMethod") ?? [];
+
+  async function submitReferral(values: ReferralFormValues) {
+    const formData = new FormData();
+    formData.set("serviceType", values.serviceType);
+    formData.set("parentFirstName", values.parentFirstName ?? "");
+    formData.set("parentLastName", values.parentLastName ?? "");
+    formData.set("parentEmail", values.parentEmail ?? "");
+    formData.set("parentPhone", values.parentPhone ?? "");
+    formData.set("patientFirstName", values.patientFirstName);
+    formData.set("patientLastName", values.patientLastName);
+    formData.set("dob", values.dob);
+    formData.set("race", values.race);
+    formData.set("grade", values.grade ?? "");
+    formData.set("gender", values.gender);
+    formData.set("ssn", values.ssn);
+    formData.set("type", values.type);
+    formData.set("priority", values.priority);
+    formData.set("status", "Pending");
+    formData.set("referrerName", values.referrerName);
+    formData.set("contactDate", values.contactDate ?? "");
+    (values.contactMethod ?? []).forEach((m) => formData.append("contactMethod", m));
+    attachments.forEach((url) => formData.append("attachments", url));
+
     startTransition(async () => {
       try {
         await createReferral(formData);
@@ -100,22 +177,22 @@ export function CreateReferralForm() {
     });
   }
 
-  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setPendingData(new FormData(e.currentTarget));
+  function onFormSubmit(values: ReferralFormValues) {
+    setPendingValues(values);
     setConfirmOpen(true);
   }
 
   function onConfirm() {
     setConfirmOpen(false);
-    if (pendingData) handleSubmit(pendingData);
-    setPendingData(null);
+    if (pendingValues) submitReferral(pendingValues);
+    setPendingValues(null);
   }
 
   function toggleContact(value: string) {
-    setContactMethods((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    const next = contactMethods.includes(value)
+      ? contactMethods.filter((v) => v !== value)
+      : [...contactMethods, value];
+    setValue("contactMethod", next);
   }
 
   return (
@@ -137,21 +214,16 @@ export function CreateReferralForm() {
       <ConfirmDialog
         open={confirmOpen}
         onConfirm={onConfirm}
-        onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+        onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
         title="Submit Referral"
         description="Are you sure you want to submit this referral? Please review all patient information before proceeding."
         confirmLabel="Submit Referral"
       />
-      <form onSubmit={onFormSubmit} className="pl-6 pr-10 py-6 space-y-6">
-
-        {/* Hidden attachment URLs */}
-        {attachments.map((url) => (
-          <input key={url} type="hidden" name="attachments" value={url} />
-        ))}
+      <form onSubmit={handleSubmit(onFormSubmit)} className="pl-6 pr-10 py-6 space-y-6">
 
         {/* ── Service Type ── */}
-        <Field label="Select Service Type" required>
-          <Select name="serviceType">
+        <Field label="Select Service Type" required error={errors.serviceType?.message}>
+          <Select onValueChange={(v) => setValue("serviceType", v, { shouldValidate: true })}>
             <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
               <SelectValue placeholder="Choose service type..." />
             </SelectTrigger>
@@ -168,20 +240,26 @@ export function CreateReferralForm() {
           <SectionLabel>Parent / Guardian Information</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="First Name">
-              <Input name="parentFirstName" placeholder="Parent first name"
+              <Input {...register("parentFirstName")} placeholder="Parent first name"
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Last Name">
-              <Input name="parentLastName" placeholder="Parent last name"
+              <Input {...register("parentLastName")} placeholder="Parent last name"
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email">
-              <Input type="email" name="parentEmail" placeholder="parent@email.com"
+            <Field label="Email" error={errors.parentEmail?.message}>
+              <Input type="email" {...register("parentEmail")} placeholder="parent@email.com"
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Phone">
-              <Input name="parentPhone" placeholder="(555)000-0000"
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Input
+                {...register("parentPhone", {
+                  onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
+                })}
+                placeholder="(555) 000-0000"
+                maxLength={14}
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
           </div>
         </div>
@@ -190,19 +268,22 @@ export function CreateReferralForm() {
         <div>
           <SectionLabel>Patient Information</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name" required>
-              <Input name="patientFirstName" placeholder="Patient first name" required
+            <Field label="First Name" required error={errors.patientFirstName?.message}>
+              <Input {...register("patientFirstName")} placeholder="Patient first name"
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required>
-              <Input name="patientLastName" placeholder="Patient last name" required
+            <Field label="Last Name" required error={errors.patientLastName?.message}>
+              <Input {...register("patientLastName")} placeholder="Patient last name"
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Date of Birth (MM/DD/YYYY)" required>
+            <Field label="Date of Birth (MM/DD/YYYY)" required error={errors.dob?.message}>
               <DatePicker
-                name="dob"
+                name="dob_display"
                 required
-                onDateChange={(iso) => setAge(iso ? calcAge(iso) : "")}
+                onDateChange={(iso) => {
+                  setValue("dob", iso, { shouldValidate: true });
+                  setAge(iso ? calcAge(iso) : "");
+                }}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
@@ -214,8 +295,8 @@ export function CreateReferralForm() {
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
               />
             </Field>
-            <Field label="Race" required>
-              <Select name="race">
+            <Field label="Race" required error={errors.race?.message}>
+              <Select onValueChange={(v) => setValue("race", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -227,7 +308,7 @@ export function CreateReferralForm() {
               </Select>
             </Field>
             <Field label="Grade">
-              <Select name="grade">
+              <Select onValueChange={(v) => setValue("grade", v)}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -238,8 +319,8 @@ export function CreateReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Gender" required>
-              <Select name="gender">
+            <Field label="Gender" required error={errors.gender?.message}>
+              <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -250,13 +331,12 @@ export function CreateReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="SSN" required>
+            <Field label="SSN" required error={errors.ssn?.message}>
               <div className="relative">
                 <Input
                   type={showSSN ? "text" : "password"}
-                  name="ssn"
+                  {...register("ssn")}
                   placeholder="XXX-XX-XXXX"
-                  required
                   className="border-border bg-background pr-10 focus-visible:ring-primary"
                 />
                 <button
@@ -275,8 +355,8 @@ export function CreateReferralForm() {
         <div>
           <SectionLabel>Test Details</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Test Type" required>
-              <Select name="type">
+            <Field label="Test Type" required error={errors.type?.message}>
+              <Select onValueChange={(v) => setValue("type", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select type..." />
                 </SelectTrigger>
@@ -287,8 +367,8 @@ export function CreateReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Priority" required>
-              <Select name="priority">
+            <Field label="Priority" required error={errors.priority?.message}>
+              <Select onValueChange={(v) => setValue("priority", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -299,15 +379,14 @@ export function CreateReferralForm() {
                 </SelectContent>
               </Select>
             </Field>
-            {/* status is always Pending on creation — admin changes it later */}
-            <input type="hidden" name="status" value="Pending" />
-            <Field label="Referrer Name" required>
-              <Input name="referrerName" placeholder="Referring person name"
+            <Field label="Referrer Name" required error={errors.referrerName?.message}>
+              <Input {...register("referrerName")} placeholder="Referring person name"
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Date of Patient Contact">
               <DatePicker
-                name="contactDate"
+                name="contactDate_display"
+                onDateChange={(iso) => setValue("contactDate", iso)}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>

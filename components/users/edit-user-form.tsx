@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { UserCog, Building2, MapPin, ShieldCheck, ToggleLeft } from "lucide-react";
 
 import { updateUser } from "@/action/user.action";
+import { formatPhoneInput } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -94,6 +95,7 @@ export function EditUserForm({ user, companies }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
+  const [phone, setPhone] = useState(formatPhoneInput(user.contactPhone));
 
   function handleRoleChange(value: string) {
     setSelectedRole(value);
@@ -242,8 +244,14 @@ export function EditUserForm({ user, companies }: Props) {
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Phone" required>
-              <Input name="phone" defaultValue={user.contactPhone} required
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Input
+                name="phone"
+                value={phone}
+                onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+                required
+                maxLength={14}
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
             <Field label="Title" full>
               <Input name="title" defaultValue={user.contactTitle ?? ""}

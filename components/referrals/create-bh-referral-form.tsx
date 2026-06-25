@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { formatPhoneInput } from "@/lib/utils";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -29,7 +30,10 @@ const GENDERS = ["Male", "Female", "Other"];
 const bhReferralSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Enter a complete phone number"),
   last4SSN: z
     .string()
     .min(1, "Last 4 of SSN is required")
@@ -170,8 +174,11 @@ export function CreateBHReferralForm() {
             </Field>
             <Field label="Phone" required error={errors.phone?.message}>
               <Input
-                {...register("phone")}
-                placeholder="(555)000-0000"
+                {...register("phone", {
+                  onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
+                })}
+                placeholder="(555) 000-0000"
+                maxLength={14}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>

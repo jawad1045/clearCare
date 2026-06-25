@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, UserPlus, Building2, MapPin, ShieldCheck, FileText } from "lucide-react";
 
 import { createUser } from "@/action/user.action";
+import { formatPhoneInput } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -77,6 +78,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
 
   function handleRoleChange(value: string) {
     setSelectedRole(value);
@@ -223,8 +225,14 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label="Phone" required>
-              <Input name="phone" required
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Input
+                name="phone"
+                value={phone}
+                onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+                required
+                maxLength={14}
+                className="border-border bg-background focus-visible:ring-primary"
+              />
             </Field>
             <Field label="Title" full>
               <Input name="title" placeholder="e.g. Manager"

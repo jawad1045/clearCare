@@ -29,3 +29,30 @@ export function formatDobInput(raw: string): { display: string; iso: string } {
 
   return { display, iso };
 }
+
+/** Auto-formats raw digits into (555) 555-1212 as the user types. */
+export function formatPhoneInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  const len = digits.length;
+  if (len === 0) return "";
+  if (len < 4) return `(${digits}`;
+  if (len < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+/** Looks up city/state for a US zip code via the free zippopotam.us API. */
+export async function lookupZipCode(zip: string): Promise<{ city: string; state: string } | null> {
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const place = data.places?.[0];
+    if (!place) return null;
+    return {
+      city: place["place name"] as string,
+      state: place["state abbreviation"] as string,
+    };
+  } catch {
+    return null;
+  }
+}
