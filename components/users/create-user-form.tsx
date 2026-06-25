@@ -2,9 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, UserPlus, Building2, MapPin, ShieldCheck, FileText } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { KeyRound, UserPlus, Building2, MapPin, ShieldCheck, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 import { createUser } from "@/action/user.action";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { formatPhoneInput } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +36,32 @@ type CreateUserFormProps = { companies: Company[] };
 
 const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
 
+const userSchema = z
+  .object({
+    acctId: z.string().optional(),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().min(1, "Email is required").email("Enter a valid email"),
+    phone: z
+      .string()
+      .min(1, "Phone is required")
+      .regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Enter a complete phone number"),
+    title: z.string().optional(),
+    role: z.string().min(1, "Role is required"),
+    notes: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role !== "Admin" && !data.acctId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["acctId"],
+        message: "Organization is required for this role.",
+      });
+    }
+  });
+
+type UserFormValues = z.infer<typeof userSchema>;
+
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
   title: string;
@@ -53,9 +84,10 @@ function FieldGroup({ icon: Icon, title, children }: {
   );
 }
 
-function Field({ label, required, children, full }: {
+function Field({ label, required, error, children, full }: {
   label: string;
   required?: boolean;
+  error?: string;
   full?: boolean;
   children: React.ReactNode;
 }) {
@@ -66,6 +98,7 @@ function Field({ label, required, children, full }: {
         {required && <span className="ml-0.5 text-primary">*</span>}
       </Label>
       {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
@@ -73,48 +106,70 @@ function Field({ label, required, children, full }: {
 export function CreateUserForm({ companies }: CreateUserFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string>("User");
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingData, setPendingData] = useState<FormData | null>(null);
-  const [companyError, setCompanyError] = useState<string | null>(null);
-  const [phone, setPhone] = useState("");
-  const [title, setTitle] = useState("");
+  const [pendingValues, setPendingValues] = useState<UserFormValues | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      acctId: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      title: "",
+      role: "User",
+      notes: "",
+    },
+  });
+
+  const role = watch("role");
 
   function handleRoleChange(value: string) {
-    setSelectedRole(value);
+    setValue("role", value, { shouldValidate: true });
+    setValue("acctId", "");
     setSelectedCompany(null);
-    setCompanyError(null);
   }
 
-  async function handleSubmit(formData: FormData) {
+  async function submitUser(values: UserFormValues) {
+    const formData = new FormData();
+    formData.set("acctId", values.acctId ?? "");
+    formData.set("firstName", values.firstName);
+    formData.set("lastName", values.lastName);
+    formData.set("email", values.email);
+    formData.set("phone", values.phone);
+    formData.set("title", values.title ?? "");
+    formData.set("role", values.role);
+    formData.set("notes", values.notes ?? "");
+
     startTransition(async () => {
-      await createUser(formData);
-      router.push("/admin/users");
-      router.refresh();
+      try {
+        await createUser(formData);
+        router.push("/admin/users");
+        router.refresh();
+      } catch (error) {
+        if (isRedirectError(error)) throw error;
+        toast.error(error instanceof Error ? error.message : "Failed to create user");
+      }
     });
   }
 
-  function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const role = formData.get("role") as string;
-    const acctId = formData.get("acctId") as string;
-    if (role !== "Admin" && !acctId) {
-      setCompanyError("Organization is required for this role.");
-      return;
-    }
-    setCompanyError(null);
-    setPendingData(formData);
+  function onFormSubmit(values: UserFormValues) {
+    setPendingValues(values);
     setConfirmOpen(true);
   }
 
   function onConfirm() {
     setConfirmOpen(false);
-    if (pendingData) handleSubmit(pendingData);
-    setPendingData(null);
+    if (pendingValues) submitUser(pendingValues);
+    setPendingValues(null);
   }
 
   return (
@@ -143,29 +198,29 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
         <ConfirmDialog
           open={confirmOpen}
           onConfirm={onConfirm}
-          onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
+          onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
           title="Create User"
           description="Are you sure you want to create this user? Please review all details before proceeding."
           confirmLabel="Create User"
         />
-        <form onSubmit={onFormSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs font-medium text-foreground/80">
                 Organization
-                {selectedRole !== "Admin"
+                {role !== "Admin"
                   ? <span className="ml-0.5 text-primary">*</span>
                   : <span className="ml-1 text-xs text-muted-foreground">(optional for Admin)</span>
                 }
               </Label>
               <Select
-                key={selectedRole}
+                key={role}
                 onValueChange={(value) => {
                   const company = companies.find((c) => c.id === Number(value)) || null;
                   setSelectedCompany(company);
-                  setCompanyError(null);
+                  setValue("acctId", value, { shouldValidate: true });
                 }}
               >
                 <SelectTrigger className="border-border focus:ring-primary">
@@ -179,9 +234,8 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <input type="hidden" name="acctId" value={selectedCompany?.id || ""} />
-              {companyError && (
-                <p className="text-xs text-destructive">{companyError}</p>
+              {errors.acctId && (
+                <p className="text-xs text-destructive">{errors.acctId.message}</p>
               )}
             </div>
           </FieldGroup>
@@ -215,30 +269,29 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
 
           {/* Contact */}
           <FieldGroup icon={UserPlus} title="Contact Details">
-            <Field label="First Name" required>
-              <Input name="firstName" required
+            <Field label="First Name" required error={errors.firstName?.message}>
+              <Input {...register("firstName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required>
-              <Input name="lastName" required
+            <Field label="Last Name" required error={errors.lastName?.message}>
+              <Input {...register("lastName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email" required>
-              <Input type="email" name="email" required
+            <Field label="Email" required error={errors.email?.message}>
+              <Input type="email" {...register("email")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Phone" required>
+            <Field label="Phone" required error={errors.phone?.message}>
               <Input
-                name="phone"
-                value={phone}
-                onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
-                required
+                {...register("phone", {
+                  onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
+                })}
                 maxLength={14}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
             <Field label="Title" full>
-              <Select onValueChange={setTitle}>
+              <Select onValueChange={(v) => setValue("title", v)}>
                 <SelectTrigger className="border-border focus:ring-primary">
                   <SelectValue placeholder="Select title..." />
                 </SelectTrigger>
@@ -248,7 +301,6 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <input type="hidden" name="title" value={title} />
             </Field>
           </FieldGroup>
 
@@ -256,7 +308,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
 
           {/* Role & Password */}
           <FieldGroup icon={ShieldCheck} title="Access & Security">
-            <Field label="Role" required>
+            <Field label="Role" required error={errors.role?.message}>
               <Select defaultValue="User" onValueChange={handleRoleChange}>
                 <SelectTrigger className="border-border focus:ring-primary">
                   <SelectValue />
@@ -266,46 +318,15 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                   <SelectItem value="User">User</SelectItem>
                 </SelectContent>
               </Select>
-              <input type="hidden" name="role" value={selectedRole} />
             </Field>
 
-            <div /> {/* spacer */}
-
-            <Field label="Password" required>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  required
-                  className="border-border bg-background pr-10 focus-visible:ring-primary"
-                />
-                <Button
-                  type="button" variant="ghost" size="icon"
-                  className="absolute right-0 top-0 h-full text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-            </Field>
-
-            <Field label="Confirm Password" required>
-              <div className="relative">
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  required
-                  className="border-border bg-background pr-10 focus-visible:ring-primary"
-                />
-                <Button
-                  type="button" variant="ghost" size="icon"
-                  className="absolute right-0 top-0 h-full text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-            </Field>
+            <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground sm:col-span-2">
+              <KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <span>
+                A temporary password will be generated automatically and emailed to the user
+                along with a link to log in and set their own password.
+              </span>
+            </div>
           </FieldGroup>
 
           <Separator className="bg-border/60" />
@@ -314,7 +335,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           <FieldGroup icon={FileText} title="Notes">
             <div className="space-y-1.5 sm:col-span-2">
               <Textarea
-                name="notes"
+                {...register("notes")}
                 placeholder="Any additional notes about this user…"
                 rows={4}
                 className="resize-none border-border bg-background focus-visible:ring-primary"

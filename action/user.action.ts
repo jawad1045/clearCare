@@ -7,6 +7,10 @@ import bcrypt from "bcryptjs";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { generateTempPassword } from "@/lib/generate-password";
+import { sendWelcomeEmail } from "@/lib/email";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
 type GetUsersParams = {
   page?: number;
@@ -146,23 +150,8 @@ export async function createUser(
   const role =
     formData.get("role") as string;
 
-  const password =
-    formData.get("password") as string;
-
-  const confirmPassword =
-    formData.get(
-      "confirmPassword"
-    ) as string;
-
   const notes =
     formData.get("notes") as string | null;
-
-  // Password Match
-  if (password !== confirmPassword) {
-    throw new Error(
-      "Passwords do not match"
-    );
-  }
 
   // Company Check — required for non-Admin users
   let company = null;
@@ -194,15 +183,16 @@ export async function createUser(
     );
   }
 
-  // Hash Password
+  // Auto-generate a temporary password — admins never set this manually
+  const temporaryPassword = generateTempPassword();
   const hashedPassword =
     await bcrypt.hash(
-      password,
+      temporaryPassword,
       12
     );
 
   // Create User
-  await prisma.user.create({
+  const user = await prisma.user.create({
   data: {
     acctId: acctId || null,
 
@@ -229,6 +219,13 @@ export async function createUser(
     isActive: true,
   },
 });
+
+  await sendWelcomeEmail({
+    toEmail: user.contactEmail,
+    toName: `${user.contactFirstName} ${user.contactLastName}`,
+    temporaryPassword,
+    loginUrl: `${APP_URL}/`,
+  }).catch(() => {});
 
   revalidatePath(
     "/admin/users"

@@ -42,6 +42,37 @@ function button(label: string, href: string) {
   return `<a href="${href}" style="display:inline-block;margin-top:20px;padding:12px 28px;background:#1C2D35;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:bold;">${label}</a>`;
 }
 
+// ── Email: new user account created → welcome email with temp password ──────
+export async function sendWelcomeEmail(opts: {
+  toEmail: string;
+  toName: string;
+  temporaryPassword: string;
+  loginUrl: string;
+}) {
+  await resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Welcome to ${APP_NAME} – Your Account is Ready`,
+    html: baseLayout(`
+      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Welcome to ${APP_NAME}</h2>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;">
+        An account has been created for you. Use the temporary password below to log in, then change it right away from your profile.
+      </p>
+      <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Email</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.toEmail}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Temporary Password</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:14px;font-weight:bold;color:#111827;font-family:monospace;">${opts.temporaryPassword}</td></tr>
+      </table>
+      <p style="color:#4b5563;font-size:13px;line-height:1.6;margin-top:16px;">
+        For your security, please change this password as soon as you log in.
+      </p>
+      ${button("Log In & Change Password", opts.loginUrl)}
+    `),
+  });
+}
+
 // ── Email: new referral submitted → sent to submitting user ──────────────────
 export async function sendReferralSubmittedToUser(opts: {
   toEmail: string;
