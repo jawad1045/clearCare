@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { generateTempPassword } from "@/lib/generate-password";
 import { sendWelcomeEmail } from "@/lib/email";
+import { notifySlackNewUser } from "@/lib/slack";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -226,6 +227,13 @@ export async function createUser(
     temporaryPassword,
     loginUrl: `${APP_URL}/`,
   }).catch(() => {});
+
+  await notifySlackNewUser({
+    name: `${user.contactFirstName} ${user.contactLastName}`,
+    email: user.contactEmail,
+    role: user.userRole,
+    organization: user.organization,
+  });
 
   revalidatePath(
     "/admin/users"

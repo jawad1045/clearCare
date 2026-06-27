@@ -11,6 +11,11 @@ import {
   sendStatusChangedToUser,
   sendResultUploadedToUser,
 } from "@/lib/email";
+import {
+  notifySlackNewReferral,
+  notifySlackStatusChanged,
+  notifySlackResultUploaded,
+} from "@/lib/slack";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const SERVICE_TYPE = "Behavioral Health";
@@ -65,6 +70,13 @@ async function notifySubmission(opts: {
         viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
+    notifySlackNewReferral({
+      referralId: opts.referralId,
+      patientName: opts.patientName,
+      submittedBy: opts.userName,
+      serviceType: SERVICE_TYPE,
+      viewUrl: `${APP_URL}${opts.adminViewPath}`,
+    }),
   ]);
 }
 
@@ -95,6 +107,12 @@ async function notifyStatusChange(opts: {
       toName: userName,
       patientName: opts.patientName,
       referralId: opts.referralId,
+      newStatus: opts.newStatus,
+      viewUrl: `${APP_URL}${opts.userViewPath}`,
+    }),
+    notifySlackStatusChanged({
+      referralId: opts.referralId,
+      patientName: opts.patientName,
       newStatus: opts.newStatus,
       viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
@@ -299,6 +317,11 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
       toName: userName,
       patientName,
       referralId,
+      viewUrl: `${APP_URL}${userViewPath}`,
+    }),
+    notifySlackResultUploaded({
+      referralId,
+      patientName,
       viewUrl: `${APP_URL}${userViewPath}`,
     }),
   ]);
