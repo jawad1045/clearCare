@@ -54,6 +54,7 @@ model User {
   userRole          String   @map("User_Role") @db.VarChar(50) // HWP Admin or Company User
   notes             String?  @db.Text
   isActive          Boolean  @default(true) @map("Is_Active")
+  mustChangePassword Boolean @default(false) @map("Must_Change_Password")
   createdDate       DateTime @default(now()) @map("Created_Date")
 
   // Relations

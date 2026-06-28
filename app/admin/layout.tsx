@@ -15,6 +15,11 @@ export default async function RootLayout({
   }
 
   const dbUser = await getUserById(user.id);
+
+  if (dbUser?.mustChangePassword) {
+    redirect("/change-password");
+  }
+
   const name = dbUser ? `${dbUser.contactFirstName} ${dbUser.contactLastName}` : "Admin";
 
   return (

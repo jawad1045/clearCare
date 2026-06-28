@@ -73,6 +73,37 @@ export async function sendWelcomeEmail(opts: {
   });
 }
 
+// ── Email: admin reset a user's password → temp password sent to user ───────
+export async function sendPasswordResetEmail(opts: {
+  toEmail: string;
+  toName: string;
+  temporaryPassword: string;
+  loginUrl: string;
+}) {
+  await resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Your ${APP_NAME} Password Has Been Reset`,
+    html: baseLayout(`
+      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Password Reset</h2>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;">
+        An administrator has reset your password. Use the temporary password below to log in, then change it right away from your profile.
+      </p>
+      <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Email</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.toEmail}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Temporary Password</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:14px;font-weight:bold;color:#111827;font-family:monospace;">${opts.temporaryPassword}</td></tr>
+      </table>
+      <p style="color:#4b5563;font-size:13px;line-height:1.6;margin-top:16px;">
+        If you didn't request this, contact your administrator immediately.
+      </p>
+      ${button("Log In & Change Password", opts.loginUrl)}
+    `),
+  });
+}
+
 // ── Email: new referral submitted → sent to submitting user ──────────────────
 export async function sendReferralSubmittedToUser(opts: {
   toEmail: string;

@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { generateTempPassword } from "@/lib/generate-password";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "@/lib/email";
 import { notifySlackNewUser } from "@/lib/slack";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -218,6 +218,8 @@ export async function createUser(
     notes: notes || null,
 
     isActive: true,
+
+    mustChangePassword: true,
   },
 });
 
@@ -359,7 +361,45 @@ export async function updateProfileName(formData: FormData) {
   revalidatePath("/user/profile");
 }
 
-export async function resetUserPassword(userId: number, newPassword: string) {
+export async function resetUserPassword(userId: number) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const temporaryPassword = generateTempPassword();
+  const hashed = await bcrypt.hash(temporaryPassword, 12);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashed, mustChangePassword: true },
+  });
+
+  await sendPasswordResetEmail({
+    toEmail: user.contactEmail,
+    toName: `${user.contactFirstName} ${user.contactLastName}`,
+    temporaryPassword,
+    loginUrl: `${APP_URL}/`,
+  });
+
+  revalidatePath("/admin/users");
+}
+
+export async function completeForcedPasswordChange(newPassword: string, confirmPassword: string) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("Unauthorized");
+
+  const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
+  if (!user) throw new Error("User not found");
+
+  if (!user.mustChangePassword) {
+    throw new Error("This link has expired. Please contact your administrator.");
+  }
+
+  if (newPassword !== confirmPassword) {
+    throw new Error("Passwords do not match");
+  }
+
   if (newPassword.length < 8) {
     throw new Error("Password must be at least 8 characters");
   }
@@ -367,11 +407,30 @@ export async function resetUserPassword(userId: number, newPassword: string) {
   const hashed = await bcrypt.hash(newPassword, 12);
 
   await prisma.user.update({
-    where: { id: userId },
-    data: { password: hashed },
+    where: { id: currentUser.id },
+    data: { password: hashed, mustChangePassword: false },
   });
 
-  revalidatePath("/admin/users");
+  return { redirectTo: user.userRole === "Admin" ? "/admin" : "/user" };
+}
+
+export async function continueWithCurrentPassword() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("Unauthorized");
+
+  const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
+  if (!user) throw new Error("User not found");
+
+  if (!user.mustChangePassword) {
+    throw new Error("This link has expired. Please contact your administrator.");
+  }
+
+  await prisma.user.update({
+    where: { id: currentUser.id },
+    data: { mustChangePassword: false },
+  });
+
+  return { redirectTo: user.userRole === "Admin" ? "/admin" : "/user" };
 }
 
 export async function updateProfilePassword(formData: FormData) {
