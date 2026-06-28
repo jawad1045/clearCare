@@ -4,6 +4,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, ChevronDown } from "lucide-react"; // Install lucide-react if you haven't already
 import {
   DropdownMenu,
@@ -18,30 +19,42 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "./theme-toggle";
 
 export function NavLinks({ menu, role, name }: any) {
   const [openMobile, setOpenMobile] = React.useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="w-full bg-[#1C2D35]">
+    <div className="w-full bg-sidebar">
       {/* ========================================== */}
       {/* DESKTOP NAVIGATION                         */}
       {/* ========================================== */}
-      <nav className="hidden md:flex items-center w-full h-full p-4 gap-8 text-sm text-gray-300">
+      <nav className="hidden md:flex items-center w-full h-full p-4 gap-8 text-sm text-sidebar-foreground">
         {menu.map((item: any) =>
           item.children ? (
             <DropdownMenu key={item.label}>
-              <DropdownMenuTrigger className="flex items-center gap-1 transition-colors duration-200 hover:text-[#7DDDD5] focus:outline-none">
+              <DropdownMenuTrigger
+                className={`flex items-center gap-1 transition-colors duration-200 hover:text-sidebar-accent-foreground focus:outline-none ${
+                  item.children.some((child: any) => isActive(child.href))
+                    ? "text-sidebar-accent-foreground"
+                    : ""
+                }`}
+              >
                 {item.label}
                 <ChevronDown className="h-4 w-4 opacity-70" />
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent className="bg-[#1C2D35] border border-slate-700 text-gray-300 min-w-40 rounded-md shadow-lg p-1">
+              <DropdownMenuContent className="bg-sidebar border border-slate-700 text-sidebar-foreground min-w-40 rounded-md shadow-lg p-1">
                 {item.children.map((child: any) => (
                   <DropdownMenuItem key={child.href} asChild>
                     <Link
                       href={child.href}
-                      className="block w-full px-3 py-2 rounded-sm transition-colors duration-200 hover:bg-slate-800 hover:text-[#7DDDD5] focus:bg-slate-800 focus:text-[#7DDDD5]"
+                      className={`block w-full px-3 py-2 rounded-sm transition-colors duration-200 hover:bg-slate-800 hover:text-sidebar-accent-foreground focus:bg-slate-800 focus:text-sidebar-accent-foreground ${
+                        isActive(child.href) ? "bg-slate-800 text-sidebar-accent-foreground" : ""
+                      }`}
                     >
                       {child.label}
                     </Link>
@@ -53,7 +66,9 @@ export function NavLinks({ menu, role, name }: any) {
             <Link
               key={item.href}
               href={item.href}
-              className="transition-colors duration-200 hover:text-[#7DDDD5]"
+              className={`transition-colors duration-200 hover:text-sidebar-accent-foreground ${
+                isActive(item.href) ? "text-sidebar-accent-foreground" : ""
+              }`}
             >
               {item.label}
             </Link>
@@ -64,17 +79,18 @@ export function NavLinks({ menu, role, name }: any) {
       {/* ========================================== */}
       {/* MOBILE NAVIGATION                          */}
       {/* ========================================== */}
-      <div className="flex md:hidden items-center justify-between p-4 text-gray-300">
-        <span className="font-semibold text-[#7DDDD5] text-sm">
+      <div className="flex md:hidden items-center justify-between p-4 text-sidebar-foreground">
+        <span className="font-semibold text-sidebar-accent-foreground text-sm">
           {role === "admin" ? "Administrator" : "Company User"}
         </span>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <UserMenu role={role} name={name} />
 
           <Sheet open={openMobile} onOpenChange={setOpenMobile}>
           <SheetTrigger asChild>
-            <button className="p-2 -mr-2 text-gray-300 hover:text-[#7DDDD5] transition-colors focus:outline-none">
+            <button className="p-2 -mr-2 text-sidebar-foreground hover:text-sidebar-accent-foreground transition-colors focus:outline-none">
               <Menu className="h-6 w-6" />
             </button>
           </SheetTrigger>
@@ -82,7 +98,7 @@ export function NavLinks({ menu, role, name }: any) {
           {/* Mobile Draw Panel styled in Midnight Teal */}
           <SheetContent 
             side="right" 
-            className="w-75 bg-[#1C2D35] border-l border-slate-800 p-6 text-gray-300"
+            className="w-75 bg-sidebar border-l border-slate-800 p-6 text-sidebar-foreground"
           >
             <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
             <nav className="flex flex-col gap-6 mt-6">
@@ -101,7 +117,9 @@ export function NavLinks({ menu, role, name }: any) {
                             key={child.href}
                             href={child.href}
                             onClick={() => setOpenMobile(false)}
-                            className="block py-2 text-sm transition-colors duration-200 hover:text-[#7DDDD5] focus:text-[#7DDDD5]"
+                            className={`block py-2 text-sm transition-colors duration-200 hover:text-sidebar-accent-foreground focus:text-sidebar-accent-foreground ${
+                              isActive(child.href) ? "text-sidebar-accent-foreground" : ""
+                            }`}
                           >
                             {child.label}
                           </Link>
@@ -113,7 +131,9 @@ export function NavLinks({ menu, role, name }: any) {
                     <Link
                       href={item.href}
                       onClick={() => setOpenMobile(false)}
-                      className="block py-1 text-base font-medium transition-colors duration-200 hover:text-[#7DDDD5] focus:text-[#7DDDD5]"
+                      className={`block py-1 text-base font-medium transition-colors duration-200 hover:text-sidebar-accent-foreground focus:text-sidebar-accent-foreground ${
+                        isActive(item.href) ? "text-sidebar-accent-foreground" : ""
+                      }`}
                     >
                       {item.label}
                     </Link>

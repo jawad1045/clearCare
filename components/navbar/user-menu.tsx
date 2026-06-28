@@ -43,8 +43,8 @@ export function UserMenu({ role, name }: { role: "admin" | "user"; name: string 
             className={cn(
               "transition-colors duration-200",
               isAdmin
-                ? "bg-amber-600 text-slate-950 group-hover:bg-slate-800 group-hover:text-[#7DDDD5]"
-                : "bg-sky-500 text-white group-hover:bg-slate-800 group-hover:text-[#7DDDD5]"
+                ? "bg-amber-600 text-slate-950 group-hover:bg-slate-800 group-hover:text-sidebar-accent-foreground"
+                : "bg-sky-500 text-white group-hover:bg-slate-800 group-hover:text-sidebar-accent-foreground"
             )}
           >
             {isAdmin ? <Shield className="h-4 w-4" /> : <User className="h-4 w-4" />}

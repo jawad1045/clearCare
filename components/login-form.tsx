@@ -56,7 +56,7 @@ export default function LoginPage() {
       }}
     >
       {/* Logo + title above card */}
-      <div className="flex flex-col items-center w-md text-center bg-[#0D1F2D] px-4 py-2 rounded-t-lg shadow-lg shadow-black/40">
+      <div className="flex flex-col items-center w-md text-center bg-sidebar px-4 py-2 rounded-t-lg shadow-lg shadow-black/40">
         <div className="mb-4 rounded-full ring-2 ring-white/20 shadow-lg shadow-black/40">
           <Image
             src="/logo.png"
@@ -67,10 +67,10 @@ export default function LoginPage() {
             priority
           />
         </div>
-        <h1 className="text-xl font-bold text-white uppercase">
+        <h1 className="text-xl font-bold text-sidebar-foreground uppercase">
           HWP CLEAR-CARE™ PORTAL
         </h1>
-        <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-cyan-400 uppercase">
+        <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-sidebar-accent-foreground uppercase">
           Secure Access &nbsp;·&nbsp; HIPAA Compliant
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function LoginPage() {
       {/* Card */}
       <div className="w-full max-w-md overflow-hidden rounded-b-lg shadow-2xl shadow-black/60">
         {/* Top accent bar */}
-        <div className="h-0.75 bg-linear-to-r from-cyan-400 via-teal-400 to-cyan-500" />
+        <div className="h-0.75 bg-linear-to-r from-primary via-accent to-primary" />
 
         <div className="bg-white px-10 py-10">
           <div className="mb-6">
@@ -111,7 +111,7 @@ export default function LoginPage() {
                 value={formData.contactEmail}
                 onChange={handleInputChange}
                 required
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/20 disabled:opacity-50"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
               />
             </div>
 
@@ -131,7 +131,7 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/20 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -147,7 +147,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a3a4a] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1f4a5e] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>

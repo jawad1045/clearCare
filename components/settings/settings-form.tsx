@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Sun, Moon, Monitor, Bell, BellOff, Settings2, Save, Clock } from "lucide-react";
+import { Bell, BellOff, Settings2, Save, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { updateSessionTimeoutMinutes } from "@/action/settings.action";
@@ -26,15 +24,8 @@ const defaultNotifPrefs: NotifPrefs = {
   inAppNotifications: true,
 };
 
-const themes = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
-] as const;
-
 const navItems = [
   { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "appearance", label: "Appearance", icon: Sun },
   { id: "system", label: "System", icon: Settings2 },
 ] as const;
 
@@ -84,50 +75,6 @@ function NotificationsSection() {
             </div>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function AppearanceSection() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Appearance</h3>
-        <p className="text-sm text-muted-foreground">
-          Customize how the portal looks on your device.
-        </p>
-      </div>
-      <Separator />
-      <div className="space-y-2">
-        <Label>Theme</Label>
-        <p className="text-sm text-muted-foreground">Select the theme for the portal.</p>
-        <div className="grid grid-cols-3 gap-3 pt-1">
-          {themes.map(({ value, label, icon: Icon }) => {
-            const active = mounted && theme === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => { setTheme(value); toast.success(`Theme set to ${label}`); }}
-                className={cn(
-                  "flex flex-col items-center gap-2 rounded-lg border-2 p-6 transition-all hover:border-primary/60",
-                  active ? "border-primary bg-primary/5" : "border-border bg-card"
-                )}
-              >
-                <Icon className={cn("h-6 w-6", active ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-sm font-medium", active ? "text-primary" : "text-muted-foreground")}>
-                  {label}
-                </span>
-                {active && <Badge variant="secondary" className="text-xs">Active</Badge>}
-              </button>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
@@ -283,7 +230,6 @@ export function SettingsForm({ initialSessionTimeoutMinutes }: { initialSessionT
 
   const sectionMap: Record<NavId, React.ReactNode> = {
     notifications: <NotificationsSection />,
-    appearance: <AppearanceSection />,
     system: <SystemSection initialSessionTimeoutMinutes={initialSessionTimeoutMinutes} />,
   };
 
