@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { CreateBHReferralForm } from "@/components/referrals/create-bh-referral-form";
 import { ReferralHeader } from "@/components/referrals/referral-header";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserById } from "@/action/user.action";
+
+export const metadata: Metadata = {
+  title: "Create B.H. Referral",
+};
 
 export default async function CreateBHReferralPage() {
   const session = await getCurrentUser();

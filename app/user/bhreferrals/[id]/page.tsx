@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBHReferralById } from "@/action/bh-referral.action";
 import Link from "next/link";
@@ -32,6 +33,10 @@ type PageProps = {
   params: Promise<{
     id: string;
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "B.H. Referral Details",
 };
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {

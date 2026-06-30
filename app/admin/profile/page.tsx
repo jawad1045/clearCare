@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserById } from "@/action/user.action";
 import { ProfileForm } from "@/components/profile/profile-form";
+
+export const metadata: Metadata = {
+  title: "Profile",
+};
 
 export default async function AdminProfilePage() {
   const session = await getCurrentUser();

@@ -37,9 +37,9 @@ export function NavLinks({ menu, role, name }: any) {
           item.children ? (
             <DropdownMenu key={item.label}>
               <DropdownMenuTrigger
-                className={`flex items-center gap-1 transition-colors duration-200 hover:text-sidebar-accent-foreground focus:outline-none ${
+                className={`flex items-center gap-1 rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus:outline-none ${
                   item.children.some((child: any) => isActive(child.href))
-                    ? "text-sidebar-accent-foreground"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : ""
                 }`}
               >
@@ -66,8 +66,10 @@ export function NavLinks({ menu, role, name }: any) {
             <Link
               key={item.href}
               href={item.href}
-              className={`transition-colors duration-200 hover:text-sidebar-accent-foreground ${
-                isActive(item.href) ? "text-sidebar-accent-foreground" : ""
+              className={`rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground ${
+                isActive(item.href)
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  : ""
               }`}
             >
               {item.label}

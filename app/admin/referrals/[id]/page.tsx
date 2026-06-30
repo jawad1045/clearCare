@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getReferralById } from "@/action/referral.action";
 import Link from "next/link";
@@ -10,6 +11,10 @@ import { ReferralDetailTabs } from "@/components/referrals/referral-detail-tabs"
 
 type PageProps = {
   params: Promise<{ id: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "Referral Details",
 };
 
 export default async function ReferralDetailsPage({ params }: PageProps) {

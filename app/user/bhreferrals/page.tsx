@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { getMyBHReferrals } from "@/action/bh-referral.action";
 import { ReferralHeader } from "@/components/referrals/referral-header";
 import { UserBHReferralsTable } from "@/components/referrals/user-bh-referrals-table";
+
+export const metadata: Metadata = {
+  title: "B.H. Referrals",
+};
 
 export default async function MyBHReferralsPage() {
   const referrals = await getMyBHReferrals();

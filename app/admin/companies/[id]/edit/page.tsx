@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { getCompanyById } from "@/action/company.action";
 import { CompanyDetailTabs } from "@/components/companies/company-detail-tabs";
+
+export const metadata: Metadata = {
+  title: "Edit Company",
+};
 
 export default async function EditCompanyPage({
   params,

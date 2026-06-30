@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Separator } from "@/components/ui/separator";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { getSessionTimeoutMinutes } from "@/action/settings.action";
+
+export const metadata: Metadata = {
+  title: "Settings",
+};
 
 export default async function AdminSettingsPage() {
   const session = await getCurrentUser();

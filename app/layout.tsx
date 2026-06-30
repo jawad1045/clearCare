@@ -11,7 +11,10 @@ const barlow = Barlow({
 });
 
 export const metadata: Metadata = {
-  title: "HWP Portal",
+  title: {
+    default: "HWP Portal",
+    template: "HWP | %s",
+  },
   description: "Healthcare Workforce Portal",
   icons: { icon: "/logo.png" },
 };

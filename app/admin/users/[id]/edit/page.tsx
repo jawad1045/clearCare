@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { getCompanies, getUserById } from "@/action/user.action";
 import { UserDetailTabs } from "@/components/users/user-detail-tabs";
+
+export const metadata: Metadata = {
+  title: "Edit User",
+};
 
 export default async function EditUserPage({
   params,

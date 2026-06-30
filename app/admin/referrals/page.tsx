@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { getReferrals } from "@/action/referral.action";
 import { ReferralHeader } from "@/components/referrals/referral-header";
 import { AdminReferralsTable } from "@/components/referrals/admin-referrals-table";
+
+export const metadata: Metadata = {
+  title: "Referrals",
+};
 
 export default async function ReferralsPage() {
   const referrals = await getReferrals();

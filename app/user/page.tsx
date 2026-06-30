@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { getMyReferralCounts, getMyReferralStatusCounts } from "@/action/referral.action";
-import { getMyBHReferralStatusCounts } from "@/action/bh-referral.action";
+import { getMyReferralCounts } from "@/action/referral.action";
+import { getUserReportData } from "@/action/report.action";
 import {
   Card,
   CardContent,
@@ -11,33 +12,35 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { StatusPieChart } from "@/components/charts/status-pie-chart";
-import { StatusBarChart } from "@/components/charts/status-bar-chart";
+import { ReportClient } from "@/components/reports/report-client";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function UserDashboardPage() {
-  const [{ total }, statusCounts, bhStatusCounts] = await Promise.all([
+  const [{ total }, reportRows] = await Promise.all([
     getMyReferralCounts(),
-    getMyReferralStatusCounts(),
-    getMyBHReferralStatusCounts(),
+    getUserReportData(),
   ]);
 
-  const bh = bhStatusCounts.reduce((sum, s) => sum + s.count, 0);
+  const bh = reportRows.filter((r) => r.type === "BH Referral").length;
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">My Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-[#007A7D]">My Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
-            <CardTitle>Referrals Submitted</CardTitle>
+            <CardTitle className="text-[#007A7D]">Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">All referral submissions</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold">{total}</p>
+                <p className="text-3xl font-bold text-[#007A7D]">{total}</p>
                 <p className="text-sm text-muted-foreground">Total referrals you've submitted</p>
               </div>
               <Link href="/user/referrals">
@@ -50,16 +53,16 @@ export default async function UserDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
-            <CardTitle>B.H. Referrals Submitted</CardTitle>
+            <CardTitle className="text-[#007A7D]">B.H. Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">Behavioral Health referrals</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold">{bh}</p>
+                <p className="text-3xl font-bold text-[#007A7D]">{bh}</p>
                 <p className="text-sm text-muted-foreground">Behavioral Health referrals you've submitted</p>
               </div>
               <Link href="/user/bhreferrals">
@@ -73,30 +76,8 @@ export default async function UserDashboardPage() {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="flex gap-6">
-        <Card className="w-[50%]">
-          <CardHeader>
-            <CardTitle>My Referrals by Status</CardTitle>
-            <CardDescription className="text-sm">Breakdown of your referral statuses</CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4 h-56">
-            <StatusPieChart data={statusCounts} />
-          </CardContent>
-        </Card>
-
-        <Card className="w-[50%]">
-          <CardHeader>
-            <CardTitle>My B.H. Referrals by Status</CardTitle>
-            <CardDescription className="text-sm">Breakdown of your Behavioral Health referral statuses</CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4 h-56">
-            <StatusBarChart data={bhStatusCounts} />
-          </CardContent>
-        </Card>
-      </div>
+      {/* Reports: filters, summary, charts, full data table */}
+      <ReportClient rows={reportRows} isAdmin={false} />
     </div>
   );
 }

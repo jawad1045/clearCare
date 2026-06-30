@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
-import { StatusPieChart } from "@/components/charts/status-pie-chart";
+import { ServiceTypeBarChart } from "@/components/charts/service-type-bar-chart";
 import { getStatusBadge, getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
 import { Download, FileText, Filter, BarChart3, Table, CheckCircle2, Clock, FileCheck } from "lucide-react";
 import type { ReportRow } from "@/action/report.action";
@@ -22,15 +21,14 @@ const SERVICE_TYPES = [
   "IOP",
 ];
 
-function exportCSV(rows: ReportRow[], isAdmin: boolean) {
+function exportCSV(rows: ReportRow[], isAdmin: boolean, filename: string) {
   const headers = isAdmin
-    ? ["ID", "Type", "Patient", "Company", "Service Type", "Status", "Date", "Referred By", "Has Result"]
-    : ["ID", "Type", "Patient", "Company", "Service Type", "Status", "Date", "Has Result"];
+    ? ["ID", "Patient", "Company", "Service Type", "Status", "Date", "Referred By", "Has Result"]
+    : ["ID", "Patient", "Company", "Service Type", "Status", "Date", "Has Result"];
 
   const csvRows = rows.map((r) => {
     const base = [
       r.id,
-      r.type,
       `"${r.patientName}"`,
       `"${r.companyName}"`,
       r.serviceType,
@@ -47,7 +45,7 @@ function exportCSV(rows: ReportRow[], isAdmin: boolean) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `hwp-report-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -94,18 +92,38 @@ export function ReportClient({ rows, isAdmin }: Props) {
   const pending = filtered.filter((r) => r.status === "Pending").length;
   const completed = filtered.filter((r) => ["Clear", "Confirmed", "Ready"].includes(r.status)).length;
   const withResult = filtered.filter((r) => r.hasPdfResult).length;
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
+  const referralRows = useMemo(() => filtered.filter((r) => r.type === "Referral"), [filtered]);
+  const bhReferralRows = useMemo(() => filtered.filter((r) => r.type === "BH Referral"), [filtered]);
 
   // Chart data
-  const statusCounts = useMemo(() => {
+  function countByStatus(rows: ReportRow[]) {
     const map = new Map<string, number>();
-    for (const r of filtered) map.set(r.status, (map.get(r.status) ?? 0) + 1);
+    for (const r of rows) map.set(r.status, (map.get(r.status) ?? 0) + 1);
     return [...map.entries()].map(([status, count]) => ({ status, count }));
-  }, [filtered]);
+  }
 
-  const bhStatusCounts = useMemo(
-    () => statusCounts.filter(() => typeFilter === "BH Referral" || typeFilter === "all"),
-    [statusCounts, typeFilter]
-  );
+  const statusCounts = useMemo(() => countByStatus(referralRows), [referralRows]);
+  const bhStatusCounts = useMemo(() => countByStatus(bhReferralRows), [bhReferralRows]);
+
+  const serviceTypeCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of referralRows) map.set(r.serviceType, (map.get(r.serviceType) ?? 0) + 1);
+    // Behavioral Health referrals live in the separate BH Referral (mental health) schema,
+    // not as a Referral.serviceType value, so source that bucket from bhReferralRows.
+    if (bhReferralRows.length > 0) map.set("Behavioral Health", bhReferralRows.length);
+    return [...map.entries()].map(([label, count]) => ({ label, count }));
+  }, [referralRows, bhReferralRows]);
+
+  const topCompanies = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of filtered) map.set(r.companyName, (map.get(r.companyName) ?? 0) + 1);
+    return [...map.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [filtered]);
 
   function clearFilters() {
     setTypeFilter("all");
@@ -128,10 +146,6 @@ export function ReportClient({ rows, isAdmin }: Props) {
           <span>{total} record{total !== 1 ? "s" : ""} {hasActiveFilters ? "(filtered)" : ""}</span>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => exportCSV(filtered, isAdmin)} className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
           <Button variant="outline" size="sm" onClick={exportPDF} className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Export PDF
@@ -146,7 +160,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       </div>
 
       {/* Filters */}
-      <Card className="print:hidden">
+      <Card className="border-t-4 border-t-sidebar print:hidden">
         <CardHeader className="flex flex-row items-center gap-2 pb-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-sm">Filters</CardTitle>
@@ -232,110 +246,239 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
       {/* Summary stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-[#007A7D]">Total Records</CardTitle>
+            <BarChart3 className="h-5 w-5 text-[#007A7D]" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{total}</div>
+            <div className="text-3xl font-bold text-[#007A7D]">{total}</div>
             <p className="text-xs text-muted-foreground">Referrals + BH Referrals</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-amber-500" />
+            <CardTitle className="text-sm font-medium text-[#007A7D]">Pending</CardTitle>
+            <Clock className="h-5 w-5 text-[#007A7D]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{pending}</div>
-            <p className="text-xs text-muted-foreground">Awaiting review</p>
+          <CardContent className="flex items-end justify-between">
+            <div>
+              <div className="text-3xl font-bold text-[#007A7D]">{pending}</div>
+              <p className="text-xs text-muted-foreground">Awaiting review</p>
+            </div>
+            <span className="text-sm font-semibold text-muted-foreground">{pct(pending)}%</span>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-[#007A7D]">Completed</CardTitle>
+            <CheckCircle2 className="h-5 w-5 text-[#007A7D]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{completed}</div>
-            <p className="text-xs text-muted-foreground">Clear / Confirmed / Ready</p>
+          <CardContent className="flex items-end justify-between">
+            <div>
+              <div className="text-3xl font-bold text-[#007A7D]">{completed}</div>
+              <p className="text-xs text-muted-foreground">Clear / Confirmed / Ready</p>
+            </div>
+            <span className="text-sm font-semibold text-muted-foreground">{pct(completed)}%</span>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">With Results</CardTitle>
-            <FileCheck className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-[#007A7D]">With Results</CardTitle>
+            <FileCheck className="h-5 w-5 text-[#007A7D]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{withResult}</div>
-            <p className="text-xs text-muted-foreground">PDF result uploaded</p>
+          <CardContent className="flex items-end justify-between">
+            <div>
+              <div className="text-3xl font-bold text-[#007A7D]">{withResult}</div>
+              <p className="text-xs text-muted-foreground">PDF result uploaded</p>
+            </div>
+            <span className="text-sm font-semibold text-muted-foreground">{pct(withResult)}%</span>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2 print:grid-cols-2">
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Status Breakdown</CardTitle>
+            <CardTitle className="text-sm font-medium text-[#007A7D]">Referral Status Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <StatusBarChart data={statusCounts} />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Status Distribution</CardTitle>
+            <CardTitle className="text-sm font-medium text-[#007A7D]">BH Referral Status Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <StatusPieChart data={bhStatusCounts} />
+            <StatusBarChart data={bhStatusCounts} />
           </CardContent>
         </Card>
       </div>
 
-      {/* Data table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Referral Records</CardTitle>
+      {/* Second row: service type breakdown + top companies */}
+      <div className="grid gap-4 lg:grid-cols-2 print:grid-cols-2">
+        <Card className="border-t-4 border-t-sidebar">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-[#007A7D]">Referrals by Service Type</CardTitle>
+          </CardHeader>
+          <CardContent className="h-64">
+            <ServiceTypeBarChart data={serviceTypeCounts} />
+          </CardContent>
+        </Card>
+
+        <Card className="border-t-4 border-t-sidebar">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-[#007A7D]">Top Companies by Referrals</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {topCompanies.map((c, i) => (
+              <div key={c.name} className="flex items-center gap-3">
+                <span className="w-5 text-xs font-bold text-muted-foreground">{i + 1}.</span>
+                <div className="flex-1">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-sm font-medium truncate">{c.name}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">{c.count}</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted">
+                    <div
+                      className="h-1.5 rounded-full bg-primary"
+                      style={{ width: `${(c.count / topCompanies[0].count) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            {topCompanies.length === 0 && (
+              <p className="text-sm text-muted-foreground">No data yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Referral Records table */}
+      <Card className="border-t-4 border-t-sidebar">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium text-[#007A7D]">Referral Records</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportCSV(referralRows, isAdmin, "hwp-referrals")}
+            className="flex items-center gap-2 print:hidden"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
         </CardHeader>
         <Separator />
         <CardContent className="p-0">
           <div className="overflow-x-auto print:overflow-visible">
             <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
               <thead>
-                <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
-                  <th className="px-4 py-3 text-left font-medium">ID</th>
-                  <th className="px-4 py-3 text-left font-medium">Type</th>
-                  <th className="px-4 py-3 text-left font-medium">Patient</th>
-                  <th className="px-4 py-3 text-left font-medium">Company</th>
-                  <th className="px-4 py-3 text-left font-medium">Service</th>
-                  <th className="px-4 py-3 text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-left font-medium">Date</th>
-                  {isAdmin && <th className="px-4 py-3 text-left font-medium">Referred By</th>}
-                  <th className="px-4 py-3 text-left font-medium">Result</th>
+                <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
+                  <th className="px-4 py-3 text-left font-semibold">ID</th>
+                  <th className="px-4 py-3 text-left font-semibold">Patient</th>
+                  <th className="px-4 py-3 text-left font-semibold">Company</th>
+                  <th className="px-4 py-3 text-left font-semibold">Service</th>
+                  <th className="px-4 py-3 text-left font-semibold">Status</th>
+                  <th className="px-4 py-3 text-left font-semibold">Date</th>
+                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">Referred By</th>}
+                  <th className="px-4 py-3 text-left font-semibold">Result</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.length === 0 ? (
+                {referralRows.length === 0 ? (
                   <tr>
-                    <td colSpan={isAdmin ? 9 : 8} className="px-4 py-10 text-center text-muted-foreground">
-                      No records match the current filters.
+                    <td colSpan={isAdmin ? 8 : 7} className="px-4 py-10 text-center text-muted-foreground">
+                      No referral records match the current filters.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((r) => (
-                    <tr key={`${r.type}-${r.id}`} className="hover:bg-muted/30 transition-colors">
+                  referralRows.map((r, i) => (
+                    <tr
+                      key={`${r.type}-${r.id}`}
+                      className={`transition-colors hover:bg-muted/50 ${i % 2 === 1 ? "bg-muted/20" : ""}`}
+                    >
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">#{r.id}</td>
+                      <td className="px-4 py-3 font-medium">{r.patientName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{r.companyName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{r.serviceType}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={r.type === "BH Referral" ? "default" : "secondary"} className="text-xs whitespace-nowrap">
-                          {r.type}
-                        </Badge>
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(r.status)}`}>
+                          {getStatusLabel(r.status)}
+                        </span>
                       </td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {new Date(r.dateOfReferral).toLocaleDateString()}
+                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-muted-foreground">{r.referName}</td>
+                      )}
+                      <td className="px-4 py-3">
+                        {r.hasPdfResult ? (
+                          <span className="text-xs text-emerald-600 font-medium">Available</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* BH Referral Records table */}
+      <Card className="border-t-4 border-t-sidebar">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium text-[#007A7D]">BH Referral Records</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportCSV(bhReferralRows, isAdmin, "hwp-bh-referrals")}
+            className="flex items-center gap-2 print:hidden"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </CardHeader>
+        <Separator />
+        <CardContent className="p-0">
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
+              <thead>
+                <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
+                  <th className="px-4 py-3 text-left font-semibold">ID</th>
+                  <th className="px-4 py-3 text-left font-semibold">Patient</th>
+                  <th className="px-4 py-3 text-left font-semibold">Company</th>
+                  <th className="px-4 py-3 text-left font-semibold">Service</th>
+                  <th className="px-4 py-3 text-left font-semibold">Status</th>
+                  <th className="px-4 py-3 text-left font-semibold">Date</th>
+                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">Referred By</th>}
+                  <th className="px-4 py-3 text-left font-semibold">Result</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {bhReferralRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={isAdmin ? 8 : 7} className="px-4 py-10 text-center text-muted-foreground">
+                      No BH referral records match the current filters.
+                    </td>
+                  </tr>
+                ) : (
+                  bhReferralRows.map((r, i) => (
+                    <tr
+                      key={`${r.type}-${r.id}`}
+                      className={`transition-colors hover:bg-muted/50 ${i % 2 === 1 ? "bg-muted/20" : ""}`}
+                    >
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">#{r.id}</td>
                       <td className="px-4 py-3 font-medium">{r.patientName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{r.companyName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{r.serviceType}</td>

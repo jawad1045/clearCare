@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserById } from "@/action/user.action";
 import { ChangePasswordForm } from "@/components/change-password-form";
+
+export const metadata: Metadata = {
+  title: "Change Password",
+};
 
 export default async function ChangePasswordPage() {
   const user = await getCurrentUser();

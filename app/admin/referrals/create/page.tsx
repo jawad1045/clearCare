@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { CreateReferralForm } from "@/components/referrals/create-referral-form";
 import { ReferralHeader } from "@/components/referrals/referral-header";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserById } from "@/action/user.action";
+
+export const metadata: Metadata = {
+  title: "Create Referral",
+};
 
 export default async function CreateReferralPage() {
   const session = await getCurrentUser();

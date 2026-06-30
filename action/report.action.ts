@@ -21,6 +21,7 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
 
   const [referrals, bhReferrals] = await Promise.all([
     prisma.referral.findMany({
+      where: { serviceType: { not: "Behavioral Health" } },
       include: { company: true },
       orderBy: { dateOfReferral: "desc" },
     }),
@@ -65,7 +66,7 @@ export async function getUserReportData(): Promise<ReportRow[]> {
 
   const [referrals, bhReferrals] = await Promise.all([
     prisma.referral.findMany({
-      where: { userId: session.id },
+      where: { userId: session.id, serviceType: { not: "Behavioral Health" } },
       include: { company: true },
       orderBy: { dateOfReferral: "desc" },
     }),

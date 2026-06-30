@@ -40,13 +40,18 @@ export function ServiceTypeBarChart({ data }: Props) {
 
   const options = {
     responsive: true,
+    layout: {
+      padding: { top: 24 },
+    },
     plugins: {
       legend: { display: false },
       datalabels: {
-        anchor: "center" as const,
-        align: "center" as const,
-        color: "#ffffff",
-        font: { weight: "bold" as const, size: 13 },
+        anchor: "end" as const,
+        align: "top" as const,
+        offset: 4,
+        clamp: true,
+        color: "#94a3b8",
+        font: { weight: "bold" as const, size: 12 },
         formatter: (value: number) => (value === 0 ? "" : value),
       },
     },
