@@ -44,7 +44,7 @@ export default async function AdminPage() {
         <p className="text-muted-foreground">System overview</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-4 gap-4">
         {/* Total Users */}
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -122,7 +122,7 @@ export default async function AdminPage() {
         </Card>
       </div>
 
-      {/* Reports: filters, summary, charts, full data table */}
+      {/* Reports: filters, stat cards, charts, full data table */}
       <ReportClient rows={reportRows} isAdmin />
     </div>
   );

@@ -8,21 +8,26 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const pool = globalForPrisma.pool ?? new Pool({
-    connectionString: process.env.DATABASE_URL!,
-    max: 3,
-    idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 5_000,
-  });
+  if (!globalForPrisma.pool) {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL!,
+      max: 1,
+      idleTimeoutMillis: 0,
+      connectionTimeoutMillis: 15_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 5_000,
+    });
+    // Remove dead clients from the pool instead of queuing against them
+    pool.on("error", (err, _client) => {
+      console.error("pg pool error, removing client:", err.message);
+    });
+    globalForPrisma.pool = pool;
+  }
 
-  globalForPrisma.pool = pool;
-
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaPg(globalForPrisma.pool);
   return new PrismaClient({ adapter });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 import { ServiceTypeBarChart } from "@/components/charts/service-type-bar-chart";
 import { getStatusBadge, getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
-import { Download, FileText, Filter, BarChart3, Table, CheckCircle2, Clock, FileCheck } from "lucide-react";
+import { Download, FileText, Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide-react";
 import type { ReportRow } from "@/action/report.action";
 
 const SERVICE_TYPES = [
@@ -87,7 +87,6 @@ export function ReportClient({ rows, isAdmin }: Props) {
     });
   }, [rows, typeFilter, statusFilter, serviceFilter, dateFrom, dateTo, search]);
 
-  // Summary stats
   const total = filtered.length;
   const pending = filtered.filter((r) => r.status === "Pending").length;
   const completed = filtered.filter((r) => ["Clear", "Confirmed", "Ready"].includes(r.status)).length;
@@ -110,8 +109,6 @@ export function ReportClient({ rows, isAdmin }: Props) {
   const serviceTypeCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const r of referralRows) map.set(r.serviceType, (map.get(r.serviceType) ?? 0) + 1);
-    // Behavioral Health referrals live in the separate BH Referral (mental health) schema,
-    // not as a Referral.serviceType value, so source that bucket from bhReferralRows.
     if (bhReferralRows.length > 0) map.set("Behavioral Health", bhReferralRows.length);
     return [...map.entries()].map(([label, count]) => ({ label, count }));
   }, [referralRows, bhReferralRows]);
@@ -245,7 +242,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       </Card>
 
       {/* Summary stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* <div className="grid grid-cols-4 gap-4">
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-[#007A7D]">Total Records</CardTitle>
@@ -298,10 +295,10 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <span className="text-sm font-semibold text-muted-foreground">{pct(withResult)}%</span>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2 print:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 print:grid-cols-2">
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-[#007A7D]">Referral Status Breakdown</CardTitle>
@@ -319,10 +316,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <StatusBarChart data={bhStatusCounts} />
           </CardContent>
         </Card>
-      </div>
 
-      {/* Second row: service type breakdown + top companies */}
-      <div className="grid gap-4 lg:grid-cols-2 print:grid-cols-2">
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-[#007A7D]">Referrals by Service Type</CardTitle>
