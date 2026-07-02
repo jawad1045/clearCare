@@ -157,7 +157,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       </div>
 
       {/* Filters */}
-      <Card className="border-t-4 border-t-sidebar print:hidden">
+      <Card>
         <CardHeader className="flex flex-row items-center gap-2 pb-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-sm">Filters</CardTitle>
@@ -169,8 +169,9 @@ export function ReportClient({ rows, isAdmin }: Props) {
         </CardHeader>
         <Separator />
         <CardContent className="pt-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <div className="space-y-1.5">
+          <div className="flex gap-2">
+            {/* Search — wider */}
+            <div className="flex w-80 shrink-0 flex-col gap-1.5">
               <Label className="text-xs">Search</Label>
               <Input
                 placeholder="Patient, company…"
@@ -180,62 +181,65 @@ export function ReportClient({ rows, isAdmin }: Props) {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Type</Label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Referral">Referral</SelectItem>
-                  <SelectItem value="BH Referral">BH Referral</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Other filters — tight row */}
+            <div className="flex flex-1 gap-2">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs">Type</Label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="h-8 w-32 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="BH Referral">BH Referral</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {REFERRAL_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{getStatusLabel(s)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-8 w-36 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {REFERRAL_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{getStatusLabel(s)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Service Type</Label>
-              <Select value={serviceFilter} onValueChange={setServiceFilter}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
-                  {SERVICE_TYPES.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs">Service Type</Label>
+                <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                  <SelectTrigger className="h-8 w-40 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Services</SelectItem>
+                    {SERVICE_TYPES.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">From</Label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="h-8 text-sm"
-              />
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs">From</Label>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="h-8 w-36 text-sm"
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">To</Label>
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="h-8 text-sm"
-              />
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs">To</Label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="h-8 w-36 text-sm"
+                />
+              </div>
             </div>
           </div>
         </CardContent>
@@ -299,36 +303,36 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
       {/* Charts */}
       <div className="grid grid-cols-2 gap-4 print:grid-cols-2">
-        <Card className="border-t-4 border-t-sidebar">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Referral Status Breakdown</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">Referral Status Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <StatusBarChart data={statusCounts} />
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-[#007A7D]">BH Referral Status Breakdown</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">BH Referral Status Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <StatusBarChart data={bhStatusCounts} />
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Referrals by Service Type</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">Referrals by Service Type</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <ServiceTypeBarChart data={serviceTypeCounts} />
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Top Companies by Referrals</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">Top Companies by Referrals</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {topCompanies.map((c, i) => (
@@ -358,7 +362,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* Referral Records table */}
       <Card className="border-t-4 border-t-sidebar">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-[#007A7D]">Referral Records</CardTitle>
+          <CardTitle className="text-sm font-medium text-brand">Referral Records</CardTitle>
           <Button
             variant="outline"
             size="sm"
@@ -396,7 +400,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
                   referralRows.map((r, i) => (
                     <tr
                       key={`${r.type}-${r.id}`}
-                      className={`transition-colors hover:bg-muted/50 ${i % 2 === 1 ? "bg-muted/20" : ""}`}
+                      className="transition-colors hover:bg-muted/50"
+                      style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}
                     >
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">#{r.id}</td>
                       <td className="px-4 py-3 font-medium">{r.patientName}</td>
@@ -432,7 +437,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* BH Referral Records table */}
       <Card className="border-t-4 border-t-sidebar">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-[#007A7D]">BH Referral Records</CardTitle>
+          <CardTitle className="text-sm font-medium text-brand">BH Referral Records</CardTitle>
           <Button
             variant="outline"
             size="sm"
@@ -470,7 +475,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
                   bhReferralRows.map((r, i) => (
                     <tr
                       key={`${r.type}-${r.id}`}
-                      className={`transition-colors hover:bg-muted/50 ${i % 2 === 1 ? "bg-muted/20" : ""}`}
+                      className="transition-colors hover:bg-muted/50"
+                      style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}
                     >
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">#{r.id}</td>
                       <td className="px-4 py-3 font-medium">{r.patientName}</td>

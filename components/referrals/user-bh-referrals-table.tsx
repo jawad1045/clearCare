@@ -123,8 +123,8 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((referral) => (
-                <TableRow key={referral.id}>
+              filtered.map((referral, i) => (
+                <TableRow key={referral.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}>
                   <TableCell>#{referral.id}</TableCell>
                   <TableCell className="font-medium">
                     {referral.firstName} {referral.lastName}

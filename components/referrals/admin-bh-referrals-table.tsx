@@ -157,30 +157,30 @@ export function AdminBHReferralsTable({ referrals, basePath }: Props) {
 
       <div className="rounded-lg border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-sidebar text-sidebar-foreground">
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Submitted By</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Last Updated</TableHead>
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead className="text-sidebar-foreground">ID</TableHead>
+              <TableHead className="text-sidebar-foreground">Client</TableHead>
+              <TableHead className="text-sidebar-foreground">Submitted By</TableHead>
+              <TableHead className="text-sidebar-foreground">Company</TableHead>
+              <TableHead className="text-sidebar-foreground">Phone</TableHead>
+              <TableHead className="text-sidebar-foreground">Status</TableHead>
+              <TableHead className="text-sidebar-foreground">Created</TableHead>
+              <TableHead className="text-sidebar-foreground">Last Updated</TableHead>
+              <TableHead className="w-20 text-sidebar-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                   No referrals found
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((referral) => (
-                <TableRow key={referral.id}>
+              filtered.map((referral, i) => (
+                <TableRow key={referral.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}>
                   <TableCell>#{referral.id}</TableCell>
 
                   <TableCell>

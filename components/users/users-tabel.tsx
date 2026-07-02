@@ -34,15 +34,15 @@ export function UsersTable({
   return (
     <div className="rounded-lg border">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-sidebar text-sidebar-foreground">
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="w-56">
+            <TableHead className="text-sidebar-foreground">Name</TableHead>
+            <TableHead className="text-sidebar-foreground">Email</TableHead>
+            <TableHead className="text-sidebar-foreground">Organization</TableHead>
+            <TableHead className="text-sidebar-foreground">Role</TableHead>
+            <TableHead className="text-sidebar-foreground">Status</TableHead>
+            <TableHead className="text-sidebar-foreground">Created</TableHead>
+            <TableHead className="w-56 text-sidebar-foreground">
               Actions
             </TableHead>
           </TableRow>
@@ -53,14 +53,14 @@ export function UsersTable({
             <TableRow>
               <TableCell
                 colSpan={7}
-                className="text-center"
+                className="py-8 text-center text-muted-foreground"
               >
                 No users found
               </TableCell>
             </TableRow>
           ) : (
-            users.map((user) => (
-              <TableRow key={user.id}>
+            users.map((user, i) => (
+              <TableRow key={user.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}>
                 <TableCell>
                   {user.contactFirstName}{" "}
                   {user.contactLastName}

@@ -38,7 +38,7 @@ export default async function AdminPage() {
     ]);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-10 py-6">
       <div>
         <h1 className="text-3xl font-bold text-brand">Dashboard</h1>
         <p className="text-muted-foreground">System overview</p>

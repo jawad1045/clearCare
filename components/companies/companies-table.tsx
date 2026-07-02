@@ -1,14 +1,4 @@
 import Link from "next/link";
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
 import { Button } from "@/components/ui/button";
 
 type Company = {
@@ -21,78 +11,51 @@ type Company = {
   createdDate: Date;
 };
 
-export function CompaniesTable({
-  companies,
-}: {
-  companies: Company[];
-}) {
+export function CompaniesTable({ companies }: { companies: Company[] }) {
   return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Organization</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
+            <th className="px-4 py-3 text-left font-semibold">Organization</th>
+            <th className="px-4 py-3 text-left font-semibold">Email</th>
+            <th className="px-4 py-3 text-left font-semibold">Phone</th>
+            <th className="px-4 py-3 text-left font-semibold">Location</th>
+            <th className="px-4 py-3 text-left font-semibold">Created</th>
+            <th className="px-4 py-3 text-left font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
           {companies.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={6}
-                className="text-center"
-              >
+            <tr>
+              <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                 No companies found
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ) : (
-            companies.map((company) => (
-              <TableRow key={company.id}>
-                <TableCell>
-                  {company.organization}
-                </TableCell>
-
-                <TableCell>
-                  {company.contactEmail}
-                </TableCell>
-
-                <TableCell>
-                  {company.contactPhone}
-                </TableCell>
-
-                <TableCell>
-                  {company.city},{" "}
-                  {company.state}
-                </TableCell>
-
-                <TableCell>
-                  {new Date(
-                    company.createdDate
-                  ).toLocaleDateString()}
-                </TableCell>
-
-                <TableCell>
-                  <Link
-                    href={`/admin/companies/${company.id}/edit`}
-                  >
-                    <Button
-                      size="sm"
-                      variant="outline"
-                    >
-                      Edit
-                    </Button>
+            companies.map((company, i) => (
+              <tr
+                key={company.id}
+                className="transition-colors hover:bg-muted/50"
+                style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}
+              >
+                <td className="px-4 py-3 font-medium">{company.organization}</td>
+                <td className="px-4 py-3 text-muted-foreground">{company.contactEmail}</td>
+                <td className="px-4 py-3 text-muted-foreground">{company.contactPhone}</td>
+                <td className="px-4 py-3 text-muted-foreground">{company.city}, {company.state}</td>
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                  {new Date(company.createdDate).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-3">
+                  <Link href={`/admin/companies/${company.id}/edit`}>
+                    <Button size="sm" variant="outline">Edit</Button>
                   </Link>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))
           )}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
 }
