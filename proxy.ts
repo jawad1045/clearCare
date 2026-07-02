@@ -20,17 +20,22 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith('/admin')) {
-    if (!currentUser || currentUser.role !== 'Admin') {
-      const destination = !currentUser ? '/' : '/user'
-      const url = new URL(destination, request.url)
+    if (!currentUser) {
+      const url = new URL('/', request.url)
+      url.searchParams.set('redirect', pathname)
       if (sessionExpired) url.searchParams.set('expired', '1')
       return NextResponse.redirect(url)
+    }
+
+    if (currentUser.role !== 'Admin') {
+      return NextResponse.redirect(new URL('/user', request.url))
     }
   }
 
   if (pathname.startsWith('/user')) {
     if (!currentUser) {
       const url = new URL('/', request.url)
+      url.searchParams.set('redirect', pathname)
       if (sessionExpired) url.searchParams.set('expired', '1')
       return NextResponse.redirect(url)
     }

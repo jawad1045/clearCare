@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getBHReferralById } from "@/action/bh-referral.action";
+import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,6 +73,11 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
 
   if (!referral) {
     notFound();
+  }
+
+  const currentUser = await getCurrentUser();
+  if (currentUser?.role !== "Admin" && referral.userId !== currentUser?.id) {
+    redirect("/user");
   }
 
   const formatDate = (d: Date | null) =>

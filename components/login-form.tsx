@@ -18,6 +18,8 @@ export default function LoginPage() {
   React.useEffect(() => {
     if (searchParams.get("expired") === "1") {
       setError("Your session has expired. Please log in again.")
+    } else if (searchParams.get("redirect")) {
+      setError("Please log in to view the page you requested.")
     }
   }, [searchParams])
 
@@ -42,7 +44,10 @@ export default function LoginPage() {
 
     toast.success("Logged in successfully!")
     if (result.redirectTo) {
-      router.push(result.redirectTo)
+      const redirectParam = searchParams.get("redirect")
+      const isAdminRoute = redirectParam?.startsWith("/admin")
+      const canUseRedirect = redirectParam && (!isAdminRoute || result.user?.role === "Admin")
+      router.push(canUseRedirect ? redirectParam : result.redirectTo)
     } else {
       setIsLoading(false)
     }

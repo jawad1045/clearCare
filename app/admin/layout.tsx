@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { Navbar } from "@/components/navbar/navebar";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserById } from "@/action/user.action";
+import { getSessionTimeoutMinutes } from "@/action/settings.action";
+import { IdleTimeoutWatcher } from "@/components/session/idle-timeout-watcher";
 
 export default async function RootLayout({
   children,
@@ -21,9 +23,11 @@ export default async function RootLayout({
   }
 
   const name = dbUser ? `${dbUser.contactFirstName} ${dbUser.contactLastName}` : "Admin";
+  const sessionTimeoutMinutes = await getSessionTimeoutMinutes();
 
   return (
     <div className="min-h-full flex flex-col">
+      <IdleTimeoutWatcher timeoutMinutes={sessionTimeoutMinutes} />
       <Navbar role="admin" name={name} />
       {children}
     </div>
