@@ -72,7 +72,10 @@ export async function setSessionCookie(
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    // "lax" (not "strict") so the cookie is still sent on top-level link clicks from
+    // external sites (e.g. a "View Referral" link opened from Slack) — "strict" would
+    // withhold it and make an already-logged-in user look logged out.
+    sameSite: "lax",
     maxAge: timeoutMinutes * 60,
     path: "/",
   });
@@ -92,7 +95,7 @@ export async function clearSession() {
   cookieStore.set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: 0,
     path: "/",
   });
