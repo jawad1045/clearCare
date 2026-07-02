@@ -247,7 +247,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
       {/* Summary stat cards */}
       {/* <div className="grid grid-cols-4 gap-4">
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-[#007A7D]">Total Records</CardTitle>
             <BarChart3 className="h-5 w-5 text-[#007A7D]" />
@@ -258,7 +258,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-[#007A7D]">Pending</CardTitle>
             <Clock className="h-5 w-5 text-[#007A7D]" />
@@ -272,7 +272,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-[#007A7D]">Completed</CardTitle>
             <CheckCircle2 className="h-5 w-5 text-[#007A7D]" />
@@ -286,7 +286,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-[#007A7D]">With Results</CardTitle>
             <FileCheck className="h-5 w-5 text-[#007A7D]" />
@@ -360,7 +360,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       </div>
 
       {/* Referral Records table */}
-      <Card className="border-t-4 border-t-sidebar">
+      <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium text-brand">Referral Records</CardTitle>
           <Button
@@ -435,7 +435,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       </Card>
 
       {/* BH Referral Records table */}
-      <Card className="border-t-4 border-t-sidebar">
+      <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium text-brand">BH Referral Records</CardTitle>
           <Button

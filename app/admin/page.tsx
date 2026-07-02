@@ -46,7 +46,7 @@ export default async function AdminPage() {
 
       <div className="grid grid-cols-4 gap-4">
         {/* Total Users */}
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-brand">Total Users</CardTitle>
             <Users className="h-6 w-6 text-brand" />
@@ -65,7 +65,7 @@ export default async function AdminPage() {
         </Card>
 
         {/* Total Companies */}
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-brand">Total Companies</CardTitle>
             <Building2 className="h-6 w-6 text-brand" />
@@ -84,7 +84,7 @@ export default async function AdminPage() {
         </Card>
 
         {/* Referrals */}
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-brand">Referrals</CardTitle>
             <Receipt className="h-6 w-6 text-brand" />
@@ -103,7 +103,7 @@ export default async function AdminPage() {
         </Card>
 
         {/* B.H. Referrals */}
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-brand">B.H. Referrals</CardTitle>
             <Brain className="h-6 w-6 text-brand" />
