@@ -29,6 +29,7 @@ export function StatusBarChart({ data }: Props) {
   const labels = sorted.map((d) => getStatusLabel(d.status));
   const counts = sorted.map((d) => d.count);
   const colors = sorted.map((d) => getStatusColor(d.status));
+  const total = counts.reduce((sum, n) => sum + n, 0);
 
   const chartData = {
     labels,
@@ -47,7 +48,7 @@ export function StatusBarChart({ data }: Props) {
   const options = {
     responsive: true,
     layout: {
-      padding: { top: 24 },
+      padding: { top: 32 },
     },
     plugins: {
       legend: { display: false },
@@ -57,9 +58,22 @@ export function StatusBarChart({ data }: Props) {
         align: "top" as const,
         offset: 4,
         clamp: true,
-        color: "#94a3b8",
-        font: { weight: "bold" as const, size: 12 },
-        formatter: (value: number) => (value === 0 ? "" : value),
+        color: "#007A7D",
+        font: { weight: 900 as const, size: 13 },
+        formatter: (value: number) => {
+          if (value === 0) return "";
+          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+          return `${value} (${pct}%)`;
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx: import("chart.js").TooltipItem<"bar">) => {
+            const value = ctx.parsed.y ?? 0;
+            const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+            return ` ${value} referrals — ${pct}%`;
+          },
+        },
       },
     },
     scales: {
@@ -83,5 +97,15 @@ export function StatusBarChart({ data }: Props) {
     );
   }
 
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex flex-col items-end">
+        <span className="text-xs font-extrabold text-brand">Total Referrals</span>
+        <span className="text-xl font-extrabold pr-6 text-brand">{total}</span>
+      </div>
+      <div className="min-h-0 flex-1">
+        <Bar data={chartData} options={options} />
+      </div>
+    </div>
+  );
 }

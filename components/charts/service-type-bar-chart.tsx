@@ -50,7 +50,7 @@ export function ServiceTypeBarChart({ data }: Props) {
         align: "top" as const,
         offset: 4,
         clamp: true,
-        color: "#94a3b8",
+        color: "#007A7D",
         font: { weight: "bold" as const, size: 12 },
         formatter: (value: number) => (value === 0 ? "" : value),
       },

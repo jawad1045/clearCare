@@ -40,7 +40,7 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#007A7D]">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-brand">Dashboard</h1>
         <p className="text-muted-foreground">System overview</p>
       </div>
 
@@ -48,12 +48,12 @@ export default async function AdminPage() {
         {/* Total Users */}
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Total Users</CardTitle>
-            <Users className="h-6 w-6 text-[#007A7D]" />
+            <CardTitle className="text-sm font-medium text-brand">Total Users</CardTitle>
+            <Users className="h-6 w-6 text-brand" />
           </CardHeader>
           <CardContent className="flex items-end justify-between">
             <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{totalUsers}</div>
+              <div className="text-3xl font-bold text-brand">{totalUsers}</div>
               <p className="text-xs text-muted-foreground">Registered users</p>
             </div>
             <Link href="/admin/users">
@@ -67,12 +67,12 @@ export default async function AdminPage() {
         {/* Total Companies */}
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Total Companies</CardTitle>
-            <Building2 className="h-6 w-6 text-[#007A7D]" />
+            <CardTitle className="text-sm font-medium text-brand">Total Companies</CardTitle>
+            <Building2 className="h-6 w-6 text-brand" />
           </CardHeader>
           <CardContent className="flex items-end justify-between">
             <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{totalCompanies}</div>
+              <div className="text-3xl font-bold text-brand">{totalCompanies}</div>
               <p className="text-xs text-muted-foreground">Registered companies</p>
             </div>
             <Link href="/admin/companies">
@@ -86,12 +86,12 @@ export default async function AdminPage() {
         {/* Referrals */}
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Referrals</CardTitle>
-            <Receipt className="h-6 w-6 text-[#007A7D]" />
+            <CardTitle className="text-sm font-medium text-brand">Referrals</CardTitle>
+            <Receipt className="h-6 w-6 text-brand" />
           </CardHeader>
           <CardContent className="flex items-end justify-between">
             <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{totalReferrals}</div>
+              <div className="text-3xl font-bold text-brand">{totalReferrals}</div>
               <p className="text-xs text-muted-foreground">Total referrals</p>
             </div>
             <Link href="/admin/referrals">
@@ -105,12 +105,12 @@ export default async function AdminPage() {
         {/* B.H. Referrals */}
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">B.H. Referrals</CardTitle>
-            <Brain className="h-6 w-6 text-[#007A7D]" />
+            <CardTitle className="text-sm font-medium text-brand">B.H. Referrals</CardTitle>
+            <Brain className="h-6 w-6 text-brand" />
           </CardHeader>
           <CardContent className="flex items-end justify-between">
             <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{totalBHReferrals}</div>
+              <div className="text-3xl font-bold text-brand">{totalBHReferrals}</div>
               <p className="text-xs text-muted-foreground">Behavioral Health referrals</p>
             </div>
             <Link href="/admin/bhreferrals">

@@ -153,7 +153,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* Print header (only visible when printing) */}
       <div className="hidden print:block">
         <h1 className="text-xl font-bold">HWP Portal — Referral Report</h1>
-        <p className="text-sm text-gray-500">Generated {new Date().toLocaleString()}</p>
+        <p className="text-sm text-gray-500" suppressHydrationWarning>Generated {new Date().toLocaleString()}</p>
       </div>
 
       {/* Filters */}

@@ -8,6 +8,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-brand: #007A7D;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-barlow);
@@ -84,6 +85,7 @@
   --sidebar-accent-foreground: oklch(0.84 0.06 178);  /* #7DDDD5 teal glow */
   --sidebar-border: oklch(0.30 0.04 205);
   --sidebar-ring: oklch(0.68 0.1 178);
+  --brand: oklch(0.525855 0.089454 197.8023);
 }
 
 .dark {
@@ -118,6 +120,7 @@
   --sidebar-accent-foreground: oklch(0.84 0.06 178);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.68 0.1 178);
+   --brand: oklch(0.525855 0.089454 197.8023);
 }
 
 @layer base {
