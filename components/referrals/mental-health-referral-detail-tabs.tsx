@@ -105,73 +105,91 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
           </CardContent>
         </Card>
 
-        {/* Submitted By */}
-        <Card>
-          <CardHeader className="pb-3">
-            <SectionHeader icon={UserCheck} title="Submitted By" />
-            <CardDescription className="text-xs">Referring contact</CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4 space-y-3">
-            <InfoRow label="Name" value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`} />
-            <div className="space-y-0.5">
-              <p className="text-xs font-medium text-muted-foreground">Email</p>
-              <a href={`mailto:${referral.user.contactEmail}`} className="text-sm text-primary hover:underline">
-                {referral.user.contactEmail}
-              </a>
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-xs font-medium text-muted-foreground">Phone</p>
-              <a href={`tel:${referral.user.contactPhone}`} className="text-sm text-primary hover:underline">
-                {referral.user.contactPhone}
-              </a>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Submitted By, Organization, Attachments, Record Info */}
+        <div className="grid gap-4 sm:grid-cols-2 sm:col-span-2">
 
-        {/* Organization */}
-        <Card>
-          <CardHeader className="pb-3">
-            <SectionHeader icon={Building2} title="Organization" />
-            <CardDescription className="text-xs">Associated company</CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4">
-            <InfoRow label="Organization" value={referral.company.organization} />
-          </CardContent>
-        </Card>
+          {/* Submitted By */}
+          <Card>
+            <CardHeader className="pb-3">
+              <SectionHeader icon={UserCheck} title="Submitted By" />
+              <CardDescription className="text-xs">Referring contact</CardDescription>
+            </CardHeader>
+            <Separator />
+            <CardContent className="pt-4 space-y-3">
+              <InfoRow label="Name" value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`} />
+              <div className="space-y-0.5">
+                <p className="text-xs font-medium text-muted-foreground">Email</p>
+                <a href={`mailto:${referral.user.contactEmail}`} className="text-sm text-primary hover:underline">
+                  {referral.user.contactEmail}
+                </a>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-medium text-muted-foreground">Phone</p>
+                <a href={`tel:${referral.user.contactPhone}`} className="text-sm text-primary hover:underline">
+                  {referral.user.contactPhone}
+                </a>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Attachments */}
-        <Card>
-          <CardHeader className="pb-3">
-            <SectionHeader icon={Paperclip} title="Attachments" />
-            <CardDescription className="text-xs">
-              {referral.clientAttachments.length} file{referral.clientAttachments.length !== 1 ? "s" : ""} attached
-            </CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4">
-            {referral.clientAttachments.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">No attachments</p>
-            ) : (
-              <ul className="space-y-2">
-                {referral.clientAttachments.map((stored, index) => {
-                  const { name, url } = parseAttachment(stored, index);
-                  return (
-                    <li key={stored}>
-                      <Button variant="outline" size="sm" asChild className="w-full justify-start gap-2 text-sm">
-                        <Link href={url} target="_blank" rel="noopener noreferrer">
-                          <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                          {name}
-                        </Link>
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+          {/* Attachments */}
+          <Card>
+            <CardHeader className="pb-3">
+              <SectionHeader icon={Paperclip} title="Attachments" />
+              <CardDescription className="text-xs">
+                {referral.clientAttachments.length} file{referral.clientAttachments.length !== 1 ? "s" : ""} attached
+              </CardDescription>
+            </CardHeader>
+            <Separator />
+            <CardContent className="pt-4">
+              {referral.clientAttachments.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">No attachments</p>
+              ) : (
+                <ul className="space-y-2">
+                  {referral.clientAttachments.map((stored, index) => {
+                    const { name, url } = parseAttachment(stored, index);
+                    return (
+                      <li key={stored}>
+                        <Button variant="outline" size="sm" asChild className="w-full justify-start gap-2 text-sm">
+                          <Link href={url} target="_blank" rel="noopener noreferrer">
+                            <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                            {name}
+                          </Link>
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Organization */}
+          <Card>
+            <CardHeader className="pb-3">
+              <SectionHeader icon={Building2} title="Organization" />
+              <CardDescription className="text-xs">Associated company</CardDescription>
+            </CardHeader>
+            <Separator />
+            <CardContent className="pt-4">
+              <InfoRow label="Organization" value={referral.company.organization} />
+            </CardContent>
+          </Card>
+
+          {/* Record Info */}
+          <Card>
+            <CardHeader className="pb-3">
+              <SectionHeader icon={Hash} title="Record Info" />
+            </CardHeader>
+            <Separator />
+            <CardContent className="pt-4 grid gap-3 sm:grid-cols-2">
+              <InfoRow label="Referral ID" value={String(referral.id)} />
+              <InfoRow label="Status" value={referral.status} />
+              <InfoRow label="Last Updated" value={formatDate(referral.lastUpdated)} />
+            </CardContent>
+          </Card>
+
+        </div>
 
       </div>
 
@@ -187,19 +205,6 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
           </CardContent>
         </Card>
       )}
-
-      {/* Record Info */}
-      <Card>
-        <CardHeader className="pb-3">
-          <SectionHeader icon={Hash} title="Record Info" />
-        </CardHeader>
-        <Separator />
-        <CardContent className="pt-4 grid gap-3 sm:grid-cols-2">
-          <InfoRow label="Referral ID" value={String(referral.id)} />
-          <InfoRow label="Status" value={referral.status} />
-          <InfoRow label="Last Updated" value={formatDate(referral.lastUpdated)} />
-        </CardContent>
-      </Card>
 
     </div>
   );
@@ -237,11 +242,10 @@ function ManageTab({ referral }: { referral: MentalHealthReferral }) {
               <Badge
                 variant="outline"
                 style={{
-                  backgroundColor: getStatusColor(referral.status) + "22",
                   color: getStatusColor(referral.status),
                   borderColor: getStatusColor(referral.status) + "55",
                 }}
-                className="capitalize text-sm px-3 py-1"
+                className="rounded-md capitalize text-sm px-3 py-1"
               >
                 {referral.status.toLowerCase()}
               </Badge>

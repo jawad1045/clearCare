@@ -10,7 +10,7 @@ export default async function CreateUserPage() {
   const companies = await getCompanies();
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
+    <div className="container max-w-4xl py-6">
       <CreateUserForm companies={companies} />
     </div>
   );

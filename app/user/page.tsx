@@ -28,19 +28,19 @@ export default async function UserDashboardPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-semibold text-[#007A7D]">My Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-brand">My Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
-            <CardTitle className="text-[#007A7D]">Referrals Submitted</CardTitle>
+            <CardTitle className="text-brand">Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">All referral submissions</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold text-[#007A7D]">{total}</p>
+                <p className="text-3xl font-bold text-brand">{total}</p>
                 <p className="text-sm text-muted-foreground">Total referrals you've submitted</p>
               </div>
               <Link href="/user/referrals">
@@ -55,14 +55,14 @@ export default async function UserDashboardPage() {
 
         <Card className="border-t-4 border-t-sidebar">
           <CardHeader>
-            <CardTitle className="text-[#007A7D]">B.H. Referrals Submitted</CardTitle>
+            <CardTitle className="text-brand">B.H. Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">Behavioral Health referrals</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold text-[#007A7D]">{bh}</p>
+                <p className="text-3xl font-bold text-brand">{bh}</p>
                 <p className="text-sm text-muted-foreground">Behavioral Health referrals you've submitted</p>
               </div>
               <Link href="/user/bhreferrals">

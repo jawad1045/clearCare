@@ -249,7 +249,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
         <Button
           type="submit"
           disabled={isPending}
-          className="w-full bg-foreground text-primary-foreground hover:bg-foreground/90 transition-colors h-11 text-sm font-semibold tracking-wide"
+          className="w-full bg-foreground text-primary-foreground hover:bg-foreground/90 transition-colors h-11 px-6 py-2.5 text-sm font-semibold tracking-wide"
         >
           {isPending ? (
             <span className="flex items-center justify-center gap-2">

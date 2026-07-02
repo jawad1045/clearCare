@@ -32,7 +32,7 @@ export function UsersTable({
   users,
 }: UsersTableProps) {
   return (
-    <div className="rounded-lg border">
+    <div className="border">
       <Table>
         <TableHeader className="bg-sidebar text-sidebar-foreground">
           <TableRow>
@@ -60,7 +60,7 @@ export function UsersTable({
             </TableRow>
           ) : (
             users.map((user, i) => (
-              <TableRow key={user.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}>
+              <TableRow key={user.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 0 ? { backgroundColor: "#F8FAFC" } : undefined}>
                 <TableCell>
                   {user.contactFirstName}{" "}
                   {user.contactLastName}

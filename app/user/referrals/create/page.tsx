@@ -18,7 +18,7 @@ export default async function CreateReferralPage() {
   if (!user) redirect("/");
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4">
       <ReferralHeader
         basePath="/user/referrals"
         title="Create Referral"

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { updateReferralStatus } from "@/action/referral.action";
 import { updateBHReferralStatus } from "@/action/bh-referral.action";
 
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import {
   Select,
@@ -32,26 +32,41 @@ export function UpdateStatusForm({
   const [status, setStatus] = useState(
     (REFERRAL_STATUSES as readonly string[]).includes(currentStatus) ? currentStatus : "Pending"
   );
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleUpdate = () => {
+  const handleSelect = (value: string) => {
+    if (value === status) return;
+    setPendingStatus(value);
+  };
+
+  const handleConfirm = () => {
+    if (!pendingStatus) return;
+    const newStatus = pendingStatus;
+    setPendingStatus(null);
+
     startTransition(async () => {
       try {
         if (isBH) {
-          const redirectTo = await updateBHReferralStatus(referralId, status);
+          const redirectTo = await updateBHReferralStatus(referralId, newStatus);
 
+          setStatus(newStatus);
           toast.success("Status updated successfully");
 
           if (redirectTo) {
             router.push(redirectTo);
             return;
           }
-        } else {
-          await updateReferralStatus(referralId, status);
 
+          router.refresh();
+        } else {
+          await updateReferralStatus(referralId, newStatus);
+
+          setStatus(newStatus);
           toast.success("Status updated successfully");
+          router.refresh();
         }
       } catch (error) {
         console.error(error);
@@ -63,10 +78,20 @@ export function UpdateStatusForm({
 
   return (
     <div className="space-y-4">
+      <ConfirmDialog
+        open={pendingStatus !== null}
+        onConfirm={handleConfirm}
+        onCancel={() => setPendingStatus(null)}
+        title="Update Status"
+        description={`Are you sure you want to change the status to "${pendingStatus}"?`}
+        confirmLabel="Yes, Update"
+      />
+
       <div>
         <Select
           value={status}
-          onValueChange={setStatus}
+          onValueChange={handleSelect}
+          disabled={isPending}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select status" />
@@ -86,18 +111,6 @@ export function UpdateStatusForm({
           </SelectContent>
         </Select>
       </div>
-
-      <Button
-        onClick={handleUpdate}
-        disabled={
-          isPending ||
-          status === currentStatus
-        }
-      >
-        {isPending
-          ? "Updating..."
-          : "Update Status"}
-      </Button>
     </div>
   );
 }

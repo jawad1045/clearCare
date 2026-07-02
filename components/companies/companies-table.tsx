@@ -13,7 +13,7 @@ type Company = {
 
 export function CompaniesTable({ companies }: { companies: Company[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto border">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
@@ -37,7 +37,7 @@ export function CompaniesTable({ companies }: { companies: Company[] }) {
               <tr
                 key={company.id}
                 className="transition-colors hover:bg-muted/50"
-                style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}
+                style={i % 2 === 0 ? { backgroundColor: "#F8FAFC" } : undefined}
               >
                 <td className="px-4 py-3 font-medium">{company.organization}</td>
                 <td className="px-4 py-3 text-muted-foreground">{company.contactEmail}</td>

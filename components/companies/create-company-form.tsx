@@ -282,7 +282,7 @@ export function CreateCompanyForm() {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <div className="space-y-1.5 sm:col-span-2">
+            <div className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground/80">Title</Label>
               <Select onValueChange={(v) => setValue("title", v)}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
@@ -315,7 +315,7 @@ export function CreateCompanyForm() {
             <Button
               type="submit"
               disabled={isPending}
-              className="min-w-35 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
+              className="min-w-35 px-6 py-2.5 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
             >
               {isPending ? (
                 <span className="flex items-center gap-2">

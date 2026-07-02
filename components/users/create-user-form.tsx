@@ -207,7 +207,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
 
           {/* Organization */}
           <FieldGroup icon={Building2} title="Organization">
-            <div className="space-y-1.5 sm:col-span-2">
+            <div className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground/80">
                 Organization
                 {role !== "Admin"
@@ -223,7 +223,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                   setValue("acctId", value, { shouldValidate: true });
                 }}
               >
-                <SelectTrigger className="border-border focus:ring-primary">
+                <SelectTrigger className="w-full border-border focus:ring-primary">
                   <SelectValue placeholder="Select organization…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -290,9 +290,9 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Title" full>
+            <Field label="Title">
               <Select onValueChange={(v) => setValue("title", v)}>
-                <SelectTrigger className="border-border focus:ring-primary">
+                <SelectTrigger className="w-full border-border focus:ring-primary">
                   <SelectValue placeholder="Select title..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,7 +310,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           <FieldGroup icon={ShieldCheck} title="Access & Security">
             <Field label="Role" required error={errors.role?.message}>
               <Select defaultValue="User" onValueChange={handleRoleChange}>
-                <SelectTrigger className="border-border focus:ring-primary">
+                <SelectTrigger className="w-full border-border focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -347,7 +347,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
             <Button
               type="submit"
               disabled={isPending}
-              className="min-w-35 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
+              className="min-w-35 px-6 py-2.5 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
             >
               {isPending ? (
                 <span className="flex items-center gap-2">

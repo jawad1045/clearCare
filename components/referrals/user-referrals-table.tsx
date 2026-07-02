@@ -115,19 +115,19 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-sidebar text-sidebar-foreground">
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Patient</TableHead>
-              <TableHead>Parent</TableHead>
-              <TableHead>Service Type</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Last Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-sidebar-foreground">ID</TableHead>
+              <TableHead className="text-sidebar-foreground">Patient</TableHead>
+              <TableHead className="text-sidebar-foreground">Parent</TableHead>
+              <TableHead className="text-sidebar-foreground">Service Type</TableHead>
+              <TableHead className="text-sidebar-foreground">Priority</TableHead>
+              <TableHead className="text-sidebar-foreground">Status</TableHead>
+              <TableHead className="text-sidebar-foreground">Created</TableHead>
+              <TableHead className="text-sidebar-foreground">Last Updated</TableHead>
+              <TableHead className="text-right text-sidebar-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -142,7 +142,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
               </TableRow>
             ) : (
               filtered.map((referral, i) => (
-                <TableRow key={referral.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}>
+                <TableRow key={referral.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 0 ? { backgroundColor: "#F8FAFC" } : undefined}>
                   <TableCell>#{referral.id}</TableCell>
                   <TableCell className="font-medium">
                     {referral.patientFirstName ?? "-"}{" "}

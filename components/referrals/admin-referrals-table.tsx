@@ -169,7 +169,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
         />
       </div>
 
-      <div className="rounded-lg border">
+      <div className="border">
         <Table>
           <TableHeader className="bg-sidebar text-sidebar-foreground">
             <TableRow>
@@ -195,7 +195,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
               </TableRow>
             ) : (
               filtered.map((referral, i) => (
-                <TableRow key={referral.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}>
+                <TableRow key={referral.id} className="transition-colors hover:bg-muted/50" style={i % 2 === 0 ? { backgroundColor: "#F8FAFC" } : undefined}>
                   <TableCell>#{referral.id}</TableCell>
 
                   <TableCell>

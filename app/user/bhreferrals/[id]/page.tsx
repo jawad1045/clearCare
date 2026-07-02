@@ -84,13 +84,13 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
         {/* Header */}
         <div className="mb-8">
           <div className="mb-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+            {/* <p className="text-xs font-semibold uppercase tracking-widest text-primary">
               {appConfig.name}
             </p>
-            <p className="text-xs text-muted-foreground">{appConfig.slogan}</p>
+            <p className="text-xs text-muted-foreground">{appConfig.slogan}</p> */}
           </div>
 
-          <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground">
+          <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground ">
             <Link href="/user/bhreferrals">
               <ArrowLeft className="mr-1.5 h-4 w-4" />
               Back to BH Referrals
@@ -109,15 +109,14 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
               </p>
             </div>
             <Badge
-              variant="outline"
+              variant="secondary"
               style={{
-                backgroundColor: (getStatusColor(referral.status)) + "22",
                 color: getStatusColor(referral.status),
                 borderColor: (getStatusColor(referral.status)) + "55",
               }}
-              className="mt-1 shrink-0 capitalize"
+              className="mt-1 p-1 bg-background border-0 shrink-0  capitalize"
             >
-              {referral.status.toLowerCase()}
+              Current Status: {referral.status.toLowerCase()}
             </Badge>
           </div>
         </div>
