@@ -81,7 +81,6 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       submittedBy: opts.userName,
       serviceType: opts.serviceType,
-      viewUrl: `${APP_URL}${opts.adminViewPath}`,
     }),
   ]);
 }
@@ -120,7 +119,6 @@ async function notifyStatusChange(opts: {
       referralId: opts.referralId,
       patientName: opts.patientName,
       newStatus: opts.newStatus,
-      viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
   ]);
 }
@@ -509,7 +507,6 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
     notifySlackResultUploaded({
       referralId,
       patientName,
-      viewUrl: `${APP_URL}${userViewPath}`,
     }),
   ]);
 

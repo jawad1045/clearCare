@@ -15,14 +15,12 @@ export async function notifySlackNewReferral(opts: {
   patientName: string;
   submittedBy: string;
   serviceType: string;
-  viewUrl: string;
 }) {
   await postToSlack(
     `:inbox_tray: *New referral submitted* — #${opts.referralId}\n` +
       `Patient: *${opts.patientName}*\n` +
       `Submitted by: ${opts.submittedBy}\n` +
-      `Service type: ${opts.serviceType}\n` +
-      `<${opts.viewUrl}|View referral>`
+      `Service type: ${opts.serviceType}`
   );
 }
 
@@ -30,25 +28,21 @@ export async function notifySlackStatusChanged(opts: {
   referralId: number;
   patientName: string;
   newStatus: string;
-  viewUrl: string;
 }) {
   await postToSlack(
     `:arrows_counterclockwise: *Referral status updated* — #${opts.referralId}\n` +
       `Patient: *${opts.patientName}*\n` +
-      `New status: *${opts.newStatus}*\n` +
-      `<${opts.viewUrl}|View referral>`
+      `New status: *${opts.newStatus}*`
   );
 }
 
 export async function notifySlackResultUploaded(opts: {
   referralId: number;
   patientName: string;
-  viewUrl: string;
 }) {
   await postToSlack(
     `:page_facing_up: *Result uploaded* — #${opts.referralId}\n` +
-      `Patient: *${opts.patientName}*\n` +
-      `<${opts.viewUrl}|View referral>`
+      `Patient: *${opts.patientName}*`
   );
 }
 
