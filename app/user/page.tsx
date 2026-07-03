@@ -31,7 +31,7 @@ export default async function UserDashboardPage() {
       <h1 className="text-2xl font-semibold text-brand">My Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader>
             <CardTitle className="text-brand">Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">All referral submissions</CardDescription>
@@ -53,7 +53,7 @@ export default async function UserDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-sidebar">
+        <Card className="border-t-4 border-t-brand">
           <CardHeader>
             <CardTitle className="text-brand">B.H. Referrals Submitted</CardTitle>
             <CardDescription className="text-sm">Behavioral Health referrals</CardDescription>

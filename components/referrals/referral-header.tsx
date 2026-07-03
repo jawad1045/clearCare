@@ -14,13 +14,13 @@ export function ReferralHeader({ basePath, title = "Referrals", subtitle, showCr
   return (
     <div className="flex items-center justify-between">
       <div>
-        <span className="text-sm font-medium text-brand">Total {title}</span>
-        <p className="pl-8 text-2xl font-bold text-brand">{total ?? 0}</p>
+        <h1 className="text-3xl font-bold text-brand">{title}</h1>
+        <p className="text-muted-foreground">{subtitle ?? `Manage ${title.toLowerCase()}`}</p>
       </div>
 
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-brand">{title}</h1>
-        <p className="text-muted-foreground">{subtitle ?? `Manage ${title.toLowerCase()}`}</p>
+        <span className="text-sm font-medium text-brand">Total {title}</span>
+        <p className="text-2xl font-bold text-brand">{total ?? 0}</p>
       </div>
 
       <div>

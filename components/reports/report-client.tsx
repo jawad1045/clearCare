@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 import { ServiceTypeBarChart } from "@/components/charts/service-type-bar-chart";
 import { getStatusBadge, getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
-import { Download, FileText, Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide-react";
+import { Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide-react";
 import type { ReportRow } from "@/action/report.action";
 
 const SERVICE_TYPES = [
@@ -20,39 +19,6 @@ const SERVICE_TYPES = [
   "Medication Management",
   "IOP",
 ];
-
-function exportCSV(rows: ReportRow[], isAdmin: boolean, filename: string) {
-  const headers = isAdmin
-    ? ["ID", "Patient", "Company", "Service Type", "Status", "Date", "Referred By", "Has Result"]
-    : ["ID", "Patient", "Company", "Service Type", "Status", "Date", "Has Result"];
-
-  const csvRows = rows.map((r) => {
-    const base = [
-      r.id,
-      `"${r.patientName}"`,
-      `"${r.companyName}"`,
-      r.serviceType,
-      getStatusLabel(r.status),
-      new Date(r.dateOfReferral).toLocaleDateString(),
-    ];
-    if (isAdmin) base.push(`"${r.referName}"`);
-    base.push(r.hasPdfResult ? "Yes" : "No");
-    return base.join(",");
-  });
-
-  const csv = [headers.join(","), ...csvRows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function exportPDF() {
-  window.print();
-}
 
 interface Props {
   rows: ReportRow[];
@@ -136,17 +102,10 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
   return (
     <div className="space-y-6 print:space-y-4">
-      {/* Export buttons */}
       <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Table className="h-4 w-4" />
           <span>{total} record{total !== 1 ? "s" : ""} {hasActiveFilters ? "(filtered)" : ""}</span>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportPDF} className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Export PDF
-          </Button>
         </div>
       </div>
 
@@ -363,15 +322,6 @@ export function ReportClient({ rows, isAdmin }: Props) {
       <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium text-brand">Referral Records</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportCSV(referralRows, isAdmin, "hwp-referrals")}
-            className="flex items-center gap-2 print:hidden"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
         </CardHeader>
         <Separator />
         <CardContent className="p-0">
@@ -438,15 +388,6 @@ export function ReportClient({ rows, isAdmin }: Props) {
       <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium text-brand">BH Referral Records</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportCSV(bhReferralRows, isAdmin, "hwp-bh-referrals")}
-            className="flex items-center gap-2 print:hidden"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
         </CardHeader>
         <Separator />
         <CardContent className="p-0">
