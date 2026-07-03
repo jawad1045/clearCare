@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,8 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/locale/use-translation";
 
-const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"] as const;
+const TITLE_LABEL_KEYS = {
+  Administrator: "common.titleAdministrator",
+  Manager: "common.titleManager",
+  Counselor: "common.titleCounselor",
+  Nurse: "common.titleNurse",
+  Doctor: "common.titleDoctor",
+} as const;
 
 type Company = {
   id: number;
@@ -44,24 +52,30 @@ type Company = {
 
 type Props = { company: Company };
 
-const companySchema = z.object({
-  organization: z.string().min(1, "Organization name is required"),
-  street: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  zip: z.string().optional(),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().min(1, "Email is required").email("Enter a valid email"),
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Enter a complete phone number"),
-  title: z.string().optional(),
-  notes: z.string().optional(),
-});
+function useCompanySchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z.object({
+        organization: z.string().min(1, t("common.validation.organizationRequired")),
+        street: z.string().optional(),
+        city: z.string().min(1, t("common.validation.cityRequired")),
+        state: z.string().min(1, t("common.validation.stateRequired")),
+        zip: z.string().optional(),
+        firstName: z.string().min(1, t("common.validation.firstNameRequired")),
+        lastName: z.string().min(1, t("common.validation.lastNameRequired")),
+        email: z.string().min(1, t("common.validation.emailRequired")).email(t("common.validation.emailInvalid")),
+        phone: z
+          .string()
+          .min(1, t("common.validation.phoneRequired"))
+          .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
+        title: z.string().optional(),
+        notes: z.string().optional(),
+      }),
+    [t]
+  );
+}
 
-type CompanyFormValues = z.infer<typeof companySchema>;
+type CompanyFormValues = z.infer<ReturnType<typeof useCompanySchema>>;
 
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
@@ -104,6 +118,8 @@ function Field({ label, required, error, children }: {
 }
 
 export function EditCompanyForm({ company }: Props) {
+  const { t } = useTranslation();
+  const companySchema = useCompanySchema(t);
   const [isPending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<CompanyFormValues | null>(null);
@@ -195,10 +211,10 @@ export function EditCompanyForm({ company }: Props) {
           </div>
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-              Edit Company
+              {t("companies.editTitle")}
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              Update organization details
+              {t("companies.editSubtitle")}
             </CardDescription>
           </div>
         </div>
@@ -211,17 +227,17 @@ export function EditCompanyForm({ company }: Props) {
           open={confirmOpen}
           onConfirm={onConfirm}
           onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-          title="Save Changes"
-          description="Are you sure you want to save these changes to the company? This will update the record immediately."
-          confirmLabel="Save Changes"
+          title={t("common.saveChanges")}
+          description={t("companies.editConfirmDescription")}
+          confirmLabel={t("common.saveChanges")}
         />
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
           {/* Organization */}
-          <FieldGroup icon={Building2} title="Organization">
+          <FieldGroup icon={Building2} title={t("common.organization")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs font-medium text-foreground/80">
-                Organization Name<span className="ml-0.5 text-primary">*</span>
+                {t("common.organizationName")}<span className="ml-0.5 text-primary">*</span>
               </Label>
               <Input
                 {...register("organization")}
@@ -236,13 +252,13 @@ export function EditCompanyForm({ company }: Props) {
           <Separator className="bg-border/60" />
 
           {/* Address */}
-          <FieldGroup icon={MapPin} title="Address">
+          <FieldGroup icon={MapPin} title={t("common.address")}>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs font-medium text-foreground/80">Street</Label>
+              <Label className="text-xs font-medium text-foreground/80">{t("common.street")}</Label>
               <Input {...register("street")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </div>
-            <Field label="Zip">
+            <Field label={t("common.zip")}>
               <Input
                 value={zip}
                 onChange={(e) => handleZipChange(e.target.value)}
@@ -251,11 +267,11 @@ export function EditCompanyForm({ company }: Props) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="City" required error={errors.city?.message}>
+            <Field label={t("common.city")} required error={errors.city?.message}>
               <Input {...register("city")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="State" required error={errors.state?.message}>
+            <Field label={t("common.state")} required error={errors.state?.message}>
               <Input {...register("state")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
@@ -264,20 +280,20 @@ export function EditCompanyForm({ company }: Props) {
           <Separator className="bg-border/60" />
 
           {/* Contact */}
-          <FieldGroup icon={User} title="Contact Person">
-            <Field label="First Name" required error={errors.firstName?.message}>
+          <FieldGroup icon={User} title={t("common.contactPerson")}>
+            <Field label={t("common.firstName")} required error={errors.firstName?.message}>
               <Input {...register("firstName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required error={errors.lastName?.message}>
+            <Field label={t("common.lastName")} required error={errors.lastName?.message}>
               <Input {...register("lastName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email" required error={errors.email?.message}>
+            <Field label={t("common.email")} required error={errors.email?.message}>
               <Input type="email" {...register("email")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Phone" required error={errors.phone?.message}>
+            <Field label={t("common.phone")} required error={errors.phone?.message}>
               <Input
                 {...register("phone", {
                   onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
@@ -287,17 +303,17 @@ export function EditCompanyForm({ company }: Props) {
               />
             </Field>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs font-medium text-foreground/80">Title</Label>
+              <Label className="text-xs font-medium text-foreground/80">{t("common.title")}</Label>
               <Select
                 defaultValue={company.contactTitle ?? undefined}
                 onValueChange={(v) => setValue("title", v)}
               >
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select title..." />
+                  <SelectValue placeholder={t("common.selectTitlePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TITLES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {TITLES.map((title) => (
+                    <SelectItem key={title} value={title}>{t(TITLE_LABEL_KEYS[title])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -307,7 +323,7 @@ export function EditCompanyForm({ company }: Props) {
           <Separator className="bg-border/60" />
 
           {/* Notes */}
-          <FieldGroup icon={FileText} title="Notes">
+          <FieldGroup icon={FileText} title={t("common.notes")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Textarea
                 {...register("notes")}
@@ -326,9 +342,9 @@ export function EditCompanyForm({ company }: Props) {
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  Saving…
+                  {t("common.saving")}
                 </span>
-              ) : "Save Changes"}
+              ) : t("common.saveChanges")}
             </Button>
           </div>
 

@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { updateSessionTimeoutMinutes } from "@/action/settings.action";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useTranslation } from "@/locale/use-translation";
+import type { TranslationKey } from "@/locale/config";
 
 const NOTIF_KEY = "hwp:notif-prefs";
 
@@ -25,15 +27,21 @@ const defaultNotifPrefs: NotifPrefs = {
 };
 
 const navItems = [
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "system", label: "System", icon: Settings2 },
+  { id: "notifications", labelKey: "settings.notificationsNav", icon: Bell },
+  { id: "system", labelKey: "settings.systemNav", icon: Settings2 },
 ] as const;
 
 type NavId = (typeof navItems)[number]["id"];
 
+const NOTIF_ITEMS: { key: keyof NotifPrefs; labelKey: TranslationKey; descKey: TranslationKey }[] = [
+  { key: "emailNotifications", labelKey: "settings.emailNotifications", descKey: "settings.emailNotificationsDesc" },
+  { key: "inAppNotifications", labelKey: "settings.inAppNotifications", descKey: "settings.inAppNotificationsDesc" },
+];
+
 // ─── Sections ─────────────────────────────────────────────────────────────────
 
 function NotificationsSection() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useState<NotifPrefs>(defaultNotifPrefs);
 
   useEffect(() => {
@@ -47,27 +55,24 @@ function NotificationsSection() {
     const updated = { ...prefs, [key]: value };
     setPrefs(updated);
     localStorage.setItem(NOTIF_KEY, JSON.stringify(updated));
-    toast.success("Preference saved");
+    toast.success(t("settings.preferenceSaved"));
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Notifications</h3>
+        <h3 className="text-lg font-medium">{t("settings.notificationsTitle")}</h3>
         <p className="text-sm text-muted-foreground">
-          Configure how you receive notifications from the portal.
+          {t("settings.notificationsSubtitle")}
         </p>
       </div>
       <Separator />
       <div className="space-y-4">
-        {([
-          { key: "emailNotifications", label: "Email Notifications", desc: "Receive referral updates and status changes via email." },
-          { key: "inAppNotifications", label: "In-App Notifications", desc: "Show the notification bell and real-time alerts in the portal." },
-        ] as const).map(({ key, label, desc }) => (
+        {NOTIF_ITEMS.map(({ key, labelKey, descKey }) => (
           <div key={key} className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base">{label}</Label>
-              <p className="text-sm text-muted-foreground">{desc}</p>
+              <Label className="text-base">{t(labelKey)}</Label>
+              <p className="text-sm text-muted-foreground">{t(descKey)}</p>
             </div>
             <div className="flex items-center gap-2">
               {prefs[key] ? <Bell className="h-4 w-4 text-emerald-500" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
@@ -80,17 +85,18 @@ function NotificationsSection() {
   );
 }
 
-const SESSION_TIMEOUT_OPTIONS = [
-  { value: 15, label: "15 minutes" },
-  { value: 30, label: "30 minutes" },
-  { value: 60, label: "1 hour" },
-  { value: 240, label: "4 hours" },
-  { value: 480, label: "8 hours" },
-  { value: 1440, label: "24 hours" },
-  { value: 10080, label: "7 days" },
+const SESSION_TIMEOUT_OPTIONS: { value: number; labelKey: TranslationKey }[] = [
+  { value: 15, labelKey: "settings.min15" },
+  { value: 30, labelKey: "settings.min30" },
+  { value: 60, labelKey: "settings.hour1" },
+  { value: 240, labelKey: "settings.hour4" },
+  { value: 480, labelKey: "settings.hour8" },
+  { value: 1440, labelKey: "settings.hour24" },
+  { value: 10080, labelKey: "settings.days7" },
 ];
 
 function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeoutMinutes: number }) {
+  const { t } = useTranslation();
   const [companyName, setCompanyName] = useState("HWP Portal");
   const [supportEmail, setSupportEmail] = useState("support@hwp.com");
   const [sessionTimeout, setSessionTimeout] = useState(initialSessionTimeoutMinutes);
@@ -102,16 +108,16 @@ function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeout
     setSaving(true);
     await new Promise((r) => setTimeout(r, 600));
     setSaving(false);
-    toast.success("System settings saved");
+    toast.success(t("settings.systemSettingsSaved"));
   }
 
   async function handleSessionTimeoutSave() {
     setSavingTimeout(true);
     try {
       await updateSessionTimeoutMinutes(sessionTimeout);
-      toast.success("Session timeout updated. New logins will use this duration.");
+      toast.success(t("settings.sessionTimeoutUpdated"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update session timeout");
+      toast.error(err instanceof Error ? err.message : t("settings.sessionTimeoutFailed"));
     } finally {
       setSavingTimeout(false);
     }
@@ -120,26 +126,26 @@ function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeout
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">System</h3>
+        <h3 className="text-lg font-medium">{t("settings.systemTitle")}</h3>
         <p className="text-sm text-muted-foreground">
-          Global application settings for the portal.
+          {t("settings.systemSubtitle")}
         </p>
       </div>
       <Separator />
       <form onSubmit={handleSave} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="company-name">Portal Name</Label>
-          <Input id="company-name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="HWP Portal" />
-          <p className="text-sm text-muted-foreground">Displayed in the browser tab and outgoing emails.</p>
+          <Label htmlFor="company-name">{t("settings.portalNameLabel")}</Label>
+          <Input id="company-name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t("settings.portalNamePlaceholder")} />
+          <p className="text-sm text-muted-foreground">{t("settings.portalNameHint")}</p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="support-email">Support Email</Label>
+          <Label htmlFor="support-email">{t("settings.supportEmailLabel")}</Label>
           <Input id="support-email" type="email" value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} placeholder="support@hwp.com" />
-          <p className="text-sm text-muted-foreground">Used as the reply-to address for system emails.</p>
+          <p className="text-sm text-muted-foreground">{t("settings.supportEmailHint")}</p>
         </div>
         <Button type="submit" disabled={saving} className="flex items-center gap-2">
           <Save className="h-4 w-4" />
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? t("common.saving") : t("settings.saveChangesBtn")}
         </Button>
       </form>
 
@@ -148,17 +154,17 @@ function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeout
       <div className="space-y-4 rounded-lg border p-4">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <Label className="text-base">Session Timeout</Label>
+          <Label className="text-base">{t("settings.sessionTimeoutLabel")}</Label>
         </div>
         <p className="text-sm text-muted-foreground">
-          How long a user can stay signed in before they're automatically logged out and must log in again.
+          {t("settings.sessionTimeoutHint")}
         </p>
         <div className="flex items-center gap-3">
           <Select value={String(sessionTimeout)} onValueChange={(v) => setSessionTimeout(Number(v))}>
             <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
               {SESSION_TIMEOUT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+                <SelectItem key={opt.value} value={String(opt.value)}>{t(opt.labelKey)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -169,7 +175,7 @@ function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeout
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {savingTimeout ? "Saving…" : "Save"}
+            {savingTimeout ? t("common.saving") : t("common.save")}
           </Button>
         </div>
       </div>
@@ -180,6 +186,7 @@ function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeout
 // ─── Animated sidebar nav ─────────────────────────────────────────────────────
 
 function SidebarNav({ active, onChange }: { active: NavId; onChange: (id: NavId) => void }) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0 });
 
@@ -202,7 +209,7 @@ function SidebarNav({ active, onChange }: { active: NavId; onChange: (id: NavId)
         style={{ top: indicatorStyle.top, height: indicatorStyle.height }}
       />
 
-      {navItems.map(({ id, label, icon: Icon }) => (
+      {navItems.map(({ id, labelKey, icon: Icon }) => (
         <button
           key={id}
           data-nav={id}
@@ -216,7 +223,7 @@ function SidebarNav({ active, onChange }: { active: NavId; onChange: (id: NavId)
           )}
         >
           <Icon className="h-4 w-4 shrink-0" />
-          {label}
+          {t(labelKey)}
         </button>
       ))}
     </div>

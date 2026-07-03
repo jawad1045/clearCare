@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { KeyRound, Loader2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
+import { useTranslation } from "@/locale/use-translation";
 
 interface Props {
   userId: number;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ResetPasswordDialog({ userId, userName }: Props) {
+  const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -21,9 +23,9 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
     setPending(true);
     try {
       await resetUserPassword(userId);
-      toast.success(`A temporary password has been emailed to ${userName}.`);
+      toast.success(t("users.resetPasswordSuccess", { name: userName }));
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : t("users.resetPasswordGenericError"));
     } finally {
       setPending(false);
     }
@@ -35,9 +37,9 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
         open={confirmOpen}
         onConfirm={doReset}
         onCancel={() => setConfirmOpen(false)}
-        title="Reset Password"
-        description={`This will generate a new temporary password and email it to ${userName}. They will need to use it to log in and should change it right away.`}
-        confirmLabel="Send Temporary Password"
+        title={t("users.resetPasswordTitle")}
+        description={t("users.resetPasswordDescription", { name: userName })}
+        confirmLabel={t("users.resetPasswordConfirm")}
       />
       <Button
         size="sm"
@@ -47,7 +49,7 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
         onClick={() => setConfirmOpen(true)}
       >
         {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
-        Reset Password
+        {t("users.resetPasswordButton")}
       </Button>
     </>
   );

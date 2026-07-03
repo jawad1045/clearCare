@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,28 +24,41 @@ import { formatPhoneInput } from "@/lib/utils";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
+import { useTranslation } from "@/locale/use-translation";
+import type { TranslationKey } from "@/locale/config";
 
-const GENDERS = ["Male", "Female", "Other"];
+const GENDERS = ["Male", "Female", "Other"] as const;
+const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
+  Male: "common.genderMale",
+  Female: "common.genderFemale",
+  Other: "common.genderOther",
+};
 
-const bhReferralSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Enter a complete phone number"),
-  last4SSN: z
-    .string()
-    .min(1, "Last 4 of SSN is required")
-    .max(4, "You can only enter 4 digits")
-    .regex(/^\d{4}$/, "Enter exactly 4 digits"),
-  email: z.string().email("Enter a valid email").optional().or(z.literal("")),
-  gender: z.string().min(1, "Gender is required"),
-  referrerName: z.string().optional(),
-  notes: z.string().optional(),
-});
+function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z.object({
+        firstName: z.string().min(1, t("common.validation.firstNameRequired")),
+        lastName: z.string().min(1, t("common.validation.lastNameRequired")),
+        phone: z
+          .string()
+          .min(1, t("common.validation.phoneRequired"))
+          .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
+        last4SSN: z
+          .string()
+          .min(1, t("referrals.last4SsnRequired"))
+          .max(4, t("referrals.last4SsnMax"))
+          .regex(/^\d{4}$/, t("referrals.last4SsnFormat")),
+        email: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
+        gender: z.string().min(1, t("referrals.genderRequired")),
+        referrerName: z.string().optional(),
+        notes: z.string().optional(),
+      }),
+    [t]
+  );
+}
 
-type BHReferralFormValues = z.infer<typeof bhReferralSchema>;
+type BHReferralFormValues = z.infer<ReturnType<typeof useBHReferralSchema>>;
 
 function Field({
   label,
@@ -73,6 +86,8 @@ function Field({
 type Props = { referrerName: string };
 
 export function CreateBHReferralForm({ referrerName }: Props) {
+  const { t } = useTranslation();
+  const bhReferralSchema = useBHReferralSchema(t);
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -114,7 +129,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
         await createBHReferral(formData);
       } catch (error) {
         if (isRedirectError(error)) throw error;
-        toast.error(error instanceof Error ? error.message : "Failed to create behavioral health referral");
+        toast.error(error instanceof Error ? error.message : t("referrals.createBhReferralFailed"));
       }
     });
   }
@@ -136,13 +151,13 @@ export function CreateBHReferralForm({ referrerName }: Props) {
       {/* ── Header ── */}
       <div className="bg-foreground px-6 py-4">
         <h2 className="text-base font-bold text-primary-foreground">
-          CLEAR-CARE™ Behavioral Health Referral Form
+          {t("referrals.bhReferralFormTitle")}
         </h2>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
-          <span>Fields marked * are required</span>
+          <span>{t("referrals.requiredFieldsNote")}</span>
           <span className="text-primary/50">·</span>
           <Lock className="h-3 w-3" />
-          <span>HIPAA Compliant · All data is encrypted</span>
+          <span>{t("referrals.hipaaEncryptedNote")}</span>
         </div>
       </div>
 
@@ -150,9 +165,9 @@ export function CreateBHReferralForm({ referrerName }: Props) {
         open={confirmOpen}
         onConfirm={onConfirm}
         onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-        title="Submit BH Referral"
-        description="Are you sure you want to submit this behavioral health referral? Please review all client information before proceeding."
-        confirmLabel="Submit BH Referral"
+        title={t("referrals.submitBhReferral")}
+        description={t("referrals.submitBhReferralConfirmDescription")}
+        confirmLabel={t("referrals.submitBhReferral")}
       />
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="pl-6 pr-10 py-6 space-y-6">
@@ -160,21 +175,21 @@ export function CreateBHReferralForm({ referrerName }: Props) {
         {/* ── Client Information ── */}
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name" required error={errors.firstName?.message}>
+            <Field label={t("common.firstName")} required error={errors.firstName?.message}>
               <Input
                 {...register("firstName")}
-                placeholder="Client first name"
+                placeholder={t("referrals.clientFirstNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Last Name" required error={errors.lastName?.message}>
+            <Field label={t("common.lastName")} required error={errors.lastName?.message}>
               <Input
                 {...register("lastName")}
-                placeholder="Client last name"
+                placeholder={t("referrals.clientLastNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Phone" required error={errors.phone?.message}>
+            <Field label={t("common.phone")} required error={errors.phone?.message}>
               <Input
                 {...register("phone", {
                   onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
@@ -184,16 +199,16 @@ export function CreateBHReferralForm({ referrerName }: Props) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Email">
+            <Field label={t("common.email")}>
               <Input
                 {...register("email")}
                 type="email"
-                placeholder="client@email.com"
+                placeholder={t("referrals.clientEmailPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </Field>
-            <Field label="Last 4 of SSN" required error={errors.last4SSN?.message}>
+            <Field label={t("referrals.last4SsnLabel")} required error={errors.last4SSN?.message}>
               <Input
                 {...register("last4SSN", {
                   onChange: (e) => {
@@ -202,18 +217,18 @@ export function CreateBHReferralForm({ referrerName }: Props) {
                 })}
                 inputMode="numeric"
                 maxLength={4}
-                placeholder="XXXX"
+                placeholder={t("referrals.last4SsnPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Gender" required error={errors.gender?.message}>
+            <Field label={t("referrals.genderLabel")} required error={errors.gender?.message}>
               <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {GENDERS.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                    <SelectItem key={g} value={g}>{t(GENDER_LABEL_KEYS[g])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -224,17 +239,17 @@ export function CreateBHReferralForm({ referrerName }: Props) {
         {/* ── Referral Details ── */}
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Referrer Name (from your profile)">
+            <Field label={t("referrals.referrerNameLabel")}>
               <Input
                 {...register("referrerName")}
                 readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
               />
             </Field>
-            <Field label="Notes">
+            <Field label={t("common.notes")}>
               <textarea
                 {...register("notes")}
-                placeholder="Any additional notes or clinical information..."
+                placeholder={t("referrals.notesPlaceholder")}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 rows={3}
               />
@@ -254,11 +269,11 @@ export function CreateBHReferralForm({ referrerName }: Props) {
           {isPending ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              Submitting…
+              {t("referrals.submitting")}
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              Submit BH Referral
+              {t("referrals.submitBhReferral")}
               <ArrowRight className="h-4 w-4" />
             </span>
           )}

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import {
@@ -12,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ResetPasswordDialog } from "@/components/users/reset-password-dialog";
+import { useTranslation } from "@/locale/use-translation";
 
 type User = {
   id: number;
@@ -28,22 +31,29 @@ type UsersTableProps = {
   users: User[];
 };
 
+const ROLE_LABEL_KEYS: Record<string, "common.roleAdmin" | "common.roleUser"> = {
+  Admin: "common.roleAdmin",
+  User: "common.roleUser",
+};
+
 export function UsersTable({
   users,
 }: UsersTableProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="border">
       <Table>
         <TableHeader className="bg-sidebar text-sidebar-foreground">
           <TableRow>
-            <TableHead className="text-sidebar-foreground">Name</TableHead>
-            <TableHead className="text-sidebar-foreground">Email</TableHead>
-            <TableHead className="text-sidebar-foreground">Organization</TableHead>
-            <TableHead className="text-sidebar-foreground">Role</TableHead>
-            <TableHead className="text-sidebar-foreground">Status</TableHead>
-            <TableHead className="text-sidebar-foreground">Created</TableHead>
+            <TableHead className="text-sidebar-foreground">{t("common.name")}</TableHead>
+            <TableHead className="text-sidebar-foreground">{t("common.email")}</TableHead>
+            <TableHead className="text-sidebar-foreground">{t("common.organization")}</TableHead>
+            <TableHead className="text-sidebar-foreground">{t("common.role")}</TableHead>
+            <TableHead className="text-sidebar-foreground">{t("common.status")}</TableHead>
+            <TableHead className="text-sidebar-foreground">{t("common.created")}</TableHead>
             <TableHead className="w-56 text-sidebar-foreground">
-              Actions
+              {t("common.actions")}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -55,7 +65,7 @@ export function UsersTable({
                 colSpan={7}
                 className="py-8 text-center text-muted-foreground"
               >
-                No users found
+                {t("users.noUsersFound")}
               </TableCell>
             </TableRow>
           ) : (
@@ -78,7 +88,7 @@ export function UsersTable({
 
                 <TableCell>
                   <Badge variant="outline">
-                    {user.userRole}
+                    {ROLE_LABEL_KEYS[user.userRole] ? t(ROLE_LABEL_KEYS[user.userRole]) : user.userRole}
                   </Badge>
                 </TableCell>
 
@@ -91,8 +101,8 @@ export function UsersTable({
                     }
                   >
                     {user.isActive
-                      ? "Active"
-                      : "Inactive"}
+                      ? t("common.active")
+                      : t("common.inactive")}
                   </Badge>
                 </TableCell>
 
@@ -106,7 +116,7 @@ export function UsersTable({
                   <div className="flex items-center gap-2">
                     <Link href={`/admin/users/${user.id}/edit`}>
                       <Button size="sm" variant="outline">
-                        Edit
+                        {t("common.edit")}
                       </Button>
                     </Link>
                     <ResetPasswordDialog

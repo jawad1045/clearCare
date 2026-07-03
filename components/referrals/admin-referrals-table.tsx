@@ -23,13 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDateTime } from "@/lib/format-date";
-import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
-
-const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+import { REFERRAL_STATUSES, getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
+import { MONTH_KEYS, MONTH_LABEL_KEYS, SERVICE_TYPES, SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { useTranslation } from "@/locale/use-translation";
 
 type Referral = {
   id: number;
@@ -57,6 +53,7 @@ type Props = {
 };
 
 export function AdminReferralsTable({ referrals, basePath }: Props) {
+  const { t, locale } = useTranslation();
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "id-asc" | "id-desc">("newest");
   const [filterService, setFilterService] = useState("all");
@@ -85,7 +82,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
     if (filterStatus !== "all") result = result.filter((r) => r.status === filterStatus);
     if (filterOrg !== "all") result = result.filter((r) => r.company.organization === filterOrg);
     if (filterMonth !== "all") {
-      const idx = MONTHS.indexOf(filterMonth);
+      const idx = MONTH_KEYS.indexOf(filterMonth as (typeof MONTH_KEYS)[number]);
       result = result.filter((r) => new Date(r.dateOfReferral).getMonth() === idx);
     }
 
@@ -106,32 +103,32 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
         <div className="flex items-center gap-3 overflow-x-auto">
         <Select value={filterService} onValueChange={setFilterService}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="All Service Types" />
+            <SelectValue placeholder={t("common.allServiceTypes")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Service Types</SelectItem>
+            <SelectItem value="all">{t("common.allServiceTypes")}</SelectItem>
             {SERVICE_TYPES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{t(SERVICE_TYPE_LABEL_KEYS[s])}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t("common.allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
             {REFERRAL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{getStatusLabel(s, locale)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterOrg} onValueChange={setFilterOrg}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="All Organizations" />
+            <SelectValue placeholder={t("common.allOrganizations")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Organizations</SelectItem>
+            <SelectItem value="all">{t("common.allOrganizations")}</SelectItem>
             {orgs.map((o) => (
               <SelectItem key={o} value={o}>{o}</SelectItem>
             ))}
@@ -139,12 +136,12 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
         </Select>
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Months" />
+            <SelectValue placeholder={t("common.allMonths")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {MONTHS.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
+            <SelectItem value="all">{t("common.allMonths")}</SelectItem>
+            {MONTH_KEYS.map((m) => (
+              <SelectItem key={m} value={m}>{t(MONTH_LABEL_KEYS[m])}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -154,15 +151,15 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Date: Newest first</SelectItem>
-            <SelectItem value="oldest">Date: Oldest first</SelectItem>
-            <SelectItem value="id-asc">ID: Ascending</SelectItem>
-            <SelectItem value="id-desc">ID: Descending</SelectItem>
+            <SelectItem value="newest">{t("common.sortNewest")}</SelectItem>
+            <SelectItem value="oldest">{t("common.sortOldest")}</SelectItem>
+            <SelectItem value="id-asc">{t("common.sortIdAsc")}</SelectItem>
+            <SelectItem value="id-desc">{t("common.sortIdDesc")}</SelectItem>
           </SelectContent>
         </Select>
         </div>
         <Input
-          placeholder="Search by patient, user, company, service, or status…"
+          placeholder={t("referrals.searchAdminReferrals")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
@@ -173,16 +170,16 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
         <Table>
           <TableHeader className="bg-sidebar text-sidebar-foreground">
             <TableRow>
-              <TableHead className="text-sidebar-foreground">ID</TableHead>
-              <TableHead className="text-sidebar-foreground">Patient</TableHead>
-              <TableHead className="text-sidebar-foreground">Submitted By</TableHead>
-              <TableHead className="text-sidebar-foreground">Company</TableHead>
-              <TableHead className="text-sidebar-foreground">Service</TableHead>
-              <TableHead className="text-sidebar-foreground">Priority</TableHead>
-              <TableHead className="text-sidebar-foreground">Status</TableHead>
-              <TableHead className="text-sidebar-foreground">Created</TableHead>
-              <TableHead className="text-sidebar-foreground">Last Updated</TableHead>
-              <TableHead className="w-20 text-sidebar-foreground">Actions</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.id")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.patient")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.submittedBy")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.company")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.service")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.priority")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.status")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.created")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.lastUpdated")}</TableHead>
+              <TableHead className="w-20 text-sidebar-foreground">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -190,7 +187,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
-                  No referrals found
+                  {t("referrals.noReferralsFound")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -210,7 +207,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
 
                   <TableCell>{referral.company.organization}</TableCell>
 
-                  <TableCell>{referral.serviceType}</TableCell>
+                  <TableCell>{SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS] ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]) : referral.serviceType}</TableCell>
 
                   <TableCell>{referral.priority}</TableCell>
 
@@ -219,7 +216,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                       style={{ backgroundColor: getStatusColor(referral.status) + "22", color: getStatusColor(referral.status), borderColor: getStatusColor(referral.status) + "55" }}
                       variant="outline"
                     >
-                      {referral.status}
+                      {getStatusLabel(referral.status, locale)}
                     </Badge>
                   </TableCell>
 
@@ -234,20 +231,20 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Link href={`${basePath}/${referral.id}`}>
-                        <Button size="sm" variant="outline">View</Button>
+                        <Button size="sm" variant="outline">{t("common.view")}</Button>
                       </Link>
                       {referral.pdfResult ? (
                         <Link href={referral.pdfResult} target="_blank" rel="noopener noreferrer" download>
                           <Button size="sm" variant="outline" className="gap-1.5">
                             <Download className="h-3.5 w-3.5" />
-                            Result
+                            {t("common.result")}
                           </Button>
                         </Link>
                       ) : (
                         <Link href={`${basePath}/${referral.id}`}>
                           <Button size="sm" variant="outline" className="gap-1.5 text-muted-foreground">
                             <Upload className="h-3.5 w-3.5" />
-                            Upload Result
+                            {t("common.uploadResult")}
                           </Button>
                         </Link>
                       )}

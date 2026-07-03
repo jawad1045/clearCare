@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/locale/use-translation";
 
 type Company = {
   id: number;
@@ -34,33 +35,46 @@ type Company = {
 
 type CreateUserFormProps = { companies: Company[] };
 
-const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"] as const;
+const TITLE_LABEL_KEYS = {
+  Administrator: "common.titleAdministrator",
+  Manager: "common.titleManager",
+  Counselor: "common.titleCounselor",
+  Nurse: "common.titleNurse",
+  Doctor: "common.titleDoctor",
+} as const;
 
-const userSchema = z
-  .object({
-    acctId: z.string().optional(),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    email: z.string().min(1, "Email is required").email("Enter a valid email"),
-    phone: z
-      .string()
-      .min(1, "Phone is required")
-      .regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Enter a complete phone number"),
-    title: z.string().optional(),
-    role: z.string().min(1, "Role is required"),
-    notes: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.role !== "Admin" && !data.acctId) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["acctId"],
-        message: "Organization is required for this role.",
-      });
-    }
-  });
+function useUserSchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z
+        .object({
+          acctId: z.string().optional(),
+          firstName: z.string().min(1, t("common.validation.firstNameRequired")),
+          lastName: z.string().min(1, t("common.validation.lastNameRequired")),
+          email: z.string().min(1, t("common.validation.emailRequired")).email(t("common.validation.emailInvalid")),
+          phone: z
+            .string()
+            .min(1, t("common.validation.phoneRequired"))
+            .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
+          title: z.string().optional(),
+          role: z.string().min(1, t("common.validation.roleRequired")),
+          notes: z.string().optional(),
+        })
+        .superRefine((data, ctx) => {
+          if (data.role !== "Admin" && !data.acctId) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["acctId"],
+              message: t("users.orgRequiredForRole"),
+            });
+          }
+        }),
+    [t]
+  );
+}
 
-type UserFormValues = z.infer<typeof userSchema>;
+type UserFormValues = z.infer<ReturnType<typeof useUserSchema>>;
 
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
@@ -104,6 +118,8 @@ function Field({ label, required, error, children, full }: {
 }
 
 export function CreateUserForm({ companies }: CreateUserFormProps) {
+  const { t } = useTranslation();
+  const userSchema = useUserSchema(t);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -156,7 +172,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
         router.refresh();
       } catch (error) {
         if (isRedirectError(error)) throw error;
-        toast.error(error instanceof Error ? error.message : "Failed to create user");
+        toast.error(error instanceof Error ? error.message : t("users.createUserFailed"));
       }
     });
   }
@@ -183,10 +199,10 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           </div>
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-              Create User
+              {t("users.createUser")}
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              Add a new user and assign them to an organization
+              {t("users.createSubtitle")}
             </CardDescription>
           </div>
         </div>
@@ -199,20 +215,20 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           open={confirmOpen}
           onConfirm={onConfirm}
           onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-          title="Create User"
-          description="Are you sure you want to create this user? Please review all details before proceeding."
-          confirmLabel="Create User"
+          title={t("users.createUser")}
+          description={t("users.createConfirmDescription")}
+          confirmLabel={t("users.createUser")}
         />
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
           {/* Organization */}
-          <FieldGroup icon={Building2} title="Organization">
+          <FieldGroup icon={Building2} title={t("common.organization")}>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground/80">
-                Organization
+                {t("common.organization")}
                 {role !== "Admin"
                   ? <span className="ml-0.5 text-primary">*</span>
-                  : <span className="ml-1 text-xs text-muted-foreground">(optional for Admin)</span>
+                  : <span className="ml-1 text-xs text-muted-foreground">{t("users.optionalForAdmin")}</span>
                 }
               </Label>
               <Select
@@ -224,7 +240,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 }}
               >
                 <SelectTrigger className="w-full border-border focus:ring-primary">
-                  <SelectValue placeholder="Select organization…" />
+                  <SelectValue placeholder={t("users.selectOrgPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
@@ -244,20 +260,20 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           {selectedCompany && (
             <>
               <Separator className="bg-border/60" />
-              <FieldGroup icon={MapPin} title="Address (from organization)">
-                <Field label="Street">
+              <FieldGroup icon={MapPin} title={t("users.addressFromOrg")}>
+                <Field label={t("common.street")}>
                   <Input value={selectedCompany.street ?? ""} readOnly
                     className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
                 </Field>
-                <Field label="City">
+                <Field label={t("common.city")}>
                   <Input value={selectedCompany.city ?? ""} readOnly
                     className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
                 </Field>
-                <Field label="State">
+                <Field label={t("common.state")}>
                   <Input value={selectedCompany.state ?? ""} readOnly
                     className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
                 </Field>
-                <Field label="Zip">
+                <Field label={t("common.zip")}>
                   <Input value={selectedCompany.zip ?? ""} readOnly
                     className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
                 </Field>
@@ -268,20 +284,20 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           <Separator className="bg-border/60" />
 
           {/* Contact */}
-          <FieldGroup icon={UserPlus} title="Contact Details">
-            <Field label="First Name" required error={errors.firstName?.message}>
+          <FieldGroup icon={UserPlus} title={t("users.contactDetails")}>
+            <Field label={t("common.firstName")} required error={errors.firstName?.message}>
               <Input {...register("firstName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required error={errors.lastName?.message}>
+            <Field label={t("common.lastName")} required error={errors.lastName?.message}>
               <Input {...register("lastName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email" required error={errors.email?.message}>
+            <Field label={t("common.email")} required error={errors.email?.message}>
               <Input type="email" {...register("email")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Phone" required error={errors.phone?.message}>
+            <Field label={t("common.phone")} required error={errors.phone?.message}>
               <Input
                 {...register("phone", {
                   onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
@@ -290,14 +306,14 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Title">
+            <Field label={t("common.title")}>
               <Select onValueChange={(v) => setValue("title", v)}>
                 <SelectTrigger className="w-full border-border focus:ring-primary">
-                  <SelectValue placeholder="Select title..." />
+                  <SelectValue placeholder={t("common.selectTitlePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TITLES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {TITLES.map((title) => (
+                    <SelectItem key={title} value={title}>{t(TITLE_LABEL_KEYS[title])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -307,15 +323,15 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           <Separator className="bg-border/60" />
 
           {/* Role & Password */}
-          <FieldGroup icon={ShieldCheck} title="Access & Security">
-            <Field label="Role" required error={errors.role?.message}>
+          <FieldGroup icon={ShieldCheck} title={t("users.accessAndSecurity")}>
+            <Field label={t("common.role")} required error={errors.role?.message}>
               <Select defaultValue="User" onValueChange={handleRoleChange}>
                 <SelectTrigger className="w-full border-border focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="User">User</SelectItem>
+                  <SelectItem value="Admin">{t("common.roleAdmin")}</SelectItem>
+                  <SelectItem value="User">{t("common.roleUser")}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -323,8 +339,7 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
             <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground sm:col-span-2">
               <KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
               <span>
-                A temporary password will be generated automatically and emailed to the user
-                along with a link to log in and set their own password.
+                {t("users.tempPasswordNotice")}
               </span>
             </div>
           </FieldGroup>
@@ -332,11 +347,11 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           <Separator className="bg-border/60" />
 
           {/* Notes */}
-          <FieldGroup icon={FileText} title="Notes">
+          <FieldGroup icon={FileText} title={t("common.notes")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Textarea
                 {...register("notes")}
-                placeholder="Any additional notes about this user…"
+                placeholder={t("users.notesPlaceholder")}
                 rows={4}
                 className="resize-none border-border bg-background focus-visible:ring-primary"
               />
@@ -352,9 +367,9 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  Creating…
+                  {t("common.creating")}
                 </span>
-              ) : "Create User"}
+              ) : t("users.createUser")}
             </Button>
           </div>
 

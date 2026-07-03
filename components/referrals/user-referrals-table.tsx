@@ -23,13 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDateTime } from "@/lib/format-date";
-import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
-
-const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+import { REFERRAL_STATUSES, getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
+import { MONTH_KEYS, MONTH_LABEL_KEYS, SERVICE_TYPES, SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { useTranslation } from "@/locale/use-translation";
 
 type Referral = Awaited<ReturnType<typeof getMyReferrals>>[number];
 
@@ -39,6 +35,7 @@ type Props = {
 };
 
 export function UserReferralsTable({ referrals, basePath }: Props) {
+  const { t, locale } = useTranslation();
   const [search, setSearch] = useState("");
   const [filterService, setFilterService] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -59,7 +56,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
     if (filterService !== "all") result = result.filter((r) => r.serviceType === filterService);
     if (filterStatus !== "all") result = result.filter((r) => r.status === filterStatus);
     if (filterMonth !== "all") {
-      const idx = MONTHS.indexOf(filterMonth);
+      const idx = MONTH_KEYS.indexOf(filterMonth as (typeof MONTH_KEYS)[number]);
       result = result.filter((r) => new Date(r.dateOfReferral).getMonth() === idx);
     }
 
@@ -73,41 +70,41 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
         <div className="flex flex-wrap items-center gap-3">
         <Select value={filterService} onValueChange={setFilterService}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="All Service Types" />
+            <SelectValue placeholder={t("common.allServiceTypes")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Service Types</SelectItem>
+            <SelectItem value="all">{t("common.allServiceTypes")}</SelectItem>
             {SERVICE_TYPES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{t(SERVICE_TYPE_LABEL_KEYS[s])}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t("common.allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
             {REFERRAL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{getStatusLabel(s, locale)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Months" />
+            <SelectValue placeholder={t("common.allMonths")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {MONTHS.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
+            <SelectItem value="all">{t("common.allMonths")}</SelectItem>
+            {MONTH_KEYS.map((m) => (
+              <SelectItem key={m} value={m}>{t(MONTH_LABEL_KEYS[m])}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         </div>
         <div className="flex flex-wrap items-center gap-3">
         <Input
-          placeholder="Search by patient, parent, service, or status…"
+          placeholder={t("referrals.searchUserReferrals")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
@@ -119,15 +116,15 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
         <Table>
           <TableHeader className="bg-sidebar text-sidebar-foreground">
             <TableRow>
-              <TableHead className="text-sidebar-foreground">ID</TableHead>
-              <TableHead className="text-sidebar-foreground">Patient</TableHead>
-              <TableHead className="text-sidebar-foreground">Parent</TableHead>
-              <TableHead className="text-sidebar-foreground">Service Type</TableHead>
-              <TableHead className="text-sidebar-foreground">Priority</TableHead>
-              <TableHead className="text-sidebar-foreground">Status</TableHead>
-              <TableHead className="text-sidebar-foreground">Created</TableHead>
-              <TableHead className="text-sidebar-foreground">Last Updated</TableHead>
-              <TableHead className="text-right text-sidebar-foreground">Actions</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.id")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.patient")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.parent")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.serviceType")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.priority")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.status")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.created")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.lastUpdated")}</TableHead>
+              <TableHead className="text-right text-sidebar-foreground">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -137,7 +134,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                   colSpan={9}
                   className="text-center text-muted-foreground py-6"
                 >
-                  No referrals found.
+                  {t("referrals.noReferralsFound")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -152,14 +149,14 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                     {referral.parentFirstName ?? "-"}{" "}
                     {referral.parentLastName ?? "-"}
                   </TableCell>
-                  <TableCell>{referral.serviceType}</TableCell>
+                  <TableCell>{SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS] ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]) : referral.serviceType}</TableCell>
                   <TableCell>{referral.priority}</TableCell>
                   <TableCell>
                     <Badge
                       style={{ backgroundColor: getStatusColor(referral.status) + "22", color: getStatusColor(referral.status), borderColor: getStatusColor(referral.status) + "55" }}
                       variant="outline"
                     >
-                      {referral.status}
+                      {getStatusLabel(referral.status, locale)}
                     </Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
@@ -171,17 +168,17 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link href={`${basePath}/${referral.id}`}>
-                        <Button variant="outline" size="sm">View</Button>
+                        <Button variant="outline" size="sm">{t("common.view")}</Button>
                       </Link>
                       {referral.pdfResult ? (
                         <Link href={referral.pdfResult} target="_blank" rel="noopener noreferrer" download>
                           <Button variant="outline" size="sm" className="gap-1.5">
                             <Download className="h-3.5 w-3.5" />
-                            Result
+                            {t("common.result")}
                           </Button>
                         </Link>
                       ) : (
-                        <span className="text-xs text-muted-foreground">No result</span>
+                        <span className="text-xs text-muted-foreground">{t("common.noResult")}</span>
                       )}
                     </div>
                   </TableCell>

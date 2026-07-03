@@ -7,6 +7,7 @@ import { EditUserForm } from "@/components/users/edit-user-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "@/locale/use-translation";
 
 type Company = {
   id: number;
@@ -67,7 +68,14 @@ function Section({ icon: Icon, title, children }: {
   );
 }
 
+const ROLE_LABEL_KEYS: Record<string, "common.roleAdmin" | "common.roleUser"> = {
+  Admin: "common.roleAdmin",
+  User: "common.roleUser",
+};
+
 function ViewTab({ user }: { user: User }) {
+  const { t, locale } = useTranslation();
+
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <div className="h-1 w-full bg-primary" />
@@ -79,7 +87,7 @@ function ViewTab({ user }: { user: User }) {
             </div>
             <div>
               <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-                User Details
+                {t("users.detailsTitle")}
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
                 {user.contactFirstName} {user.contactLastName}
@@ -90,7 +98,7 @@ function ViewTab({ user }: { user: User }) {
             variant={user.isActive ? "default" : "secondary"}
             className={user.isActive ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/10" : ""}
           >
-            {user.isActive ? "Active" : "Inactive"}
+            {user.isActive ? t("common.active") : t("common.inactive")}
           </Badge>
         </div>
       </CardHeader>
@@ -99,57 +107,57 @@ function ViewTab({ user }: { user: User }) {
 
       <CardContent className="pt-6 space-y-8">
 
-        <Section icon={Building2} title="Organization">
+        <Section icon={Building2} title={t("common.organization")}>
           <div className="sm:col-span-2">
-            <InfoRow label="Organization" value={user.organization} />
+            <InfoRow label={t("common.organization")} value={user.organization} />
           </div>
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={MapPin} title="Address">
-          <InfoRow label="Street" value={user.street} />
-          <InfoRow label="City" value={user.city} />
-          <InfoRow label="State" value={user.state} />
-          <InfoRow label="Zip" value={user.zip} />
+        <Section icon={MapPin} title={t("common.address")}>
+          <InfoRow label={t("common.street")} value={user.street} />
+          <InfoRow label={t("common.city")} value={user.city} />
+          <InfoRow label={t("common.state")} value={user.state} />
+          <InfoRow label={t("common.zip")} value={user.zip} />
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={UserCog} title="Contact Details">
-          <InfoRow label="First Name" value={user.contactFirstName} />
-          <InfoRow label="Last Name" value={user.contactLastName} />
-          <InfoRow label="Email" value={user.contactEmail} />
-          <InfoRow label="Phone" value={user.contactPhone} />
+        <Section icon={UserCog} title={t("users.contactDetails")}>
+          <InfoRow label={t("common.firstName")} value={user.contactFirstName} />
+          <InfoRow label={t("common.lastName")} value={user.contactLastName} />
+          <InfoRow label={t("common.email")} value={user.contactEmail} />
+          <InfoRow label={t("common.phone")} value={user.contactPhone} />
           <div className="sm:col-span-2">
-            <InfoRow label="Title" value={user.contactTitle} />
+            <InfoRow label={t("common.title")} value={user.contactTitle} />
           </div>
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={ShieldCheck} title="Access & Status">
-          <InfoRow label="Role" value={user.userRole} />
-          <InfoRow label="Account Status" value={user.isActive ? "Active" : "Inactive"} />
+        <Section icon={ShieldCheck} title={t("users.accessAndStatus")}>
+          <InfoRow label={t("common.role")} value={ROLE_LABEL_KEYS[user.userRole] ? t(ROLE_LABEL_KEYS[user.userRole]) : user.userRole} />
+          <InfoRow label={t("users.accountStatus")} value={user.isActive ? t("common.active") : t("common.inactive")} />
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={FileText} title="Notes">
+        <Section icon={FileText} title={t("common.notes")}>
           <div className="sm:col-span-2">
-            <InfoRow label="Notes" value={user.notes} />
+            <InfoRow label={t("common.notes")} value={user.notes} />
           </div>
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={Hash} title="Record Info">
-          <InfoRow label="User ID" value={String(user.id)} />
-          <InfoRow label="Account ID" value={user.acctId ? String(user.acctId) : undefined} />
+        <Section icon={Hash} title={t("common.recordInfo")}>
+          <InfoRow label={t("users.userId")} value={String(user.id)} />
+          <InfoRow label={t("users.accountId")} value={user.acctId ? String(user.acctId) : undefined} />
           <div className="sm:col-span-2">
             <InfoRow
-              label="Created"
-              value={new Date(user.createdDate).toLocaleDateString("en-US", {
+              label={t("common.created")}
+              value={new Date(user.createdDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
                 year: "numeric", month: "long", day: "numeric",
               })}
             />
@@ -162,6 +170,7 @@ function ViewTab({ user }: { user: User }) {
 }
 
 export function UserDetailTabs({ user, companies }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<"view" | "edit">("view");
 
   return (
@@ -176,7 +185,7 @@ export function UserDetailTabs({ user, companies }: Props) {
           }`}
         >
           <Eye className="h-4 w-4" />
-          View
+          {t("common.view")}
         </button>
         <button
           onClick={() => setTab("edit")}
@@ -187,7 +196,7 @@ export function UserDetailTabs({ user, companies }: Props) {
           }`}
         >
           <UserCog className="h-4 w-4" />
-          Edit
+          {t("common.edit")}
         </button>
       </div>
 

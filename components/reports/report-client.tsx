@@ -9,8 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 import { ServiceTypeBarChart } from "@/components/charts/service-type-bar-chart";
 import { getStatusBadge, getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
+import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
 import { Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide-react";
 import type { ReportRow } from "@/action/report.action";
+import { useTranslation } from "@/locale/use-translation";
+import type { TranslationKey } from "@/locale/config";
 
 const SERVICE_TYPES = [
   "Drug Test",
@@ -18,7 +21,11 @@ const SERVICE_TYPES = [
   "Behavioral Health",
   "Medication Management",
   "IOP",
-];
+] as const;
+const SERVICE_TYPE_LABEL_KEYS_ALL: Record<(typeof SERVICE_TYPES)[number], TranslationKey> = {
+  ...SERVICE_TYPE_LABEL_KEYS,
+  "Behavioral Health": "reports.serviceBehavioralHealth",
+};
 
 interface Props {
   rows: ReportRow[];
@@ -26,6 +33,7 @@ interface Props {
 }
 
 export function ReportClient({ rows, isAdmin }: Props) {
+  const { t, locale } = useTranslation();
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [serviceFilter, setServiceFilter] = useState("all");
@@ -76,8 +84,11 @@ export function ReportClient({ rows, isAdmin }: Props) {
     const map = new Map<string, number>();
     for (const r of referralRows) map.set(r.serviceType, (map.get(r.serviceType) ?? 0) + 1);
     if (bhReferralRows.length > 0) map.set("Behavioral Health", bhReferralRows.length);
-    return [...map.entries()].map(([label, count]) => ({ label, count }));
-  }, [referralRows, bhReferralRows]);
+    return [...map.entries()].map(([rawLabel, count]) => {
+      const labelKey = SERVICE_TYPE_LABEL_KEYS_ALL[rawLabel as keyof typeof SERVICE_TYPE_LABEL_KEYS_ALL];
+      return { label: labelKey ? t(labelKey) : rawLabel, count };
+    });
+  }, [referralRows, bhReferralRows, t]);
 
   const topCompanies = useMemo(() => {
     const map = new Map<string, number>();
@@ -105,24 +116,24 @@ export function ReportClient({ rows, isAdmin }: Props) {
       <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Table className="h-4 w-4" />
-          <span>{total} record{total !== 1 ? "s" : ""} {hasActiveFilters ? "(filtered)" : ""}</span>
+          <span>{t(total === 1 ? "reports.recordCountOne" : "reports.recordCountOther", { n: total })} {hasActiveFilters ? t("reports.filteredSuffix") : ""}</span>
         </div>
       </div>
 
       {/* Print header (only visible when printing) */}
       <div className="hidden print:block">
-        <h1 className="text-xl font-bold">HWP Portal — Referral Report</h1>
-        <p className="text-sm text-gray-500" suppressHydrationWarning>Generated {new Date().toLocaleString()}</p>
+        <h1 className="text-xl font-bold">{t("reports.printTitle")}</h1>
+        <p className="text-sm text-gray-500" suppressHydrationWarning>{t("reports.generatedPrefix")} {new Date().toLocaleString()}</p>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader className="flex flex-row items-center gap-2 pb-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-sm">Filters</CardTitle>
+          <CardTitle className="text-sm">{t("reports.filtersTitle")}</CardTitle>
           {hasActiveFilters && (
             <button onClick={clearFilters} className="ml-auto text-xs text-muted-foreground underline hover:text-foreground">
-              Clear all
+              {t("reports.clearAll")}
             </button>
           )}
         </CardHeader>
@@ -131,9 +142,9 @@ export function ReportClient({ rows, isAdmin }: Props) {
           <div className="flex gap-2">
             {/* Search — wider */}
             <div className="flex w-80 shrink-0 flex-col gap-1.5">
-              <Label className="text-xs">Search</Label>
+              <Label className="text-xs">{t("reports.searchLabel")}</Label>
               <Input
-                placeholder="Patient, company…"
+                placeholder={t("reports.searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-8 text-sm"
@@ -143,45 +154,45 @@ export function ReportClient({ rows, isAdmin }: Props) {
             {/* Other filters — tight row */}
             <div className="flex flex-1 gap-2">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">Type</Label>
+                <Label className="text-xs">{t("reports.typeLabel")}</Label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="h-8 w-32 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Referral">Referral</SelectItem>
-                    <SelectItem value="BH Referral">BH Referral</SelectItem>
+                    <SelectItem value="all">{t("reports.allTypes")}</SelectItem>
+                    <SelectItem value="Referral">{t("reports.typeReferral")}</SelectItem>
+                    <SelectItem value="BH Referral">{t("reports.typeBhReferral")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">Status</Label>
+                <Label className="text-xs">{t("common.status")}</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="h-8 w-36 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
                     {REFERRAL_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>{getStatusLabel(s)}</SelectItem>
+                      <SelectItem key={s} value={s}>{getStatusLabel(s, locale)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">Service Type</Label>
+                <Label className="text-xs">{t("common.serviceType")}</Label>
                 <Select value={serviceFilter} onValueChange={setServiceFilter}>
                   <SelectTrigger className="h-8 w-40 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Services</SelectItem>
+                    <SelectItem value="all">{t("reports.allServices")}</SelectItem>
                     {SERVICE_TYPES.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                      <SelectItem key={s} value={s}>{t(SERVICE_TYPE_LABEL_KEYS_ALL[s])}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">From</Label>
+                <Label className="text-xs">{t("reports.fromLabel")}</Label>
                 <Input
                   type="date"
                   value={dateFrom}
@@ -191,7 +202,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">To</Label>
+                <Label className="text-xs">{t("reports.toLabel")}</Label>
                 <Input
                   type="date"
                   value={dateTo}
@@ -264,7 +275,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       <div className="grid grid-cols-2 gap-4 print:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-brand">Referral Status Breakdown</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">{t("reports.referralStatusBreakdown")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <StatusBarChart data={statusCounts} />
@@ -273,7 +284,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
         <Card >
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-brand">BH Referral Status Breakdown</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">{t("reports.bhReferralStatusBreakdown")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <StatusBarChart data={bhStatusCounts} />
@@ -282,7 +293,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-brand">Referrals by Service Type</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">{t("reports.referralsByServiceType")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
             <ServiceTypeBarChart data={serviceTypeCounts} />
@@ -291,7 +302,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-brand">Top Companies by Referrals</CardTitle>
+            <CardTitle className="text-sm font-medium text-brand">{t("reports.topCompanies")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {topCompanies.map((c, i) => (
@@ -312,7 +323,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
               </div>
             ))}
             {topCompanies.length === 0 && (
-              <p className="text-sm text-muted-foreground">No data yet</p>
+              <p className="text-sm text-muted-foreground">{t("reports.noDataYet")}</p>
             )}
           </CardContent>
         </Card>
@@ -321,7 +332,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* Referral Records table */}
       <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-brand">Referral Records</CardTitle>
+          <CardTitle className="text-sm font-medium text-brand">{t("reports.referralRecords")}</CardTitle>
         </CardHeader>
         <Separator />
         <CardContent className="p-0">
@@ -329,21 +340,21 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
               <thead>
                 <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
-                  <th className="px-4 py-3 text-left font-semibold">ID</th>
-                  <th className="px-4 py-3 text-left font-semibold">Patient</th>
-                  <th className="px-4 py-3 text-left font-semibold">Company</th>
-                  <th className="px-4 py-3 text-left font-semibold">Service</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Date</th>
-                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">Referred By</th>}
-                  <th className="px-4 py-3 text-left font-semibold">Result</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.id")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.patient")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.company")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.service")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.status")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.date")}</th>
+                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">{t("referrals.referredByLabel")}</th>}
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.result")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {referralRows.length === 0 ? (
                   <tr>
                     <td colSpan={isAdmin ? 8 : 7} className="px-4 py-10 text-center text-muted-foreground">
-                      No referral records match the current filters.
+                      {t("reports.noReferralRecordsMatch")}
                     </td>
                   </tr>
                 ) : (
@@ -359,7 +370,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                       <td className="px-4 py-3 text-muted-foreground">{r.serviceType}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(r.status)}`}>
-                          {getStatusLabel(r.status)}
+                          {getStatusLabel(r.status, locale)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
@@ -370,7 +381,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                       )}
                       <td className="px-4 py-3">
                         {r.hasPdfResult ? (
-                          <span className="text-xs text-emerald-600 font-medium">Available</span>
+                          <span className="text-xs text-emerald-600 font-medium">{t("reports.available")}</span>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
@@ -387,7 +398,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* BH Referral Records table */}
       <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-brand">BH Referral Records</CardTitle>
+          <CardTitle className="text-sm font-medium text-brand">{t("reports.bhReferralRecords")}</CardTitle>
         </CardHeader>
         <Separator />
         <CardContent className="p-0">
@@ -395,21 +406,21 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
               <thead>
                 <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
-                  <th className="px-4 py-3 text-left font-semibold">ID</th>
-                  <th className="px-4 py-3 text-left font-semibold">Patient</th>
-                  <th className="px-4 py-3 text-left font-semibold">Company</th>
-                  <th className="px-4 py-3 text-left font-semibold">Service</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Date</th>
-                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">Referred By</th>}
-                  <th className="px-4 py-3 text-left font-semibold">Result</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.id")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.patient")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.company")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.service")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.status")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.date")}</th>
+                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">{t("referrals.referredByLabel")}</th>}
+                  <th className="px-4 py-3 text-left font-semibold">{t("common.result")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {bhReferralRows.length === 0 ? (
                   <tr>
                     <td colSpan={isAdmin ? 8 : 7} className="px-4 py-10 text-center text-muted-foreground">
-                      No BH referral records match the current filters.
+                      {t("reports.noBhReferralRecordsMatch")}
                     </td>
                   </tr>
                 ) : (
@@ -425,7 +436,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                       <td className="px-4 py-3 text-muted-foreground">{r.serviceType}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(r.status)}`}>
-                          {getStatusLabel(r.status)}
+                          {getStatusLabel(r.status, locale)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
@@ -436,7 +447,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                       )}
                       <td className="px-4 py-3">
                         {r.hasPdfResult ? (
-                          <span className="text-xs text-emerald-600 font-medium">Available</span>
+                          <span className="text-xs text-emerald-600 font-medium">{t("reports.available")}</span>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}

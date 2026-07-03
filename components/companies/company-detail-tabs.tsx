@@ -6,6 +6,7 @@ import { Building2, Eye, MapPin, User, FileText, Hash } from "lucide-react";
 import { EditCompanyForm } from "@/components/companies/edit-company-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "@/locale/use-translation";
 
 type Company = {
   id: number;
@@ -55,6 +56,8 @@ function Section({ icon: Icon, title, children }: {
 }
 
 function ViewTab({ company }: { company: Company }) {
+  const { t, locale } = useTranslation();
+
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <div className="h-1 w-full bg-primary" />
@@ -65,7 +68,7 @@ function ViewTab({ company }: { company: Company }) {
           </div>
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-              Company Details
+              {t("companies.detailsTitle")}
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               {company.organization}
@@ -78,50 +81,50 @@ function ViewTab({ company }: { company: Company }) {
 
       <CardContent className="pt-6 space-y-8">
 
-        <Section icon={Building2} title="Organization">
+        <Section icon={Building2} title={t("common.organization")}>
           <div className="sm:col-span-2">
-            <InfoRow label="Organization Name" value={company.organization} />
+            <InfoRow label={t("common.organizationName")} value={company.organization} />
           </div>
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={MapPin} title="Address">
+        <Section icon={MapPin} title={t("common.address")}>
           <div className="sm:col-span-2">
-            <InfoRow label="Street" value={company.street} />
+            <InfoRow label={t("common.street")} value={company.street} />
           </div>
-          <InfoRow label="City" value={company.city} />
-          <InfoRow label="State" value={company.state} />
-          <InfoRow label="Zip" value={company.zip} />
+          <InfoRow label={t("common.city")} value={company.city} />
+          <InfoRow label={t("common.state")} value={company.state} />
+          <InfoRow label={t("common.zip")} value={company.zip} />
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={User} title="Contact Person">
-          <InfoRow label="First Name" value={company.contactFirstName} />
-          <InfoRow label="Last Name" value={company.contactLastName} />
-          <InfoRow label="Email" value={company.contactEmail} />
-          <InfoRow label="Phone" value={company.contactPhone} />
+        <Section icon={User} title={t("common.contactPerson")}>
+          <InfoRow label={t("common.firstName")} value={company.contactFirstName} />
+          <InfoRow label={t("common.lastName")} value={company.contactLastName} />
+          <InfoRow label={t("common.email")} value={company.contactEmail} />
+          <InfoRow label={t("common.phone")} value={company.contactPhone} />
           <div className="sm:col-span-2">
-            <InfoRow label="Title" value={company.contactTitle} />
-          </div>
-        </Section>
-
-        <Separator className="bg-border/60" />
-
-        <Section icon={FileText} title="Notes">
-          <div className="sm:col-span-2">
-            <InfoRow label="Notes" value={company.notes} />
+            <InfoRow label={t("common.title")} value={company.contactTitle} />
           </div>
         </Section>
 
         <Separator className="bg-border/60" />
 
-        <Section icon={Hash} title="Record Info">
-          <InfoRow label="Company ID" value={String(company.id)} />
+        <Section icon={FileText} title={t("common.notes")}>
+          <div className="sm:col-span-2">
+            <InfoRow label={t("common.notes")} value={company.notes} />
+          </div>
+        </Section>
+
+        <Separator className="bg-border/60" />
+
+        <Section icon={Hash} title={t("common.recordInfo")}>
+          <InfoRow label={t("companies.companyId")} value={String(company.id)} />
           <InfoRow
-            label="Created"
-            value={new Date(company.createdDate).toLocaleDateString("en-US", {
+            label={t("common.created")}
+            value={new Date(company.createdDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
               year: "numeric", month: "long", day: "numeric",
             })}
           />
@@ -133,6 +136,7 @@ function ViewTab({ company }: { company: Company }) {
 }
 
 export function CompanyDetailTabs({ company }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<"view" | "edit">("view");
 
   return (
@@ -147,7 +151,7 @@ export function CompanyDetailTabs({ company }: Props) {
           }`}
         >
           <Eye className="h-4 w-4" />
-          View
+          {t("common.view")}
         </button>
         <button
           onClick={() => setTab("edit")}
@@ -158,7 +162,7 @@ export function CompanyDetailTabs({ company }: Props) {
           }`}
         >
           <Building2 className="h-4 w-4" />
-          Edit
+          {t("common.edit")}
         </button>
       </div>
 

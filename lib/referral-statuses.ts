@@ -22,8 +22,21 @@ export const STATUS_LABELS: Record<ReferralStatus, string> = {
   Ready: "Ready",
 };
 
-export const getStatusLabel = (status: string): string =>
-  STATUS_LABELS[status as ReferralStatus] ?? status;
+const STATUS_LABELS_ES: Record<ReferralStatus, string> = {
+  Pending: "Pendiente",
+  Clear: "Aprobado",
+  Lab: "Laboratorio",
+  NoShow: "No Asistió",
+  Confirmed: "Confirmado",
+  Refusal: "Rechazado",
+  inProgress: "En Progreso",
+  Ready: "Listo",
+};
+
+export const getStatusLabel = (status: string, locale: "en" | "es" = "en"): string => {
+  const labels = locale === "es" ? STATUS_LABELS_ES : STATUS_LABELS;
+  return labels[status as ReferralStatus] ?? status;
+};
 
 export const STATUS_COLORS: Record<ReferralStatus, string> = {
   Pending: "#F59E0B",     // Amber
@@ -66,6 +79,18 @@ export const getStatusBadge = (status: string): string => {
   return STATUS_BADGES[status as ReferralStatus] ?? "";
 };
 
-export const getStatusDescription = (status: string): string => {
-  return STATUS_DESCRIPTIONS[status as ReferralStatus] ?? "";
+const STATUS_DESCRIPTIONS_ES: Record<ReferralStatus, string> = {
+  Pending: "La referencia está pendiente de revisión.",
+  Clear: "La referencia ha sido aprobada exitosamente.",
+  Lab: "El paciente está esperando los resultados de laboratorio.",
+  NoShow: "El paciente no asistió a la cita.",
+  Confirmed: "La referencia ha sido confirmada.",
+  Refusal: "El paciente rechazó la referencia.",
+  inProgress: "La referencia está siendo procesada actualmente.",
+  Ready: "La referencia está lista para el siguiente paso.",
+};
+
+export const getStatusDescription = (status: string, locale: "en" | "es" = "en"): string => {
+  const descriptions = locale === "es" ? STATUS_DESCRIPTIONS_ES : STATUS_DESCRIPTIONS;
+  return descriptions[status as ReferralStatus] ?? "";
 };

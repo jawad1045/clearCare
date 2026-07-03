@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCompanies, getUserById } from "@/action/user.action";
 import { UserDetailTabs } from "@/components/users/user-detail-tabs";
+import { getServerTranslation } from "@/locale/server";
 
 export const metadata: Metadata = {
   title: "Edit User",
@@ -19,7 +20,8 @@ export default async function EditUserPage({
   ]);
 
   if (!user) {
-    return <div>User not found</div>;
+    const { t } = await getServerTranslation();
+    return <div>{t("users.userNotFound")}</div>;
   }
 
   return (

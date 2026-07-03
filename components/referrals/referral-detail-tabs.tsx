@@ -11,7 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { ResultUploader } from "@/components/referrals/result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
-import { getStatusColor } from "@/lib/referral-statuses";
+import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
+import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { useTranslation } from "@/locale/use-translation";
 
 type Referral = {
   id: number;
@@ -77,8 +79,12 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
 }
 
 function ViewTab({ referral }: { referral: Referral }) {
+  const { t, locale } = useTranslation();
   const formatDate = (d: Date | null) =>
-    d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
+    d ? new Date(d).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
+  const serviceTypeLabel = SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]
+    ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS])
+    : referral.serviceType;
 
   return (
     <div className="space-y-4">
@@ -88,50 +94,50 @@ function ViewTab({ referral }: { referral: Referral }) {
         {/* Patient */}
         <Card>
           <CardHeader className="pb-3">
-            <SectionHeader icon={User} title="Patient" />
-            <CardDescription className="text-xs">Personal details</CardDescription>
+            <SectionHeader icon={User} title={t("referrals.patientSection")} />
+            <CardDescription className="text-xs">{t("referrals.personalDetails")}</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            <InfoRow label="Full Name" value={`${referral.patientFirstName} ${referral.patientLastName}`} />
-            <InfoRow label="Date of Birth" value={formatDate(referral.dob)} />
-            <InfoRow label="Gender" value={referral.gender} />
-            <InfoRow label="Race" value={referral.race} />
-            <InfoRow label="Grade" value={referral.grade} />
-            <InfoRow label="SSN" value="••••••••••" />
+            <InfoRow label={t("common.fullName")} value={`${referral.patientFirstName} ${referral.patientLastName}`} />
+            <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
+            <InfoRow label={t("common.gender")} value={referral.gender} />
+            <InfoRow label={t("referrals.raceLabel")} value={referral.race} />
+            <InfoRow label={t("referrals.gradeLabel")} value={referral.grade} />
+            <InfoRow label={t("referrals.ssnLabel")} value="••••••••••" />
           </CardContent>
         </Card>
 
         {/* Parent / Guardian */}
         <Card>
           <CardHeader className="pb-3">
-            <SectionHeader icon={User} title="Parent / Guardian" />
-            <CardDescription className="text-xs">Guardian contact info</CardDescription>
+            <SectionHeader icon={User} title={t("referrals.parentGuardianSection")} />
+            <CardDescription className="text-xs">{t("referrals.guardianContactInfo")}</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            <InfoRow label="First Name" value={referral.parentFirstName} />
-            <InfoRow label="Last Name" value={referral.parentLastName} />
-            <InfoRow label="Email" value={referral.parentEmail} />
-            <InfoRow label="Phone" value={referral.parentPhone} />
+            <InfoRow label={t("common.firstName")} value={referral.parentFirstName} />
+            <InfoRow label={t("common.lastName")} value={referral.parentLastName} />
+            <InfoRow label={t("common.email")} value={referral.parentEmail} />
+            <InfoRow label={t("common.phone")} value={referral.parentPhone} />
           </CardContent>
         </Card>
 
         {/* Referral Info */}
         <Card>
           <CardHeader className="pb-3">
-            <SectionHeader icon={ShieldCheck} title="Referral Info" />
-            <CardDescription className="text-xs">Type, priority & dates</CardDescription>
+            <SectionHeader icon={ShieldCheck} title={t("referrals.referralInfoSection")} />
+            <CardDescription className="text-xs">{t("referrals.typePriorityDates")}</CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            <InfoRow label="Service Type" value={referral.serviceType} />
-            <InfoRow label="Type" value={referral.type} />
-            <InfoRow label="Priority" value={referral.priority} />
-            <InfoRow label="Date of Referral" value={formatDate(referral.dateOfReferral)} />
-            <InfoRow label="Date Patient Contacted" value={formatDate(referral.datePatientContact)} />
-            <InfoRow label="Method of Contact" value={referral.methodOfContact} />
-            <InfoRow label="Referred By" value={referral.referName} />
+            <InfoRow label={t("common.serviceType")} value={serviceTypeLabel} />
+            <InfoRow label={t("referrals.testType")} value={referral.type} />
+            <InfoRow label={t("common.priority")} value={referral.priority} />
+            <InfoRow label={t("referrals.dateOfReferral")} value={formatDate(referral.dateOfReferral)} />
+            <InfoRow label={t("referrals.dateOfPatientContact")} value={formatDate(referral.datePatientContact)} />
+            <InfoRow label={t("referrals.methodOfContactLabel")} value={referral.methodOfContact} />
+            <InfoRow label={t("referrals.referredByLabel")} value={referral.referName} />
           </CardContent>
         </Card>
 
@@ -139,20 +145,20 @@ function ViewTab({ referral }: { referral: Referral }) {
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={UserCheck} title="Submitted By" />
-              <CardDescription className="text-xs">Referring contact</CardDescription>
+              <SectionHeader icon={UserCheck} title={t("referrals.submittedBySection")} />
+              <CardDescription className="text-xs">{t("referrals.referringContact")}</CardDescription>
             </CardHeader>
             <Separator />
             <CardContent className="pt-4 space-y-3">
-              <InfoRow label="Name" value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`} />
+              <InfoRow label={t("common.name")} value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`} />
               <div className="space-y-0.5">
-                <p className="text-xs font-medium text-muted-foreground">Email</p>
+                <p className="text-xs font-medium text-muted-foreground">{t("common.email")}</p>
                 <a href={`mailto:${referral.user.contactEmail}`} className="text-sm text-primary hover:underline">
                   {referral.user.contactEmail}
                 </a>
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-medium text-muted-foreground">Phone</p>
+                <p className="text-xs font-medium text-muted-foreground">{t("common.phone")}</p>
                 <a href={`tel:${referral.user.contactPhone}`} className="text-sm text-primary hover:underline">
                   {referral.user.contactPhone}
                 </a>
@@ -162,12 +168,12 @@ function ViewTab({ referral }: { referral: Referral }) {
 
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={Building2} title="Organization" />
-              <CardDescription className="text-xs">Associated company</CardDescription>
+              <SectionHeader icon={Building2} title={t("referrals.organizationSection")} />
+              <CardDescription className="text-xs">{t("referrals.associatedCompany")}</CardDescription>
             </CardHeader>
             <Separator />
             <CardContent className="pt-4">
-              <InfoRow label="Organization" value={referral.company.organization} />
+              <InfoRow label={t("common.organization")} value={referral.company.organization} />
             </CardContent>
           </Card>
         </div>
@@ -175,15 +181,15 @@ function ViewTab({ referral }: { referral: Referral }) {
         {/* Attachments */}
         <Card>
           <CardHeader className="pb-3">
-            <SectionHeader icon={Paperclip} title="Attachments" />
+            <SectionHeader icon={Paperclip} title={t("referrals.attachmentsSection")} />
             <CardDescription className="text-xs">
-              {referral.clientAttachments.length} file{referral.clientAttachments.length !== 1 ? "s" : ""} attached
+              {t(referral.clientAttachments.length === 1 ? "referrals.attachmentsCountOne" : "referrals.attachmentsCountOther", { n: referral.clientAttachments.length })}
             </CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
             {referral.clientAttachments.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">No attachments</p>
+              <p className="text-sm text-muted-foreground italic">{t("referrals.noAttachments")}</p>
             ) : (
               <ul className="space-y-2">
                 {referral.clientAttachments.map((stored, index) => {
@@ -207,13 +213,13 @@ function ViewTab({ referral }: { referral: Referral }) {
         {/* Record Info */}
         <Card>
           <CardHeader className="pb-3">
-            <SectionHeader icon={Hash} title="Record Info" />
+            <SectionHeader icon={Hash} title={t("common.recordInfo")} />
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 grid gap-3 sm:grid-cols-2">
-            <InfoRow label="Referral ID" value={String(referral.id)} />
-            <InfoRow label="Status" value={referral.status} />
-            <InfoRow label="Last Updated" value={formatDate(referral.lastUpdated)} />
+            <InfoRow label={t("referrals.referralId")} value={String(referral.id)} />
+            <InfoRow label={t("common.status")} value={getStatusLabel(referral.status, locale)} />
+            <InfoRow label={t("common.lastUpdated")} value={formatDate(referral.lastUpdated)} />
           </CardContent>
         </Card>
 
@@ -223,7 +229,7 @@ function ViewTab({ referral }: { referral: Referral }) {
       {referral.notes && (
         <Card>
           <CardHeader className="pb-3">
-            <SectionHeader icon={FileText} title="Notes" />
+            <SectionHeader icon={FileText} title={t("common.notes")} />
           </CardHeader>
           <Separator />
           <CardContent className="pt-4">
@@ -237,14 +243,16 @@ function ViewTab({ referral }: { referral: Referral }) {
 }
 
 function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
+  const { t, locale } = useTranslation();
+
   return (
     <div className="space-y-4">
 
       {/* Result PDF */}
       <Card>
         <CardHeader className="pb-3">
-          <SectionHeader icon={FileOutput} title="Result / Report" />
-          <CardDescription className="text-xs">Upload the result PDF for this referral</CardDescription>
+          <SectionHeader icon={FileOutput} title={t("referrals.resultReportSection")} />
+          <CardDescription className="text-xs">{t("referrals.uploadResultHint")}</CardDescription>
         </CardHeader>
         <Separator />
         <CardContent className="pt-4">
@@ -255,15 +263,15 @@ function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
       {/* Status */}
       <Card>
         <CardHeader className="pb-3">
-          <SectionHeader icon={Activity} title="Status Management" />
-          <CardDescription className="text-xs">Update the referral workflow status</CardDescription>
+          <SectionHeader icon={Activity} title={t("referrals.statusManagementSection")} />
+          <CardDescription className="text-xs">{t("referrals.updateStatusHint")}</CardDescription>
         </CardHeader>
         <Separator />
         <CardContent className="pt-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Current Status
+                {t("referrals.currentStatus")}
               </p>
               <Badge
                 variant="outline"
@@ -273,7 +281,7 @@ function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
                 }}
                 className="rounded-md capitalize text-sm px-3 py-1"
               >
-                {referral.status.toLowerCase()}
+                {getStatusLabel(referral.status, locale)}
               </Badge>
             </div>
             <div className="sm:min-w-70">
@@ -288,6 +296,7 @@ function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
 }
 
 export function ReferralDetailTabs({ referral, isBH = false }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<"view" | "manage">("view");
 
   return (
@@ -302,7 +311,7 @@ export function ReferralDetailTabs({ referral, isBH = false }: Props) {
           }`}
         >
           <Eye className="h-4 w-4" />
-          View
+          {t("common.view")}
         </button>
         <button
           onClick={() => setTab("manage")}
@@ -313,7 +322,7 @@ export function ReferralDetailTabs({ referral, isBH = false }: Props) {
           }`}
         >
           <Settings className="h-4 w-4" />
-          Manage
+          {t("common.manage")}
         </button>
       </div>
 

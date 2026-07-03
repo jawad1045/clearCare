@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { generateTempPassword } from "@/lib/generate-password";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "@/lib/email";
 import { notifySlackNewUser } from "@/lib/slack";
+import { getServerTranslation } from "@/locale/server";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -154,6 +155,8 @@ export async function createUser(
   const notes =
     formData.get("notes") as string | null;
 
+  const { t } = await getServerTranslation();
+
   // Company Check — required for non-Admin users
   let company = null;
   if (role === "Admin") {
@@ -162,11 +165,11 @@ export async function createUser(
     }
   } else {
     if (!acctId) {
-      throw new Error("Company is required");
+      throw new Error(t("users.errorCompanyRequired"));
     }
     company = await prisma.company.findUnique({ where: { id: acctId } });
     if (!company) {
-      throw new Error("Selected company not found");
+      throw new Error(t("users.errorCompanyNotFound"));
     }
   }
 
@@ -180,7 +183,7 @@ export async function createUser(
 
   if (existingUser) {
     throw new Error(
-      "Email already exists"
+      t("users.errorEmailExists")
     );
   }
 
@@ -340,16 +343,17 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function updateProfileName(formData: FormData) {
   const currentUser = await getCurrentUser();
-  if (!currentUser) throw new Error("Unauthorized");
+  const { t } = await getServerTranslation();
+  if (!currentUser) throw new Error(t("common.errors.unauthorized"));
   if (currentUser.role !== "Admin") {
-    throw new Error("Your name is managed by your administrator. Contact them to make changes.");
+    throw new Error(t("profile.nameManagedByAdmin"));
   }
 
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
 
   if (!firstName?.trim() || !lastName?.trim()) {
-    throw new Error("First and last name are required");
+    throw new Error(t("profile.errorFirstLastNameRequired"));
   }
 
   await prisma.user.update({
@@ -364,7 +368,8 @@ export async function updateProfileName(formData: FormData) {
 export async function resetUserPassword(userId: number) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
-    throw new Error("User not found");
+    const { t } = await getServerTranslation();
+    throw new Error(t("users.userNotFound"));
   }
 
   const temporaryPassword = generateTempPassword();
@@ -387,21 +392,22 @@ export async function resetUserPassword(userId: number) {
 
 export async function completeForcedPasswordChange(newPassword: string, confirmPassword: string) {
   const currentUser = await getCurrentUser();
-  if (!currentUser) throw new Error("Unauthorized");
+  const { t } = await getServerTranslation();
+  if (!currentUser) throw new Error(t("common.errors.unauthorized"));
 
   const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error(t("users.userNotFound"));
 
   if (!user.mustChangePassword) {
-    throw new Error("This link has expired. Please contact your administrator.");
+    throw new Error(t("profile.errorLinkExpiredContactAdmin"));
   }
 
   if (newPassword !== confirmPassword) {
-    throw new Error("Passwords do not match");
+    throw new Error(t("profile.errorPasswordsDoNotMatchPlain"));
   }
 
   if (newPassword.length < 8) {
-    throw new Error("Password must be at least 8 characters");
+    throw new Error(t("profile.errorPasswordMinLengthPlain"));
   }
 
   const hashed = await bcrypt.hash(newPassword, 12);
@@ -416,13 +422,14 @@ export async function completeForcedPasswordChange(newPassword: string, confirmP
 
 export async function continueWithCurrentPassword() {
   const currentUser = await getCurrentUser();
-  if (!currentUser) throw new Error("Unauthorized");
+  const { t } = await getServerTranslation();
+  if (!currentUser) throw new Error(t("common.errors.unauthorized"));
 
   const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error(t("users.userNotFound"));
 
   if (!user.mustChangePassword) {
-    throw new Error("This link has expired. Please contact your administrator.");
+    throw new Error(t("profile.errorLinkExpiredContactAdmin"));
   }
 
   await prisma.user.update({
@@ -435,25 +442,26 @@ export async function continueWithCurrentPassword() {
 
 export async function updateProfilePassword(formData: FormData) {
   const currentUser = await getCurrentUser();
-  if (!currentUser) throw new Error("Unauthorized");
+  const { t } = await getServerTranslation();
+  if (!currentUser) throw new Error(t("common.errors.unauthorized"));
 
   const currentPassword = formData.get("currentPassword") as string;
   const newPassword = formData.get("newPassword") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
   if (newPassword !== confirmPassword) {
-    throw new Error("New passwords do not match");
+    throw new Error(t("profile.passwordsDoNotMatch"));
   }
 
   if (newPassword.length < 8) {
-    throw new Error("Password must be at least 8 characters");
+    throw new Error(t("profile.errorPasswordMinLengthPlain"));
   }
 
   const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error(t("users.userNotFound"));
 
   const valid = await bcrypt.compare(currentPassword, user.password);
-  if (!valid) throw new Error("Current password is incorrect");
+  if (!valid) throw new Error(t("profile.errorCurrentPasswordIncorrect"));
 
   const hashed = await bcrypt.hash(newPassword, 12);
 

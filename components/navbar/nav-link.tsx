@@ -20,10 +20,13 @@ import {
 } from "@/components/ui/sheet";
 import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageToggle } from "./language-toggle";
+import { useTranslation } from "@/locale/use-translation";
 
 export function NavLinks({ menu, role, name }: any) {
   const [openMobile, setOpenMobile] = React.useState(false);
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const isActive = (href: string) => pathname === href;
 
@@ -35,7 +38,7 @@ export function NavLinks({ menu, role, name }: any) {
       <nav className="hidden md:flex items-center w-full h-full p-4 gap-8 text-sm text-sidebar-foreground">
         {menu.map((item: any) =>
           item.children ? (
-            <DropdownMenu key={item.label}>
+            <DropdownMenu key={item.labelKey}>
               <DropdownMenuTrigger
                 className={`flex items-center gap-1 rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus:outline-none ${
                   item.children.some((child: any) => isActive(child.href))
@@ -43,7 +46,7 @@ export function NavLinks({ menu, role, name }: any) {
                     : ""
                 }`}
               >
-                {item.label}
+                {t(item.labelKey)}
                 <ChevronDown className="h-4 w-4 opacity-70" />
               </DropdownMenuTrigger>
 
@@ -56,7 +59,7 @@ export function NavLinks({ menu, role, name }: any) {
                         isActive(child.href) ? "bg-slate-800 text-sidebar-accent-foreground" : ""
                       }`}
                     >
-                      {child.label}
+                      {t(child.labelKey)}
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -72,7 +75,7 @@ export function NavLinks({ menu, role, name }: any) {
                   : ""
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           )
         )}
@@ -83,10 +86,11 @@ export function NavLinks({ menu, role, name }: any) {
       {/* ========================================== */}
       <div className="flex md:hidden items-center justify-between p-4 text-sidebar-foreground">
         <span className="font-semibold text-sidebar-accent-foreground text-sm">
-          {role === "admin" ? "Administrator" : "Company User"}
+          {role === "admin" ? t("mobileNav.administrator") : t("mobileNav.companyUser")}
         </span>
 
         <div className="flex items-center gap-2">
+          <LanguageToggle />
           <ThemeToggle />
           <UserMenu role={role} name={name} />
 
@@ -102,15 +106,15 @@ export function NavLinks({ menu, role, name }: any) {
             side="right" 
             className="w-75 bg-sidebar border-l border-slate-800 p-6 text-sidebar-foreground"
           >
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <SheetTitle className="sr-only">{t("mobileNav.navMenu")}</SheetTitle>
             <nav className="flex flex-col gap-6 mt-6">
               {menu.map((item: any) => (
-                <div key={item.label} className="flex flex-col gap-2">
+                <div key={item.labelKey} className="flex flex-col gap-2">
                   {item.children ? (
                     <>
                       {/* Parent label header in mobile */}
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                        {item.label}
+                        {t(item.labelKey)}
                       </span>
                       {/* Nested mobile links */}
                       <div className="flex flex-col gap-1 pl-3 border-l border-slate-800">
@@ -123,7 +127,7 @@ export function NavLinks({ menu, role, name }: any) {
                               isActive(child.href) ? "text-sidebar-accent-foreground" : ""
                             }`}
                           >
-                            {child.label}
+                            {t(child.labelKey)}
                           </Link>
                         ))}
                       </div>
@@ -137,7 +141,7 @@ export function NavLinks({ menu, role, name }: any) {
                         isActive(item.href) ? "text-sidebar-accent-foreground" : ""
                       }`}
                     >
-                      {item.label}
+                      {t(item.labelKey)}
                     </Link>
                   )}
                 </div>

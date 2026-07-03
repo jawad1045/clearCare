@@ -7,6 +7,7 @@ import { getCompanies } from "@/action/company.action";
 import { Input } from "@/components/ui/input";
 
 import { CompaniesTable } from "./companies-table";
+import { useTranslation } from "@/locale/use-translation";
 
 type Props = {
   initialData: Awaited<
@@ -17,6 +18,8 @@ type Props = {
 export function CompaniesClient({
   initialData,
 }: Props) {
+  const { t } = useTranslation();
+
   const [search, setSearch] =
     useState("");
 
@@ -41,7 +44,7 @@ export function CompaniesClient({
   return (
     <div className="space-y-6">
       <Input
-        placeholder="Search companies..."
+        placeholder={t("companies.searchPlaceholder")}
         value={search}
         onChange={(e) =>
           setSearch(

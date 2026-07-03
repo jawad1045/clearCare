@@ -16,9 +16,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/action/auth/auth.model";
 import { Shield, User, LogOut, Settings, ChevronDown } from "lucide-react";
+import { useTranslation } from "@/locale/use-translation";
 
 export function UserMenu({ role, name }: { role: "admin" | "user"; name: string }) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   async function handleLogout() {
     const result = await logoutAction();
@@ -58,7 +60,7 @@ export function UserMenu({ role, name }: { role: "admin" | "user"; name: string 
         <div className="space-y-1 px-4 py-3">
           <p className="text-sm font-semibold text-slate-100">{name}</p>
           <p className="text-xs text-slate-500">
-            {isAdmin ? "Full access to admin tools" : "Access referrals and reports"}
+            {isAdmin ? t("userMenu.fullAccess") : t("userMenu.limitedAccess")}
           </p>
         </div>
 
@@ -67,7 +69,7 @@ export function UserMenu({ role, name }: { role: "admin" | "user"; name: string 
         <DropdownMenuItem asChild>
           <Link href={`/${role}/profile`} className="flex items-center gap-2 text-slate-100">
             <User className="h-4 w-4" />
-            Profile
+            {t("userMenu.profile")}
           </Link>
         </DropdownMenuItem>
 
@@ -75,7 +77,7 @@ export function UserMenu({ role, name }: { role: "admin" | "user"; name: string 
           <DropdownMenuItem asChild>
             <Link href="/admin/settings" className="flex items-center gap-2 text-slate-100">
               <Settings className="h-4 w-4" />
-              Settings
+              {t("userMenu.settings")}
             </Link>
           </DropdownMenuItem>
         )}
@@ -89,7 +91,7 @@ export function UserMenu({ role, name }: { role: "admin" | "user"; name: string 
             className="flex w-full items-center gap-2 text-destructive"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {t("userMenu.logout")}
           </button>
         </DropdownMenuItem>
       </DropdownMenuContent>

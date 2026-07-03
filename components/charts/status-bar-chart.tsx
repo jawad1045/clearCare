@@ -12,6 +12,7 @@ import {
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Bar } from "react-chartjs-2";
 import { REFERRAL_STATUSES, ReferralStatus, getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
+import { useTranslation } from "@/locale/use-translation";
 
 function statusOrder(status: string): number {
   const index = REFERRAL_STATUSES.indexOf(status as ReferralStatus);
@@ -25,8 +26,9 @@ interface Props {
 }
 
 export function StatusBarChart({ data }: Props) {
+  const { t, locale } = useTranslation();
   const sorted = [...data].sort((a, b) => statusOrder(a.status) - statusOrder(b.status));
-  const labels = sorted.map((d) => getStatusLabel(d.status));
+  const labels = sorted.map((d) => getStatusLabel(d.status, locale));
   const counts = sorted.map((d) => d.count);
   const colors = sorted.map((d) => getStatusColor(d.status));
   const total = counts.reduce((sum, n) => sum + n, 0);
@@ -35,7 +37,7 @@ export function StatusBarChart({ data }: Props) {
     labels,
     datasets: [
       {
-        label: "Referrals",
+        label: t("charts.datasetLabelReferrals"),
         data: counts,
         backgroundColor: colors.map((c) => c + "cc"),
         borderColor: colors,
@@ -71,7 +73,7 @@ export function StatusBarChart({ data }: Props) {
           label: (ctx: import("chart.js").TooltipItem<"bar">) => {
             const value = ctx.parsed.y ?? 0;
             const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-            return ` ${value} referrals — ${pct}%`;
+            return ` ${t("charts.tooltipReferrals", { value, pct })}`;
           },
         },
       },
@@ -92,7 +94,7 @@ export function StatusBarChart({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        No referrals yet
+        {t("charts.noReferralsYet")}
       </div>
     );
   }
@@ -100,7 +102,7 @@ export function StatusBarChart({ data }: Props) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-col items-end">
-        <span className="text-xs font-extrabold text-brand">Total Referrals</span>
+        <span className="text-xs font-extrabold text-brand">{t("charts.totalReferrals")}</span>
         <span className="text-xl font-extrabold pr-6 text-brand">{total}</span>
       </div>
       <div className="min-h-0 flex-1">

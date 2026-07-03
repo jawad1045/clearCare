@@ -11,6 +11,7 @@ import { Pie } from "react-chartjs-2";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
+import { useTranslation } from "@/locale/use-translation";
 
 function colorFor(status: string) {
   return getStatusColor(status);
@@ -21,7 +22,8 @@ interface Props {
 }
 
 export function StatusPieChart({ data }: Props) {
-  const labels = data.map((d) => getStatusLabel(d.status));
+  const { t, locale } = useTranslation();
+  const labels = data.map((d) => getStatusLabel(d.status, locale));
   const counts = data.map((d) => d.count);
   const colors = data.map((d) => colorFor(d.status));
 
@@ -51,7 +53,7 @@ export function StatusPieChart({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        No referrals yet
+        {t("charts.noReferralsYet")}
       </div>
     );
   }

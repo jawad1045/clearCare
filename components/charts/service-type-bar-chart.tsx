@@ -10,6 +10,7 @@ import {
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Bar } from "react-chartjs-2";
+import { useTranslation } from "@/locale/use-translation";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ChartDataLabels);
 
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function ServiceTypeBarChart({ data }: Props) {
+  const { t } = useTranslation();
   const labels = data.map((d) => d.label);
   const counts = data.map((d) => d.count);
   const colors = data.map((_, i) => COLORS[i % COLORS.length]);
@@ -28,7 +30,7 @@ export function ServiceTypeBarChart({ data }: Props) {
     labels,
     datasets: [
       {
-        label: "Referrals",
+        label: t("charts.datasetLabelReferrals"),
         data: counts,
         backgroundColor: colors.map((c) => c + "cc"),
         borderColor: colors,
@@ -71,7 +73,7 @@ export function ServiceTypeBarChart({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        No data yet
+        {t("charts.noDataYet")}
       </div>
     );
   }

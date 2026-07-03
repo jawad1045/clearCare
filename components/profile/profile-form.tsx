@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,26 +20,39 @@ import {
 import { ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { updateProfileName, updateProfilePassword } from "@/action/user.action";
+import { useTranslation } from "@/locale/use-translation";
 
-const nameSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-});
+function useNameSchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z.object({
+        firstName: z.string().min(1, t("common.validation.firstNameRequired")),
+        lastName: z.string().min(1, t("common.validation.lastNameRequired")),
+      }),
+    [t]
+  );
+}
 
-type NameFormValues = z.infer<typeof nameSchema>;
+type NameFormValues = z.infer<ReturnType<typeof useNameSchema>>;
 
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "New password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your new password"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "New passwords do not match",
-    path: ["confirmPassword"],
-  });
+function usePasswordSchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z
+        .object({
+          currentPassword: z.string().min(1, t("profile.currentPasswordRequired")),
+          newPassword: z.string().min(8, t("profile.newPasswordMinLength")),
+          confirmPassword: z.string().min(1, t("profile.confirmPasswordRequired")),
+        })
+        .refine((data) => data.newPassword === data.confirmPassword, {
+          message: t("profile.passwordsDoNotMatch"),
+          path: ["confirmPassword"],
+        }),
+    [t]
+  );
+}
 
-type PasswordFormValues = z.infer<typeof passwordSchema>;
+type PasswordFormValues = z.infer<ReturnType<typeof usePasswordSchema>>;
 
 interface Props {
   firstName: string;
@@ -50,6 +63,9 @@ interface Props {
 }
 
 export function ProfileForm({ firstName, lastName, email, redirectTo, canEditName = true }: Props) {
+  const { t } = useTranslation();
+  const nameSchema = useNameSchema(t);
+  const passwordSchema = usePasswordSchema(t);
   const router = useRouter();
   const [nameMsg, setNameMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -87,9 +103,9 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
 
   function onNameSubmit(values: NameFormValues) {
     openConfirm(
-      "Save Name",
-      "Are you sure you want to update your name?",
-      "Save Name",
+      t("profile.saveNameTitle"),
+      t("profile.saveNameConfirm"),
+      t("profile.saveNameTitle"),
       () => {
         setConfirmOpen(false);
         setNameMsg(null);
@@ -101,7 +117,7 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
             await updateProfileName(formData);
             router.push(redirectTo);
           } catch (err: unknown) {
-            setNameMsg({ ok: false, text: err instanceof Error ? err.message : "Something went wrong." });
+            setNameMsg({ ok: false, text: err instanceof Error ? err.message : t("profile.genericErrorPeriod") });
           }
         });
       }
@@ -110,9 +126,9 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
 
   function onPwSubmit(values: PasswordFormValues) {
     openConfirm(
-      "Update Password",
-      "Are you sure you want to change your password? You will need to use the new password on your next login.",
-      "Update Password",
+      t("profile.updatePasswordTitle"),
+      t("profile.updatePasswordConfirm"),
+      t("profile.updatePasswordTitle"),
       () => {
         setConfirmOpen(false);
         setPwMsg(null);
@@ -126,7 +142,7 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
             resetPwForm();
             router.push(redirectTo);
           } catch (err: unknown) {
-            setPwMsg({ ok: false, text: err instanceof Error ? err.message : "Something went wrong." });
+            setPwMsg({ ok: false, text: err instanceof Error ? err.message : t("profile.genericErrorPeriod") });
           }
         });
       }
@@ -146,14 +162,14 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
       {/* Name */}
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>{t("profile.personalInformation")}</CardTitle>
         </CardHeader>
         <Separator />
         <CardContent className="pt-4">
           <form onSubmit={handleNameSubmit(onNameSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{t("common.firstName")}</Label>
                 <Input
                   id="firstName"
                   {...registerName("firstName")}
@@ -166,7 +182,7 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
                 )}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{t("common.lastName")}</Label>
                 <Input
                   id="lastName"
                   {...registerName("lastName")}
@@ -180,12 +196,12 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Email</Label>
+              <Label>{t("common.email")}</Label>
               <Input value={email} disabled className="opacity-60" />
             </div>
             {!canEditName && (
               <p className="text-sm text-muted-foreground">
-                Your name is managed by your administrator. Contact them to make changes.
+                {t("profile.nameManagedByAdmin")}
               </p>
             )}
             {nameMsg && (
@@ -195,7 +211,7 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
             )}
             {canEditName && (
               <Button type="submit" disabled={namePending}>
-                {namePending ? "Saving…" : "Save Name"}
+                {namePending ? t("common.saving") : t("profile.saveNameTitle")}
               </Button>
             )}
           </form>
@@ -205,13 +221,13 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
       {/* Password */}
       <Card>
         <CardHeader>
-          <CardTitle>Change Password</CardTitle>
+          <CardTitle>{t("profile.changePasswordTitle")}</CardTitle>
         </CardHeader>
         <Separator />
         <CardContent className="pt-4">
           <form onSubmit={handlePwSubmit(onPwSubmit)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword">{t("profile.currentPasswordLabel")}</Label>
               <div className="relative">
                 <Input
                   id="currentPassword"
@@ -228,7 +244,7 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">{t("profile.newPasswordLabel")}</Label>
               <div className="relative">
                 <Input
                   id="newPassword"
@@ -245,7 +261,7 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword">{t("profile.confirmNewPasswordLabel")}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -268,26 +284,26 @@ export function ProfileForm({ firstName, lastName, email, redirectTo, canEditNam
             )}
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={pwPending}>
-                {pwPending ? "Updating…" : "Update Password"}
+                {pwPending ? t("profile.updating") : t("profile.updatePasswordTitle")}
               </Button>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button type="button" variant="outline">
-                    Reset Password
+                    {t("profile.resetPasswordDialogTrigger")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-sm">
                   <DialogHeader>
-                    <DialogTitle>Reset Password</DialogTitle>
+                    <DialogTitle>{t("profile.resetPasswordDialogTitle")}</DialogTitle>
                   </DialogHeader>
                   <div className="flex flex-col items-center gap-4 py-4 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                       <ShieldAlert className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <div className="space-y-1">
-                      <p className="font-medium">Contact your Administrator</p>
+                      <p className="font-medium">{t("profile.contactAdminTitle")}</p>
                       <p className="text-sm text-muted-foreground">
-                        To reset your password, please ask your admin to reset it for you from the Users section.
+                        {t("profile.contactAdminDescription")}
                       </p>
                     </div>
                   </div>

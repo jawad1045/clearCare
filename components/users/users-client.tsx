@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/select";
 
 import { UsersTable } from "./users-tabel";
+import { useTranslation } from "@/locale/use-translation";
 
 type Props = {
   initialData: Awaited<ReturnType<typeof getUsers>>;
 };
 
 export function UsersClient({ initialData }: Props) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("all");
   const [page, setPage] = useState(1);
@@ -47,7 +49,7 @@ export function UsersClient({ initialData }: Props) {
       {/* Search + Filters */}
       <div className="flex flex-col gap-4 md:flex-row">
         <Input
-          placeholder="Search users..."
+          placeholder={t("users.searchPlaceholder")}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -64,20 +66,20 @@ export function UsersClient({ initialData }: Props) {
           }}
         >
           <SelectTrigger className="w-55">
-            <SelectValue placeholder="All Roles" />
+            <SelectValue placeholder={t("common.allRoles")} />
           </SelectTrigger>
 
           <SelectContent>
             <SelectItem value="all">
-              All Roles
+              {t("common.allRoles")}
             </SelectItem>
 
             <SelectItem value="Admin">
-              Admin
+              {t("common.roleAdmin")}
             </SelectItem>
 
             <SelectItem value="User">
-              User
+              {t("common.roleUser")}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -86,7 +88,7 @@ export function UsersClient({ initialData }: Props) {
       {/* Loading */}
       {isPending && (
         <p className="text-sm text-muted-foreground">
-          Loading users...
+          {t("users.loadingUsers")}
         </p>
       )}
 
@@ -101,7 +103,7 @@ export function UsersClient({ initialData }: Props) {
             disabled={page === 1}
             onClick={() => setPage((prev) => prev - 1)}
           >
-            Previous
+            {t("common.previous")}
           </Button>
 
           {Array.from(
@@ -126,7 +128,7 @@ export function UsersClient({ initialData }: Props) {
             disabled={page === data.totalPages}
             onClick={() => setPage((prev) => prev + 1)}
           >
-            Next
+            {t("common.next")}
           </Button>
         </div>
       )}

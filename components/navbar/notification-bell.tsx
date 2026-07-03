@@ -11,10 +11,12 @@ import {
   deleteAllNotifications,
 } from "@/action/notification.action";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTranslation } from "@/locale/use-translation";
 
 type Notification = Awaited<ReturnType<typeof getMyNotifications>>[number];
 
 export function NotificationBell() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [, startTransition] = useTransition();
@@ -90,10 +92,10 @@ export function NotificationBell() {
 
   function timeAgo(date: Date) {
     const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-    if (seconds < 60) return "just now";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    return `${Math.floor(seconds / 86400)}d ago`;
+    if (seconds < 60) return t("notifications.justNow");
+    if (seconds < 3600) return t("notifications.minutesAgo", { n: Math.floor(seconds / 60) });
+    if (seconds < 86400) return t("notifications.hoursAgo", { n: Math.floor(seconds / 3600) });
+    return t("notifications.daysAgo", { n: Math.floor(seconds / 86400) });
   }
 
   return (
@@ -102,24 +104,24 @@ export function NotificationBell() {
         open={confirmDeleteId !== null}
         onConfirm={handleDeleteOne}
         onCancel={() => setConfirmDeleteId(null)}
-        title="Delete Notification"
-        description="Are you sure you want to delete this notification? This cannot be undone."
-        confirmLabel="Delete"
+        title={t("notifications.deleteOneTitle")}
+        description={t("notifications.deleteOneDescription")}
+        confirmLabel={t("notifications.confirmDelete")}
       />
       <ConfirmDialog
         open={confirmDeleteAll}
         onConfirm={handleDeleteAll}
         onCancel={() => setConfirmDeleteAll(false)}
-        title="Delete All Notifications"
-        description="Are you sure you want to delete all notifications? This cannot be undone."
-        confirmLabel="Delete All"
+        title={t("notifications.deleteAllTitle")}
+        description={t("notifications.deleteAllDescription")}
+        confirmLabel={t("notifications.confirmDeleteAll")}
       />
 
       <div className="relative" ref={panelRef}>
         <button
           onClick={() => setOpen((v) => !v)}
           className="relative flex items-center justify-center rounded-md p-2 text-sidebar-foreground hover:bg-white/10 transition-colors"
-          aria-label="Notifications"
+          aria-label={t("notifications.title")}
         >
           <Bell className="h-5 w-5" />
           {unread > 0 && (
@@ -134,7 +136,7 @@ export function NotificationBell() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span className="text-sm font-semibold text-foreground">
-                Notifications
+                {t("notifications.title")}
                 {unread > 0 && (
                   <span className="ml-2 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                     {unread}
@@ -147,14 +149,14 @@ export function NotificationBell() {
                     onClick={handleMarkAll}
                     className="text-xs text-primary hover:underline"
                   >
-                    Mark all read
+                    {t("notifications.markAllRead")}
                   </button>
                 )}
                 {notifications.length > 0 && (
                   <button
                     onClick={() => setConfirmDeleteAll(true)}
                     className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    title="Delete all notifications"
+                    title={t("notifications.deleteAll")}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -166,7 +168,7 @@ export function NotificationBell() {
             <div className="max-h-80 overflow-y-auto divide-y divide-border">
               {notifications.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  No notifications yet
+                  {t("notifications.empty")}
                 </p>
               ) : (
                 notifications.map((n) => (
@@ -197,7 +199,7 @@ export function NotificationBell() {
                           </p>
                           {n.link && (
                             <span className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary hover:underline">
-                              View <ArrowRight className="h-2.5 w-2.5" />
+                              {t("notifications.view")} <ArrowRight className="h-2.5 w-2.5" />
                             </span>
                           )}
                         </div>
@@ -207,7 +209,7 @@ export function NotificationBell() {
                     <button
                       onClick={() => setConfirmDeleteId(n.id)}
                       className="mt-3 shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      title="Delete notification"
+                      title={t("notifications.deleteOne")}
                     >
                       <X className="h-3 w-3" />
                     </button>

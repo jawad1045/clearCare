@@ -6,10 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react"
 import { loginAction } from "@/action/auth/auth.model"
 import { toast } from "sonner"
+import { useTranslation } from "@/locale/use-translation"
+import { LanguageToggle } from "@/components/navbar/language-toggle"
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -17,11 +20,11 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (searchParams.get("expired") === "1") {
-      setError("Your session has expired. Please log in again.")
+      setError(t("login.sessionExpired"))
     } else if (searchParams.get("redirect")) {
-      setError("Please log in to view the page you requested.")
+      setError(t("login.pleaseLogin"))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target
@@ -38,11 +41,11 @@ export default function LoginPage() {
 
     if (!result || !result.success) {
       setIsLoading(false)
-      setError(result?.error || "Something went wrong.")
+      setError(result?.error || t("login.genericError"))
       return
     }
 
-    toast.success("Logged in successfully!")
+    toast.success(t("login.loggedIn"))
     if (result.redirectTo) {
       const redirectParam = searchParams.get("redirect")
       const isAdminRoute = redirectParam?.startsWith("/admin")
@@ -60,6 +63,10 @@ export default function LoginPage() {
         background: "radial-gradient(ellipse at 50% 45%, #0d6e72 0%, #073d42 45%, #030e12 100%)",
       }}
     >
+      <div className="w-full max-w-md flex justify-end mb-2">
+        <LanguageToggle />
+      </div>
+
       {/* Logo + title above card */}
       <div className="flex flex-col items-center w-md text-center bg-sidebar px-4 py-2 rounded-t-lg shadow-lg shadow-black/40">
         <div className="mb-4 rounded-full ring-2 ring-white/20 shadow-lg shadow-black/40">
@@ -73,10 +80,10 @@ export default function LoginPage() {
           />
         </div>
         <h1 className="text-xl font-bold text-sidebar-foreground uppercase">
-          HWP CLEAR-CARE™ PORTAL
+          {t("login.portalTitle")}
         </h1>
         <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-sidebar-accent-foreground uppercase">
-          Secure Access &nbsp;·&nbsp; HIPAA Compliant
+          {t("login.secureAccess")} &nbsp;·&nbsp; {t("login.hipaaCompliant")}
         </p>
       </div>
 
@@ -87,8 +94,8 @@ export default function LoginPage() {
 
         <div className="bg-white px-10 py-10">
           <div className="mb-6">
-            <h2 className="text-[17px] font-semibold text-gray-900">Sign in to your account</h2>
-            <p className="mt-0.5 text-sm text-gray-500">Enter your credentials to continue</p>
+            <h2 className="text-[17px] font-semibold text-gray-900">{t("login.signInTitle")}</h2>
+            <p className="mt-0.5 text-sm text-gray-500">{t("login.signInSubtitle")}</p>
           </div>
 
           {error && (
@@ -103,7 +110,7 @@ export default function LoginPage() {
                 htmlFor="contactEmail"
                 className="block text-[10px] font-bold uppercase tracking-widest text-gray-400"
               >
-                Email Address
+                {t("login.emailLabel")}
               </label>
               <input
                 id="contactEmail"
@@ -125,7 +132,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-[10px] font-bold uppercase tracking-widest text-gray-400"
               >
-                Password
+                {t("login.passwordLabel")}
               </label>
               <div className="relative">
                 <input
@@ -157,11 +164,11 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Signing in...
+                  {t("login.signingIn")}
                 </>
               ) : (
                 <>
-                  Sign In
+                  {t("login.signIn")}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -169,14 +176,14 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-[11px] text-gray-400">
-            🔒 256-bit SSL &nbsp;·&nbsp; HIPAA Compliant
+            🔒 {t("login.sslNote")} &nbsp;·&nbsp; {t("login.hipaaCompliant")}
           </p>
         </div>
       </div>
 
       {/* Footer below card */}
       <p className="mt-6 text-center text-[11px] text-white/40">
-        CLEAR-CARE® · Healthcare Coordination You Can Trust · HWP Enterprises, LLC
+        {t("login.footer")}
       </p>
     </div>
   )

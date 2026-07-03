@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,27 +24,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/locale/use-translation";
 
-const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"] as const;
+const TITLE_LABEL_KEYS = {
+  Administrator: "common.titleAdministrator",
+  Manager: "common.titleManager",
+  Counselor: "common.titleCounselor",
+  Nurse: "common.titleNurse",
+  Doctor: "common.titleDoctor",
+} as const;
 
-const companySchema = z.object({
-  organization: z.string().min(1, "Organization name is required"),
-  street: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  zip: z.string().optional(),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().min(1, "Email is required").email("Enter a valid email"),
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Enter a complete phone number"),
-  title: z.string().optional(),
-  notes: z.string().optional(),
-});
+function useCompanySchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z.object({
+        organization: z.string().min(1, t("common.validation.organizationRequired")),
+        street: z.string().optional(),
+        city: z.string().min(1, t("common.validation.cityRequired")),
+        state: z.string().min(1, t("common.validation.stateRequired")),
+        zip: z.string().optional(),
+        firstName: z.string().min(1, t("common.validation.firstNameRequired")),
+        lastName: z.string().min(1, t("common.validation.lastNameRequired")),
+        email: z.string().min(1, t("common.validation.emailRequired")).email(t("common.validation.emailInvalid")),
+        phone: z
+          .string()
+          .min(1, t("common.validation.phoneRequired"))
+          .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
+        title: z.string().optional(),
+        notes: z.string().optional(),
+      }),
+    [t]
+  );
+}
 
-type CompanyFormValues = z.infer<typeof companySchema>;
+type CompanyFormValues = z.infer<ReturnType<typeof useCompanySchema>>;
 
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
@@ -87,6 +101,8 @@ function Field({ label, required, error, children }: {
 }
 
 export function CreateCompanyForm() {
+  const { t } = useTranslation();
+  const companySchema = useCompanySchema(t);
   const [isPending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<CompanyFormValues | null>(null);
@@ -179,10 +195,10 @@ export function CreateCompanyForm() {
           </div>
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-              Create Company
+              {t("companies.createTitle")}
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              Add a new organization to the system
+              {t("companies.createSubtitle")}
             </CardDescription>
           </div>
         </div>
@@ -195,21 +211,21 @@ export function CreateCompanyForm() {
           open={confirmOpen}
           onConfirm={onConfirm}
           onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-          title="Create Company"
-          description="Are you sure you want to create this company? Please review all details before proceeding."
-          confirmLabel="Create Company"
+          title={t("companies.createConfirmTitle")}
+          description={t("companies.createConfirmDescription")}
+          confirmLabel={t("companies.createTitle")}
         />
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
           {/* Organization */}
-          <FieldGroup icon={Building2} title="Organization">
+          <FieldGroup icon={Building2} title={t("common.organization")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs font-medium text-foreground/80">
-                Organization Name<span className="ml-0.5 text-primary">*</span>
+                {t("common.organizationName")}<span className="ml-0.5 text-primary">*</span>
               </Label>
               <Input
                 {...register("organization")}
-                placeholder="e.g. Acme Health Partners"
+                placeholder={t("companies.orgPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
               {errors.organization && (
@@ -221,36 +237,36 @@ export function CreateCompanyForm() {
           <Separator className="bg-border/60" />
 
           {/* Address */}
-          <FieldGroup icon={MapPin} title="Address">
+          <FieldGroup icon={MapPin} title={t("common.address")}>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs font-medium text-foreground/80">Street</Label>
+              <Label className="text-xs font-medium text-foreground/80">{t("common.street")}</Label>
               <Input
                 {...register("street")}
-                placeholder="123 Main St"
+                placeholder={t("companies.streetPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </div>
-            <Field label="Zip">
+            <Field label={t("common.zip")}>
               <Input
                 value={zip}
                 onChange={(e) => handleZipChange(e.target.value)}
-                placeholder="00000"
+                placeholder={t("companies.zipPlaceholder")}
                 maxLength={5}
                 inputMode="numeric"
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="City" required error={errors.city?.message}>
+            <Field label={t("common.city")} required error={errors.city?.message}>
               <Input
                 {...register("city")}
-                placeholder="City"
+                placeholder={t("companies.cityPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="State" required error={errors.state?.message}>
+            <Field label={t("common.state")} required error={errors.state?.message}>
               <Input
                 {...register("state")}
-                placeholder="State"
+                placeholder={t("companies.statePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
@@ -259,38 +275,38 @@ export function CreateCompanyForm() {
           <Separator className="bg-border/60" />
 
           {/* Contact */}
-          <FieldGroup icon={User} title="Contact Person">
-            <Field label="First Name" required error={errors.firstName?.message}>
-              <Input {...register("firstName")} placeholder="First name"
+          <FieldGroup icon={User} title={t("common.contactPerson")}>
+            <Field label={t("common.firstName")} required error={errors.firstName?.message}>
+              <Input {...register("firstName")} placeholder={t("companies.firstNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required error={errors.lastName?.message}>
-              <Input {...register("lastName")} placeholder="Last name"
+            <Field label={t("common.lastName")} required error={errors.lastName?.message}>
+              <Input {...register("lastName")} placeholder={t("companies.lastNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email" required error={errors.email?.message}>
-              <Input {...register("email")} type="email" placeholder="name@company.com"
+            <Field label={t("common.email")} required error={errors.email?.message}>
+              <Input {...register("email")} type="email" placeholder={t("companies.emailPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Phone" required error={errors.phone?.message}>
+            <Field label={t("common.phone")} required error={errors.phone?.message}>
               <Input
                 {...register("phone", {
                   onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
                 })}
-                placeholder="(555) 000-0000"
+                placeholder={t("companies.phonePlaceholder")}
                 maxLength={14}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-foreground/80">Title</Label>
+              <Label className="text-xs font-medium text-foreground/80">{t("common.title")}</Label>
               <Select onValueChange={(v) => setValue("title", v)}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select title..." />
+                  <SelectValue placeholder={t("common.selectTitlePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TITLES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {TITLES.map((title) => (
+                    <SelectItem key={title} value={title}>{t(TITLE_LABEL_KEYS[title])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -300,11 +316,11 @@ export function CreateCompanyForm() {
           <Separator className="bg-border/60" />
 
           {/* Notes */}
-          <FieldGroup icon={FileText} title="Notes">
+          <FieldGroup icon={FileText} title={t("common.notes")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Textarea
                 {...register("notes")}
-                placeholder="Any additional notes about this company…"
+                placeholder={t("companies.notesPlaceholder")}
                 rows={4}
                 className="resize-none border-border bg-background focus-visible:ring-primary"
               />
@@ -320,9 +336,9 @@ export function CreateCompanyForm() {
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  Creating…
+                  {t("common.creating")}
                 </span>
-              ) : "Create Company"}
+              ) : t("companies.createTitle")}
             </Button>
           </div>
 

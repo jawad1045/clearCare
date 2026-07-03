@@ -5,13 +5,12 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { CalendarIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-
-const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+import { MONTH_KEYS, MONTH_LABEL_KEYS } from "@/lib/referral-filters";
+import { useTranslation } from "@/locale/use-translation";
 
 export function MonthFilter({ paramKey = "month" }: { paramKey?: string }) {
+  const { t } = useTranslation();
+  const MONTHS = MONTH_KEYS.map((k) => t(MONTH_LABEL_KEYS[k]).slice(0, 3));
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -52,7 +51,7 @@ export function MonthFilter({ paramKey = "month" }: { paramKey?: string }) {
         <button
           onClick={clear}
           className="text-muted-foreground hover:text-foreground"
-          aria-label="Clear filter"
+          aria-label={t("charts.clearFilterAria")}
         >
           <X className="h-3 w-3" />
         </button>
@@ -61,7 +60,7 @@ export function MonthFilter({ paramKey = "month" }: { paramKey?: string }) {
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-7 gap-1.5 px-2 text-xs">
             <CalendarIcon className="h-3 w-3" />
-            {label ?? "All time"}
+            {label ?? t("charts.allTime")}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-56 p-3" align="end">

@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/locale/use-translation";
 
 type Company = {
   id: number;
@@ -46,7 +47,14 @@ type User = {
 
 type Props = { user: User; companies: Company[] };
 
-const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"];
+const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"] as const;
+const TITLE_LABEL_KEYS = {
+  Administrator: "common.titleAdministrator",
+  Manager: "common.titleManager",
+  Counselor: "common.titleCounselor",
+  Nurse: "common.titleNurse",
+  Doctor: "common.titleDoctor",
+} as const;
 
 function FieldGroup({ icon: Icon, title, children }: {
   icon: React.ElementType;
@@ -88,6 +96,7 @@ function Field({ label, required, full, children }: {
 }
 
 export function EditUserForm({ user, companies }: Props) {
+  const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [selectedRole, setSelectedRole] = useState<string>(user.userRole);
   const [selectedCompany, setSelectedCompany] = useState(
@@ -115,7 +124,7 @@ export function EditUserForm({ user, companies }: Props) {
   function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (selectedRole !== "Admin" && !selectedCompany) {
-      setCompanyError("Organization is required for this role.");
+      setCompanyError(t("users.orgRequiredForRole"));
       return;
     }
     setCompanyError(null);
@@ -141,7 +150,7 @@ export function EditUserForm({ user, companies }: Props) {
             </div>
             <div>
               <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-                Edit User
+                {t("users.editTitle")}
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
                 {user.contactFirstName} {user.contactLastName}
@@ -154,7 +163,7 @@ export function EditUserForm({ user, companies }: Props) {
               ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/10"
               : ""}
           >
-            {isActive ? "Active" : "Inactive"}
+            {isActive ? t("common.active") : t("common.inactive")}
           </Badge>
         </div>
       </CardHeader>
@@ -166,20 +175,20 @@ export function EditUserForm({ user, companies }: Props) {
           open={confirmOpen}
           onConfirm={onConfirm}
           onCancel={() => { setConfirmOpen(false); setPendingData(null); }}
-          title="Save Changes"
-          description="Are you sure you want to save these changes to the user? This will update the record immediately."
-          confirmLabel="Save Changes"
+          title={t("common.saveChanges")}
+          description={t("users.editConfirmDescription")}
+          confirmLabel={t("common.saveChanges")}
         />
         <form onSubmit={onFormSubmit} className="space-y-8">
 
           {/* Organization */}
-          <FieldGroup icon={Building2} title="Organization">
+          <FieldGroup icon={Building2} title={t("common.organization")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs font-medium text-foreground/80">
-                Organization
+                {t("common.organization")}
                 {selectedRole !== "Admin"
                   ? <span className="ml-0.5 text-primary">*</span>
-                  : <span className="ml-1 text-xs text-muted-foreground">(optional for Admin)</span>
+                  : <span className="ml-1 text-xs text-muted-foreground">{t("users.optionalForAdmin")}</span>
                 }
               </Label>
               <Select
@@ -211,20 +220,20 @@ export function EditUserForm({ user, companies }: Props) {
           <Separator className="bg-border/60" />
 
           {/* Address */}
-          <FieldGroup icon={MapPin} title="Address (from organization)">
-            <Field label="Street">
+          <FieldGroup icon={MapPin} title={t("users.addressFromOrg")}>
+            <Field label={t("common.street")}>
               <Input value={selectedCompany?.street ?? ""} readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
             </Field>
-            <Field label="City">
+            <Field label={t("common.city")}>
               <Input value={selectedCompany?.city ?? ""} readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
             </Field>
-            <Field label="State">
+            <Field label={t("common.state")}>
               <Input value={selectedCompany?.state ?? ""} readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
             </Field>
-            <Field label="Zip">
+            <Field label={t("common.zip")}>
               <Input value={selectedCompany?.zip ?? ""} readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default" />
             </Field>
@@ -233,20 +242,20 @@ export function EditUserForm({ user, companies }: Props) {
           <Separator className="bg-border/60" />
 
           {/* Contact */}
-          <FieldGroup icon={UserCog} title="Contact Details">
-            <Field label="First Name" required>
+          <FieldGroup icon={UserCog} title={t("users.contactDetails")}>
+            <Field label={t("common.firstName")} required>
               <Input name="firstName" defaultValue={user.contactFirstName} required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required>
+            <Field label={t("common.lastName")} required>
               <Input name="lastName" defaultValue={user.contactLastName} required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email" required>
+            <Field label={t("common.email")} required>
               <Input type="email" name="email" defaultValue={user.contactEmail} required
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Phone" required>
+            <Field label={t("common.phone")} required>
               <Input
                 name="phone"
                 value={phone}
@@ -256,14 +265,14 @@ export function EditUserForm({ user, companies }: Props) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Title" full>
+            <Field label={t("common.title")} full>
               <Select defaultValue={contactTitle || undefined} onValueChange={setContactTitle}>
                 <SelectTrigger className="border-border focus:ring-primary">
-                  <SelectValue placeholder="Select title..." />
+                  <SelectValue placeholder={t("common.selectTitlePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TITLES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {TITLES.map((title) => (
+                    <SelectItem key={title} value={title}>{t(TITLE_LABEL_KEYS[title])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -274,15 +283,15 @@ export function EditUserForm({ user, companies }: Props) {
           <Separator className="bg-border/60" />
 
           {/* Role & Status */}
-          <FieldGroup icon={ShieldCheck} title="Access & Status">
-            <Field label="Role" required>
+          <FieldGroup icon={ShieldCheck} title={t("users.accessAndStatus")}>
+            <Field label={t("common.role")} required>
               <Select defaultValue={user.userRole} onValueChange={handleRoleChange}>
                 <SelectTrigger className="border-border focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="User">User</SelectItem>
+                  <SelectItem value="Admin">{t("common.roleAdmin")}</SelectItem>
+                  <SelectItem value="User">{t("common.roleUser")}</SelectItem>
                 </SelectContent>
               </Select>
               <input type="hidden" name="role" value={selectedRole} />
@@ -290,7 +299,7 @@ export function EditUserForm({ user, companies }: Props) {
 
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground/80">
-                Account Status
+                {t("users.accountStatus")}
               </Label>
               <div className="flex h-10 items-center gap-3">
                 <Switch
@@ -299,7 +308,7 @@ export function EditUserForm({ user, companies }: Props) {
                   className="data-[state=checked]:bg-primary"
                 />
                 <span className="text-sm text-muted-foreground">
-                  {isActive ? "Active" : "Inactive"}
+                  {isActive ? t("common.active") : t("common.inactive")}
                 </span>
               </div>
             </div>
@@ -314,9 +323,9 @@ export function EditUserForm({ user, companies }: Props) {
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  Saving…
+                  {t("common.saving")}
                 </span>
-              ) : "Save Changes"}
+              ) : t("common.saveChanges")}
             </Button>
           </div>
 

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { Separator } from "@/components/ui/separator";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { getSessionTimeoutMinutes } from "@/action/settings.action";
+import { getServerTranslation } from "@/locale/server";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -14,13 +15,14 @@ export default async function AdminSettingsPage() {
   if (!session || session.role !== "Admin") redirect("/user");
 
   const sessionTimeoutMinutes = await getSessionTimeoutMinutes();
+  const { t } = await getServerTranslation();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 pb-16">
       <div className="space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t("settings.pageTitle")}</h2>
         <p className="text-muted-foreground">
-          Manage your notifications, appearance, and system configuration.
+          {t("settings.pageSubtitle")}
         </p>
       </div>
       <Separator />

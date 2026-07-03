@@ -8,20 +8,29 @@ import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { completeForcedPasswordChange, continueWithCurrentPassword } from "@/action/user.action";
 import { toast } from "sonner";
+import { useTranslation } from "@/locale/use-translation";
 
-const passwordSchema = z
-  .object({
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your new password"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+function usePasswordSchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return React.useMemo(
+    () =>
+      z
+        .object({
+          newPassword: z.string().min(8, t("changePassword.passwordMinLength")),
+          confirmPassword: z.string().min(1, t("changePassword.confirmPasswordRequired")),
+        })
+        .refine((data) => data.newPassword === data.confirmPassword, {
+          message: t("changePassword.passwordsDoNotMatch"),
+          path: ["confirmPassword"],
+        }),
+    [t]
+  );
+}
 
-type PasswordFormValues = z.infer<typeof passwordSchema>;
+type PasswordFormValues = z.infer<ReturnType<typeof usePasswordSchema>>;
 
 export function ChangePasswordForm() {
+  const { t } = useTranslation();
+  const passwordSchema = usePasswordSchema(t);
   const router = useRouter();
   const [showNew, setShowNew] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
@@ -43,10 +52,10 @@ export function ChangePasswordForm() {
     setIsLoading(true);
     try {
       const result = await completeForcedPasswordChange(values.newPassword, values.confirmPassword);
-      toast.success("Password updated successfully!");
+      toast.success(t("changePassword.updateSuccess"));
       router.push(result.redirectTo);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : t("profile.genericErrorPeriod"));
       setIsLoading(false);
     }
   }
@@ -58,7 +67,7 @@ export function ChangePasswordForm() {
       const result = await continueWithCurrentPassword();
       router.push(result.redirectTo);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : t("profile.genericErrorPeriod"));
       setIsContinuing(false);
     }
   }
@@ -75,9 +84,9 @@ export function ChangePasswordForm() {
 
         <div className="bg-white px-10 py-10">
           <div className="mb-6">
-            <h2 className="text-[17px] font-semibold text-gray-900">Set a new password</h2>
+            <h2 className="text-[17px] font-semibold text-gray-900">{t("changePassword.title")}</h2>
             <p className="mt-0.5 text-sm text-gray-500">
-              Your administrator reset your password. Choose a new one to continue.
+              {t("changePassword.subtitle")}
             </p>
           </div>
 
@@ -93,13 +102,13 @@ export function ChangePasswordForm() {
                 htmlFor="newPassword"
                 className="block text-[10px] font-bold uppercase tracking-widest text-gray-400"
               >
-                New Password
+                {t("profile.newPasswordLabel")}
               </label>
               <div className="relative">
                 <input
                   id="newPassword"
                   type={showNew ? "text" : "password"}
-                  placeholder="Min. 8 characters"
+                  placeholder={t("changePassword.newPasswordPlaceholder")}
                   disabled={isLoading || isContinuing}
                   {...register("newPassword")}
                   className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
@@ -123,13 +132,13 @@ export function ChangePasswordForm() {
                 htmlFor="confirmPassword"
                 className="block text-[10px] font-bold uppercase tracking-widest text-gray-400"
               >
-                Confirm Password
+                {t("changePassword.confirmPasswordLabel")}
               </label>
               <div className="relative">
                 <input
                   id="confirmPassword"
                   type={showConfirm ? "text" : "password"}
-                  placeholder="Repeat new password"
+                  placeholder={t("changePassword.confirmPasswordPlaceholder")}
                   disabled={isLoading || isContinuing}
                   {...register("confirmPassword")}
                   className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
@@ -156,10 +165,10 @@ export function ChangePasswordForm() {
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Updating...
+                  {t("changePassword.updating")}
                 </>
               ) : (
-                "Continue"
+                t("changePassword.continueBtn")
               )}
             </button>
 
@@ -172,10 +181,10 @@ export function ChangePasswordForm() {
               {isContinuing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Continuing...
+                  {t("changePassword.continuing")}
                 </>
               ) : (
-                "Continue with this password"
+                t("changePassword.continueWithPassword")
               )}
             </button>
           </form>

@@ -17,6 +17,7 @@ import {
   notifySlackStatusChanged,
   notifySlackResultUploaded,
 } from "@/lib/slack";
+import { getServerTranslation } from "@/locale/server";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -130,8 +131,10 @@ export async function createReferral(
   const currentUser =
     await getCurrentUser();
 
+  const { t } = await getServerTranslation();
+
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   const user =
@@ -143,7 +146,7 @@ export async function createReferral(
 
   if (!user) {
     throw new Error(
-      "User not found"
+      t("users.userNotFound")
     );
   }
 
@@ -157,7 +160,7 @@ export async function createReferral(
     uploadedFiles.length > 5
   ) {
     throw new Error(
-      "Maximum 5 files allowed"
+      t("referrals.errorMaxFilesAllowed")
     );
   }
 
@@ -174,7 +177,7 @@ export async function createReferral(
     );
 
   if (!user.acctId) {
-    throw new Error("No company associated with this account.");
+    throw new Error(t("referrals.errorNoCompanyAssociated"));
   }
 
   const referral = await prisma.referral.create({
@@ -324,7 +327,8 @@ export async function getMyReferrals() {
     await getCurrentUser();
 
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    const { t } = await getServerTranslation();
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   return prisma.referral.findMany({
@@ -384,7 +388,8 @@ export async function updateReferralStatus(
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "Admin") {
-    throw new Error("Unauthorized: only admins can change referral status");
+    const { t } = await getServerTranslation();
+    throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
   }
 
   const updated = await prisma.referral.update({
@@ -422,7 +427,8 @@ export async function getMyReferralCounts() {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    const { t } = await getServerTranslation();
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   const total = await prisma.referral.count({
@@ -459,7 +465,8 @@ export async function getMyReferralStatusCounts() {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    const { t } = await getServerTranslation();
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   const rows = await prisma.referral.groupBy({
@@ -473,7 +480,8 @@ export async function getMyReferralStatusCounts() {
 export async function updateReferralResult(referralId: number, pdfUrl: string) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "Admin") {
-    throw new Error("Unauthorized: only admins can upload results");
+    const { t } = await getServerTranslation();
+    throw new Error(t("referrals.errorOnlyAdminsUploadResults"));
   }
 
   const referral = await prisma.referral.update({

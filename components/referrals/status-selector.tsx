@@ -16,7 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { REFERRAL_STATUSES } from "@/lib/referral-statuses";
+import { REFERRAL_STATUSES, getStatusLabel } from "@/lib/referral-statuses";
+import { useTranslation } from "@/locale/use-translation";
 
 type Props = {
   referralId: number;
@@ -29,6 +30,7 @@ export function UpdateStatusForm({
   currentStatus,
   isBH,
 }: Props) {
+  const { t, locale } = useTranslation();
   const [status, setStatus] = useState(
     (REFERRAL_STATUSES as readonly string[]).includes(currentStatus) ? currentStatus : "Pending"
   );
@@ -53,7 +55,7 @@ export function UpdateStatusForm({
           const redirectTo = await updateBHReferralStatus(referralId, newStatus);
 
           setStatus(newStatus);
-          toast.success("Status updated successfully");
+          toast.success(t("referrals.statusUpdatedSuccess"));
 
           if (redirectTo) {
             router.push(redirectTo);
@@ -65,13 +67,13 @@ export function UpdateStatusForm({
           await updateReferralStatus(referralId, newStatus);
 
           setStatus(newStatus);
-          toast.success("Status updated successfully");
+          toast.success(t("referrals.statusUpdatedSuccess"));
           router.refresh();
         }
       } catch (error) {
         console.error(error);
 
-        toast.error("Failed to update status");
+        toast.error(t("referrals.statusUpdateFailed"));
       }
     });
   };
@@ -82,9 +84,9 @@ export function UpdateStatusForm({
         open={pendingStatus !== null}
         onConfirm={handleConfirm}
         onCancel={() => setPendingStatus(null)}
-        title="Update Status"
-        description={`Are you sure you want to change the status to "${pendingStatus}"?`}
-        confirmLabel="Yes, Update"
+        title={t("referrals.updateStatusTitle")}
+        description={t("referrals.updateStatusDescription", { status: pendingStatus ? getStatusLabel(pendingStatus, locale) : "" })}
+        confirmLabel={t("referrals.updateStatusConfirm")}
       />
 
       <div>
@@ -94,7 +96,7 @@ export function UpdateStatusForm({
           disabled={isPending}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select status" />
+            <SelectValue placeholder={t("referrals.selectStatusPlaceholder")} />
           </SelectTrigger>
 
           <SelectContent>
@@ -104,7 +106,7 @@ export function UpdateStatusForm({
                   key={statusOption}
                   value={statusOption}
                 >
-                  {statusOption}
+                  {getStatusLabel(statusOption, locale)}
                 </SelectItem>
               )
             )}

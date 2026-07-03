@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/locale/use-translation"
 
 interface ConfirmDialogProps {
   open: boolean
@@ -23,23 +24,25 @@ export function ConfirmDialog({
   open,
   onConfirm,
   onCancel,
-  title = "Confirm Submission",
-  description = "Please review your information before submitting. Are you sure you want to proceed?",
-  confirmLabel = "Confirm",
+  title,
+  description,
+  confirmLabel,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation()
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel() }}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle>{title ?? t("common.confirmSubmissionTitle")}</DialogTitle>
+          <DialogDescription>{description ?? t("common.confirmSubmissionDescription")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" type="button" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="button" onClick={onConfirm}>
-            {confirmLabel}
+            {confirmLabel ?? t("common.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

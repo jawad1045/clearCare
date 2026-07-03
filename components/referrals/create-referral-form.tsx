@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,22 +26,34 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
+import { SERVICE_TYPES, SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { useTranslation } from "@/locale/use-translation";
+import type { TranslationKey } from "@/locale/config";
 
-const SERVICE_TYPES = [
-  "Drug Test",
-  "Physical",
-  "Medication Management",
-  "IOP",
-];
 const REFERRAL_TYPES = [
   "Random",
   "Pre-employment",
   "Post-accident",
   "Reasonable Suspicion",
-];
-const PRIORITIES = ["Same-day", "24-hours"];
-const GENDERS = ["Male", "Female", "Other"];
-const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+] as const;
+const REFERRAL_TYPE_LABEL_KEYS: Record<(typeof REFERRAL_TYPES)[number], TranslationKey> = {
+  "Random": "referrals.typeRandom",
+  "Pre-employment": "referrals.typePreEmployment",
+  "Post-accident": "referrals.typePostAccident",
+  "Reasonable Suspicion": "referrals.typeReasonableSuspicion",
+};
+const PRIORITIES = ["Same-day", "24-hours"] as const;
+const PRIORITY_LABEL_KEYS: Record<(typeof PRIORITIES)[number], TranslationKey> = {
+  "Same-day": "referrals.prioritySameDay",
+  "24-hours": "referrals.priority24Hours",
+};
+const GENDERS = ["Male", "Female", "Other"] as const;
+const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
+  Male: "common.genderMale",
+  Female: "common.genderFemale",
+  Other: "common.genderOther",
+};
+const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
 const RACES = [
   "American Indian or Alaska Native",
   "Asian",
@@ -51,29 +63,51 @@ const RACES = [
   "White",
   "Two or More Races",
   "Other",
-];
+] as const;
+const RACE_LABEL_KEYS: Record<(typeof RACES)[number], TranslationKey> = {
+  "American Indian or Alaska Native": "referrals.raceAmericanIndian",
+  "Asian": "referrals.raceAsian",
+  "Black or African American": "referrals.raceBlack",
+  "Hispanic or Latino": "referrals.raceHispanic",
+  "Native Hawaiian or Other Pacific Islander": "referrals.raceNativeHawaiian",
+  "White": "referrals.raceWhite",
+  "Two or More Races": "referrals.raceTwoOrMore",
+  "Other": "referrals.raceOther",
+};
+const CONTACT_METHODS = ["Text", "Phone", "Email"] as const;
+const CONTACT_METHOD_LABEL_KEYS: Record<(typeof CONTACT_METHODS)[number], TranslationKey> = {
+  Text: "common.contactMethodText",
+  Phone: "common.contactMethodPhone",
+  Email: "common.contactMethodEmail",
+};
 
-const referralSchema = z.object({
-  serviceType: z.string().min(1, "Service type is required"),
-  parentFirstName: z.string().optional(),
-  parentLastName: z.string().optional(),
-  parentEmail: z.string().email("Enter a valid email").optional().or(z.literal("")),
-  parentPhone: z.string().optional(),
-  patientFirstName: z.string().min(1, "Patient first name is required"),
-  patientLastName: z.string().min(1, "Patient last name is required"),
-  dob: z.string().min(1, "Date of birth is required"),
-  race: z.string().min(1, "Race is required"),
-  grade: z.string().optional(),
-  gender: z.string().min(1, "Gender is required"),
-  ssn: z.string().min(1, "SSN is required"),
-  type: z.string().min(1, "Test type is required"),
-  priority: z.string().min(1, "Priority is required"),
-  referrerName: z.string().min(1, "Referrer name is required"),
-  contactDate: z.string().optional(),
-  contactMethod: z.array(z.string()).optional(),
-});
+function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
+  return useMemo(
+    () =>
+      z.object({
+        serviceType: z.string().min(1, t("referrals.serviceTypeRequired")),
+        parentFirstName: z.string().optional(),
+        parentLastName: z.string().optional(),
+        parentEmail: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
+        parentPhone: z.string().optional(),
+        patientFirstName: z.string().min(1, t("referrals.patientFirstNameRequired")),
+        patientLastName: z.string().min(1, t("referrals.patientLastNameRequired")),
+        dob: z.string().min(1, t("referrals.dobRequired")),
+        race: z.string().min(1, t("referrals.raceRequired")),
+        grade: z.string().optional(),
+        gender: z.string().min(1, t("referrals.genderRequired")),
+        ssn: z.string().min(1, t("referrals.ssnRequired")),
+        type: z.string().min(1, t("referrals.testTypeRequired")),
+        priority: z.string().min(1, t("referrals.priorityRequired")),
+        referrerName: z.string().min(1, t("referrals.referrerNameRequired")),
+        contactDate: z.string().optional(),
+        contactMethod: z.array(z.string()).optional(),
+      }),
+    [t]
+  );
+}
 
-type ReferralFormValues = z.infer<typeof referralSchema>;
+type ReferralFormValues = z.infer<ReturnType<typeof useReferralSchema>>;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -109,6 +143,8 @@ function Field({
 type Props = { referrerName: string };
 
 export function CreateReferralForm({ referrerName }: Props) {
+  const { t } = useTranslation();
+  const referralSchema = useReferralSchema(t);
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -174,7 +210,7 @@ export function CreateReferralForm({ referrerName }: Props) {
         await createReferral(formData);
       } catch (error) {
         if (isRedirectError(error)) throw error;
-        toast.error("Failed to create referral");
+        toast.error(t("referrals.createReferralFailed"));
       }
     });
   }
@@ -203,13 +239,13 @@ export function CreateReferralForm({ referrerName }: Props) {
       {/* ── Header ── */}
       <div className="bg-foreground px-6 py-4">
         <h2 className="text-base font-bold text-primary-foreground">
-          CLEAR-CARE™ Healthcare Referral Form
+          {t("referrals.referralFormTitle")}
         </h2>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
-          <span>Fields marked * are required</span>
+          <span>{t("referrals.requiredFieldsNote")}</span>
           <span className="text-primary/50">·</span>
           <Lock className="h-3 w-3" />
-          <span>HIPAA Compliant · All data is encrypted</span>
+          <span>{t("referrals.hipaaEncryptedNote")}</span>
         </div>
       </div>
 
@@ -217,21 +253,21 @@ export function CreateReferralForm({ referrerName }: Props) {
         open={confirmOpen}
         onConfirm={onConfirm}
         onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-        title="Submit Referral"
-        description="Are you sure you want to submit this referral? Please review all patient information before proceeding."
-        confirmLabel="Submit Referral"
+        title={t("referrals.submitReferral")}
+        description={t("referrals.submitReferralConfirmDescription")}
+        confirmLabel={t("referrals.submitReferral")}
       />
       <form onSubmit={handleSubmit(onFormSubmit)} className="pl-6 pr-10 py-6 space-y-6">
 
         {/* ── Service Type ── */}
-        <Field label="Select Service Type" required error={errors.serviceType?.message}>
+        <Field label={t("referrals.selectServiceType")} required error={errors.serviceType?.message}>
           <Select onValueChange={(v) => setValue("serviceType", v, { shouldValidate: true })}>
             <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-              <SelectValue placeholder="Choose service type..." />
+              <SelectValue placeholder={t("referrals.chooseServiceTypePlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {SERVICE_TYPES.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>{t(SERVICE_TYPE_LABEL_KEYS[s])}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -239,21 +275,21 @@ export function CreateReferralForm({ referrerName }: Props) {
 
         {/* ── Parent / Guardian ── */}
         <div>
-          <SectionLabel>Parent / Guardian Information</SectionLabel>
+          <SectionLabel>{t("referrals.parentGuardianInfo")}</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name">
-              <Input {...register("parentFirstName")} placeholder="Parent first name"
+            <Field label={t("common.firstName")}>
+              <Input {...register("parentFirstName")} placeholder={t("referrals.parentFirstNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name">
-              <Input {...register("parentLastName")} placeholder="Parent last name"
+            <Field label={t("common.lastName")}>
+              <Input {...register("parentLastName")} placeholder={t("referrals.parentLastNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Email" error={errors.parentEmail?.message}>
-              <Input type="email" {...register("parentEmail")} placeholder="parent@email.com"
+            <Field label={t("common.email")} error={errors.parentEmail?.message}>
+              <Input type="email" {...register("parentEmail")} placeholder={t("referrals.parentEmailPlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Phone">
+            <Field label={t("common.phone")}>
               <Input
                 {...register("parentPhone", {
                   onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
@@ -268,17 +304,17 @@ export function CreateReferralForm({ referrerName }: Props) {
 
         {/* ── Patient Information ── */}
         <div>
-          <SectionLabel>Patient Information</SectionLabel>
+          <SectionLabel>{t("referrals.patientInformation")}</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="First Name" required error={errors.patientFirstName?.message}>
-              <Input {...register("patientFirstName")} placeholder="Patient first name"
+            <Field label={t("common.firstName")} required error={errors.patientFirstName?.message}>
+              <Input {...register("patientFirstName")} placeholder={t("referrals.patientFirstNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Last Name" required error={errors.patientLastName?.message}>
-              <Input {...register("patientLastName")} placeholder="Patient last name"
+            <Field label={t("common.lastName")} required error={errors.patientLastName?.message}>
+              <Input {...register("patientLastName")} placeholder={t("referrals.patientLastNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label="Date of Birth (MM/DD/YYYY)" required error={errors.dob?.message}>
+            <Field label={t("referrals.dobLabel")} required error={errors.dob?.message}>
               <DatePicker
                 name="dob_display"
                 required
@@ -289,56 +325,56 @@ export function CreateReferralForm({ referrerName }: Props) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Age (Auto-Calculated)">
+            <Field label={t("referrals.ageLabel")}>
               <Input
                 value={age}
-                placeholder="Auto"
+                placeholder={t("referrals.agePlaceholder")}
                 readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
               />
             </Field>
-            <Field label="Race" required error={errors.race?.message}>
+            <Field label={t("referrals.raceLabel")} required error={errors.race?.message}>
               <Select onValueChange={(v) => setValue("race", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {RACES.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                    <SelectItem key={r} value={r}>{t(RACE_LABEL_KEYS[r])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Grade">
+            <Field label={t("referrals.gradeLabel")}>
               <Select onValueChange={(v) => setValue("grade", v)}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {GRADES.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                    <SelectItem key={g} value={g}>{g === "K" ? t("referrals.gradeK") : g}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Gender" required error={errors.gender?.message}>
+            <Field label={t("referrals.genderLabel")} required error={errors.gender?.message}>
               <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {GENDERS.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                    <SelectItem key={g} value={g}>{t(GENDER_LABEL_KEYS[g])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="SSN" required error={errors.ssn?.message}>
+            <Field label={t("referrals.ssnLabel")} required error={errors.ssn?.message}>
               <div className="relative">
                 <Input
                   type={showSSN ? "text" : "password"}
                   {...register("ssn")}
-                  placeholder="XXX-XX-XXXX"
+                  placeholder={t("referrals.ssnPlaceholder")}
                   className="border-border bg-background pr-10 focus-visible:ring-primary"
                 />
                 <button
@@ -355,56 +391,56 @@ export function CreateReferralForm({ referrerName }: Props) {
 
         {/* ── Test Details ── */}
         <div>
-          <SectionLabel>Test Details</SectionLabel>
+          <SectionLabel>{t("referrals.testDetails")}</SectionLabel>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Test Type" required error={errors.type?.message}>
+            <Field label={t("referrals.testTypeLabel")} required error={errors.type?.message}>
               <Select onValueChange={(v) => setValue("type", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select type..." />
+                  <SelectValue placeholder={t("referrals.selectTypePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {REFERRAL_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {REFERRAL_TYPES.map((rt) => (
+                    <SelectItem key={rt} value={rt}>{t(REFERRAL_TYPE_LABEL_KEYS[rt])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Priority" required error={errors.priority?.message}>
+            <Field label={t("common.priority")} required error={errors.priority?.message}>
               <Select onValueChange={(v) => setValue("priority", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                    <SelectItem key={p} value={p}>{t(PRIORITY_LABEL_KEYS[p])}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Referrer Name (from your profile)" required error={errors.referrerName?.message}>
+            <Field label={t("referrals.referrerNameLabel")} required error={errors.referrerName?.message}>
               <Input
                 {...register("referrerName")}
                 readOnly
                 className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
               />
             </Field>
-            <Field label="Date of Patient Contact">
+            <Field label={t("referrals.contactDateLabel")}>
               <DatePicker
                 name="contactDate_display"
                 onDateChange={(iso) => setValue("contactDate", iso)}
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label="Method of Contact">
+            <Field label={t("referrals.methodOfContactLabel")}>
               <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
-                {["Text", "Phone", "Email"].map((method) => (
+                {CONTACT_METHODS.map((method) => (
                   <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
                     <Checkbox
                       checked={contactMethods.includes(method)}
                       onCheckedChange={() => toggleContact(method)}
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
-                    <span className="text-xs text-foreground/80">{method}</span>
+                    <span className="text-xs text-foreground/80">{t(CONTACT_METHOD_LABEL_KEYS[method])}</span>
                   </label>
                 ))}
               </div>
@@ -424,11 +460,11 @@ export function CreateReferralForm({ referrerName }: Props) {
           {isPending ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              Submitting…
+              {t("referrals.submitting")}
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              Submit Referral
+              {t("referrals.submitReferral")}
               <ArrowRight className="h-4 w-4" />
             </span>
           )}

@@ -8,6 +8,7 @@ import { NavLinks } from "./nav-link";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageToggle } from "./language-toggle";
 
 export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: string }) {
   const menu = role === "admin" ? adminMenu : userMenu;
@@ -21,6 +22,7 @@ export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: 
         </div>
 
         <div className="hidden md:flex items-center gap-2">
+          {/* <LanguageToggle /> */}
           <ThemeToggle />
           <NotificationBell />
           <UserMenu role={role} name={name} />

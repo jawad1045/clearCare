@@ -16,6 +16,7 @@ import {
   notifySlackStatusChanged,
   notifySlackResultUploaded,
 } from "@/lib/slack";
+import { getServerTranslation } from "@/locale/server";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const SERVICE_TYPE = "Behavioral Health";
@@ -123,9 +124,10 @@ export async function getBHReferralsCount() {
 
 export async function createBHReferral(formData: FormData) {
   const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
 
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   const user = await prisma.user.findUnique({
@@ -133,22 +135,22 @@ export async function createBHReferral(formData: FormData) {
   });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(t("users.userNotFound"));
   }
 
   if (!user.acctId) {
-    throw new Error("No company associated with this account.");
+    throw new Error(t("referrals.errorNoCompanyAssociated"));
   }
 
   const uploadedFiles = formData.getAll("attachments") as string[];
 
   if (uploadedFiles.length > 5) {
-    throw new Error("Maximum 5 files allowed");
+    throw new Error(t("referrals.errorMaxFilesAllowed"));
   }
 
   const last4SSN = (formData.get("last4SSN") as string) ?? "";
   if (last4SSN.length !== 4) {
-    throw new Error("You can only enter the last 4 digits of the SSN");
+    throw new Error(t("referrals.errorLast4SsnOnly"));
   }
 
   const bhReferral = await prisma.mentalHealthReferral.create({
@@ -209,7 +211,8 @@ export async function getMyBHReferrals() {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    const { t } = await getServerTranslation();
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   return prisma.mentalHealthReferral.findMany({
@@ -229,7 +232,8 @@ export async function getBHReferralById(id: number) {
 export async function updateBHReferralStatus(referralId: number, status: string) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "Admin") {
-    throw new Error("Unauthorized: only admins can change referral status");
+    const { t } = await getServerTranslation();
+    throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
   }
 
   const updated = await prisma.mentalHealthReferral.update({
@@ -275,7 +279,8 @@ export async function getMyBHReferralStatusCounts() {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
-    throw new Error("Unauthorized");
+    const { t } = await getServerTranslation();
+    throw new Error(t("common.errors.unauthorized"));
   }
 
   const rows = await prisma.mentalHealthReferral.groupBy({
@@ -289,7 +294,8 @@ export async function getMyBHReferralStatusCounts() {
 export async function updateBHReferralResult(referralId: number, pdfUrl: string) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "Admin") {
-    throw new Error("Unauthorized: only admins can upload results");
+    const { t } = await getServerTranslation();
+    throw new Error(t("referrals.errorOnlyAdminsUploadResults"));
   }
 
   const referral = await prisma.mentalHealthReferral.update({

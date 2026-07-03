@@ -23,12 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDateTime } from "@/lib/format-date";
-import { REFERRAL_STATUSES, getStatusColor } from "@/lib/referral-statuses";
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+import { REFERRAL_STATUSES, getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
+import { MONTH_KEYS, MONTH_LABEL_KEYS } from "@/lib/referral-filters";
+import { useTranslation } from "@/locale/use-translation";
 
 type BHReferral = Awaited<ReturnType<typeof getMyBHReferrals>>[number];
 
@@ -38,6 +35,7 @@ type Props = {
 };
 
 export function UserBHReferralsTable({ referrals, basePath }: Props) {
+  const { t, locale } = useTranslation();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
@@ -54,7 +52,7 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
 
     if (filterStatus !== "all") result = result.filter((r) => r.status === filterStatus);
     if (filterMonth !== "all") {
-      const idx = MONTHS.indexOf(filterMonth);
+      const idx = MONTH_KEYS.indexOf(filterMonth as (typeof MONTH_KEYS)[number]);
       result = result.filter((r) => new Date(r.dateOfReferral).getMonth() === idx);
     }
 
@@ -68,30 +66,30 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
         <div className="flex flex-wrap items-center gap-3">
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t("common.allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
             {REFERRAL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{getStatusLabel(s, locale)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Months" />
+            <SelectValue placeholder={t("common.allMonths")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {MONTHS.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
+            <SelectItem value="all">{t("common.allMonths")}</SelectItem>
+            {MONTH_KEYS.map((m) => (
+              <SelectItem key={m} value={m}>{t(MONTH_LABEL_KEYS[m])}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         </div>
         <div className="flex flex-wrap items-center gap-3">
         <Input
-          placeholder="Search by client or status…"
+          placeholder={t("referrals.searchUserBhReferrals")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
@@ -103,13 +101,13 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
         <Table>
           <TableHeader className="bg-sidebar text-sidebar-foreground">
             <TableRow>
-              <TableHead className="text-sidebar-foreground">ID</TableHead>
-              <TableHead className="text-sidebar-foreground">Client</TableHead>
-              <TableHead className="text-sidebar-foreground">Phone</TableHead>
-              <TableHead className="text-sidebar-foreground">Status</TableHead>
-              <TableHead className="text-sidebar-foreground">Created</TableHead>
-              <TableHead className="text-sidebar-foreground">Last Updated</TableHead>
-              <TableHead className="text-right text-sidebar-foreground">Actions</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.id")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.client")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.phone")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.status")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.created")}</TableHead>
+              <TableHead className="text-sidebar-foreground">{t("common.lastUpdated")}</TableHead>
+              <TableHead className="text-right text-sidebar-foreground">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -119,7 +117,7 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
                   colSpan={7}
                   className="text-center text-muted-foreground py-6"
                 >
-                  No referrals found.
+                  {t("referrals.noReferralsFound")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -135,7 +133,7 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
                       style={{ backgroundColor: getStatusColor(referral.status) + "22", color: getStatusColor(referral.status), borderColor: getStatusColor(referral.status) + "55" }}
                       variant="outline"
                     >
-                      {referral.status}
+                      {getStatusLabel(referral.status, locale)}
                     </Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
@@ -147,17 +145,17 @@ export function UserBHReferralsTable({ referrals, basePath }: Props) {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link href={`${basePath}/${referral.id}`}>
-                        <Button variant="outline" size="sm">View</Button>
+                        <Button variant="outline" size="sm">{t("common.view")}</Button>
                       </Link>
                       {referral.pdfReport ? (
                         <Link href={referral.pdfReport} target="_blank" rel="noopener noreferrer" download>
                           <Button variant="outline" size="sm" className="gap-1.5">
                             <Download className="h-3.5 w-3.5" />
-                            Result
+                            {t("common.result")}
                           </Button>
                         </Link>
                       ) : (
-                        <span className="text-xs text-muted-foreground">No result</span>
+                        <span className="text-xs text-muted-foreground">{t("common.noResult")}</span>
                       )}
                     </div>
                   </TableCell>

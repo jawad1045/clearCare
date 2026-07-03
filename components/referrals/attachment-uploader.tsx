@@ -5,6 +5,7 @@ import { useUploadThing } from "@/lib/utils/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Paperclip, X, Loader2, FileText, ImageIcon } from "lucide-react";
 import { encodeAttachment } from "@/lib/parse-attachment";
+import { useTranslation } from "@/locale/use-translation";
 
 const MAX_FILES = 5;
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function AttachmentUploader({ value, onChange }: Props) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,12 +43,12 @@ export function AttachmentUploader({ value, onChange }: Props) {
       (f) => !f.type.startsWith("image/") && f.type !== "application/pdf"
     );
     if (invalid.length > 0) {
-      setError("Only images and PDF files are allowed.");
+      setError(t("referrals.onlyImagesAndPdf"));
       return;
     }
 
     if (fileNames.length + files.length > MAX_FILES) {
-      setError(`You can upload a maximum of ${MAX_FILES} files total.`);
+      setError(t("referrals.maxFilesError", { max: MAX_FILES }));
       return;
     }
 
@@ -120,11 +122,11 @@ export function AttachmentUploader({ value, onChange }: Props) {
           ) : (
             <Paperclip className="h-4 w-4" />
           )}
-          {pending ? "Uploading…" : "Attach Files"}
+          {pending ? t("referrals.uploading") : t("referrals.attachFiles")}
         </Button>
 
         <p className="text-xs text-muted-foreground">
-          Images &amp; PDFs accepted · up to {MAX_FILES} files
+          {t("referrals.attachmentsHint", { max: MAX_FILES })}
         </p>
 
         {error && <p className="text-xs text-destructive">{error}</p>}

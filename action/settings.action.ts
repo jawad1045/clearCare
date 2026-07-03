@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { DEFAULT_SESSION_TIMEOUT_MINUTES } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { getServerTranslation } from "@/locale/server";
 
 const MIN_TIMEOUT_MINUTES = 5;
 const MAX_TIMEOUT_MINUTES = 60 * 24 * 7; // 7 days
@@ -15,12 +16,14 @@ export async function getSessionTimeoutMinutes() {
 
 export async function updateSessionTimeoutMinutes(minutes: number) {
   const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
   if (!currentUser || currentUser.role !== "Admin") {
-    throw new Error("Unauthorized: only admins can change session settings");
+    throw new Error(t("settings.errorOnlyAdminsSessionSettings"));
   }
 
   if (!Number.isInteger(minutes) || minutes < MIN_TIMEOUT_MINUTES || minutes > MAX_TIMEOUT_MINUTES) {
-    throw new Error(`Session timeout must be between ${MIN_TIMEOUT_MINUTES} and ${MAX_TIMEOUT_MINUTES} minutes`);
+    throw new Error(t("settings.errorTimeoutRange", { min: MIN_TIMEOUT_MINUTES, max: MAX_TIMEOUT_MINUTES }));
   }
 
   await prisma.appSetting.upsert({
