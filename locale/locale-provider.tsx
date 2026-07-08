@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { locales, type Locale } from "./config";
 
 const LOCALE_STORAGE_KEY = "locale";
@@ -14,6 +15,7 @@ const LocaleContext = React.createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = React.useState<Locale>("en");
+  const router = useRouter();
 
   React.useEffect(() => {
     const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -26,7 +28,8 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     setLocaleState(next);
     window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
     document.cookie = `${LOCALE_STORAGE_KEY}=${next}; path=/; max-age=31536000`;
-  }, []);
+    router.refresh();
+  }, [router]);
 
   return (
     <LocaleContext.Provider value={{ locale, setLocale }}>

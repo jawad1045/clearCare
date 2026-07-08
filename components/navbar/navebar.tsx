@@ -22,7 +22,7 @@ export function Navbar({ role = "user", name }: { role: "admin" | "user"; name: 
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          {/* <LanguageToggle /> */}
+          <LanguageToggle />
           <ThemeToggle />
           <NotificationBell />
           <UserMenu role={role} name={name} />

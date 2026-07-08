@@ -7,7 +7,6 @@ import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react"
 import { loginAction } from "@/action/auth/auth.model"
 import { toast } from "sonner"
 import { useTranslation } from "@/locale/use-translation"
-import { LanguageToggle } from "@/components/navbar/language-toggle"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -63,9 +62,7 @@ export default function LoginPage() {
         background: "radial-gradient(ellipse at 50% 45%, #0d6e72 0%, #073d42 45%, #030e12 100%)",
       }}
     >
-      <div className="w-full max-w-md flex justify-end mb-2">
-        <LanguageToggle />
-      </div>
+
 
       {/* Logo + title above card */}
       <div className="flex flex-col items-center w-md text-center bg-sidebar px-4 py-2 rounded-t-lg shadow-lg shadow-black/40">
