@@ -141,8 +141,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
         <CardContent className="pt-4">
           <div className="flex gap-2">
             {/* Search — wider */}
-            <div className="flex w-80 shrink-0 flex-col gap-1.5">
-              <Label className="text-xs">{t("reports.searchLabel")}</Label>
+            <div className="flex w-70 shrink-0 flex-col gap-1.5">
+              <Label className="text-sm">{t("reports.searchLabel")}</Label>
               <Input
                 placeholder={t("reports.searchPlaceholder")}
                 value={search}
@@ -154,9 +154,9 @@ export function ReportClient({ rows, isAdmin }: Props) {
             {/* Other filters — tight row */}
             <div className="flex flex-1 gap-2">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">{t("reports.typeLabel")}</Label>
+                <Label className="text-sm">{t("reports.typeLabel")}</Label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="h-8 w-32 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-40 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("reports.allTypes")}</SelectItem>
                     <SelectItem value="Referral">{t("reports.typeReferral")}</SelectItem>
@@ -166,9 +166,9 @@ export function ReportClient({ rows, isAdmin }: Props) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">{t("common.status")}</Label>
+                <Label className="text-sm">{t("common.status")}</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-8 w-36 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-44 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
                     {REFERRAL_STATUSES.map((s) => (
@@ -179,9 +179,9 @@ export function ReportClient({ rows, isAdmin }: Props) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">{t("common.serviceType")}</Label>
+                <Label className="text-sm">{t("common.serviceType")}</Label>
                 <Select value={serviceFilter} onValueChange={setServiceFilter}>
-                  <SelectTrigger className="h-8 w-40 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-48 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("reports.allServices")}</SelectItem>
                     {SERVICE_TYPES.map((s) => (
@@ -192,7 +192,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">{t("reports.fromLabel")}</Label>
+                <Label className="text-sm">{t("reports.fromLabel")}</Label>
                 <Input
                   type="date"
                   value={dateFrom}
@@ -202,7 +202,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">{t("reports.toLabel")}</Label>
+                <Label className="text-sm">{t("reports.toLabel")}</Label>
                 <Input
                   type="date"
                   value={dateTo}

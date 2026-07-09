@@ -5,11 +5,9 @@ import { getUserReportData } from "@/action/report.action";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { ReportClient } from "@/components/reports/report-client";
@@ -30,51 +28,44 @@ export default async function UserDashboardPage() {
   const { t } = await getServerTranslation();
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-semibold text-brand">{t("dashboard.myDashboard")}</h1>
+    <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-10 py-6">
+      <div>
+        <h1 className="text-3xl font-bold text-brand">{t("dashboard.myDashboard")}</h1>
+        <p className="text-muted-foreground">{t("dashboard.totalReferralsSubmitted")}</p>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="border-t-4 border-t-brand">
-          <CardHeader>
-            <CardTitle className="text-brand">{t("dashboard.referralsSubmitted")}</CardTitle>
-            <CardDescription className="text-sm">{t("dashboard.allReferralSubmissions")}</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-brand">{t("dashboard.referralsSubmitted")}</CardTitle>
           </CardHeader>
-          <Separator />
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold text-brand">{total}</p>
-                <p className="text-sm text-muted-foreground">{t("dashboard.totalReferralsSubmitted")}</p>
-              </div>
-              <Link href="/user/referrals">
-                <Button variant="outline">
-                  {t("common.view")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+          <CardContent className="flex items-end justify-between">
+            <div>
+              <p className="text-3xl font-bold text-brand">{total}</p>
+              <p className="text-xs text-muted-foreground">{t("dashboard.allReferralSubmissions")}</p>
             </div>
+            <Link href="/user/referrals">
+              <Button variant="outline" size="sm">
+                {t("common.view")} <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
         <Card className="border-t-4 border-t-brand">
-          <CardHeader>
-            <CardTitle className="text-brand">{t("dashboard.bhReferralsSubmitted")}</CardTitle>
-            <CardDescription className="text-sm">{t("dashboard.bhReferralsHint")}</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-brand">{t("dashboard.bhReferralsSubmitted")}</CardTitle>
           </CardHeader>
-          <Separator />
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold text-brand">{bh}</p>
-                <p className="text-sm text-muted-foreground">{t("dashboard.totalBhReferralsSubmitted")}</p>
-              </div>
-              <Link href="/user/bhreferrals">
-                <Button variant="outline">
-                  {t("common.view")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+          <CardContent className="flex items-end justify-between">
+            <div>
+              <p className="text-3xl font-bold text-brand">{bh}</p>
+              <p className="text-xs text-muted-foreground">{t("dashboard.totalBhReferralsSubmitted")}</p>
             </div>
+            <Link href="/user/bhreferrals">
+              <Button variant="outline" size="sm">
+                {t("common.view")} <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
