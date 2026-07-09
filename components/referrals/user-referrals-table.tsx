@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { formatDateTime } from "@/lib/format-date";
 import { REFERRAL_STATUSES, getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
-import { MONTH_KEYS, MONTH_LABEL_KEYS, SERVICE_TYPES, SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { MONTH_KEYS, MONTH_LABEL_KEYS, SERVICE_TYPES, SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filters";
 import { useTranslation } from "@/locale/use-translation";
 
 type Referral = Awaited<ReturnType<typeof getMyReferrals>>[number];
@@ -150,7 +150,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                     {referral.parentLastName ?? "-"}
                   </TableCell>
                   <TableCell>{SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS] ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]) : referral.serviceType}</TableCell>
-                  <TableCell>{referral.priority}</TableCell>
+                  <TableCell>{getPriorityLabel(referral.priority, t)}</TableCell>
                   <TableCell>
                     <Badge
                       style={{ backgroundColor: getStatusColor(referral.status) + "22", color: getStatusColor(referral.status), borderColor: getStatusColor(referral.status) + "55" }}

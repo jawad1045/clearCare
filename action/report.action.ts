@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { getServerTranslation } from "@/locale/server";
 
 export type ReportRow = {
   id: number;
@@ -19,8 +18,7 @@ export type ReportRow = {
 export async function getAdminReportData(): Promise<ReportRow[]> {
   const session = await getCurrentUser();
   if (!session || session.role !== "Admin") {
-    const { t } = await getServerTranslation();
-    throw new Error(t("common.errors.unauthorized"));
+    return [];
   }
 
   const [referrals, bhReferrals] = await Promise.all([
@@ -67,8 +65,7 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
 export async function getUserReportData(): Promise<ReportRow[]> {
   const session = await getCurrentUser();
   if (!session) {
-    const { t } = await getServerTranslation();
-    throw new Error(t("common.errors.unauthorized"));
+    return [];
   }
 
   const [referrals, bhReferrals] = await Promise.all([

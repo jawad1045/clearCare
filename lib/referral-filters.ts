@@ -30,3 +30,13 @@ export const SERVICE_TYPE_LABEL_KEYS: Record<ServiceType, TranslationKey> = {
   "Medication Management": "common.serviceMedicationManagement",
   "IOP": "common.serviceIOP",
 };
+
+export const PRIORITY_LABEL_KEYS: Record<string, TranslationKey> = {
+  "Same-day": "referrals.prioritySameDay",
+  "24-hours": "referrals.priority24Hours",
+};
+
+export const getPriorityLabel = (priority: string, t: any): string => {
+  const key = PRIORITY_LABEL_KEYS[priority];
+  return key ? t(key) : priority;
+};

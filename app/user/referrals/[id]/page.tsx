@@ -29,7 +29,7 @@ import {
 import { appConfig } from "@/next.config";
 import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusDescription, getStatusLabel } from "@/lib/referral-statuses";
-import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filters";
 import { getServerTranslation } from "@/locale/server";
 
 type PageProps = {
@@ -211,7 +211,7 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
               <dl className="space-y-3 text-sm">
                 <InfoRow label={t("common.serviceType")} value={serviceTypeLabel} />
                 <InfoRow label={t("referrals.testType")} value={referral.type} />
-                <InfoRow label={t("common.priority")} value={referral.priority} />
+                <InfoRow label={t("common.priority")} value={getPriorityLabel(referral.priority, t)} />
                 <InfoRow
                   label={t("referrals.dateOfReferral")}
                   value={formatDate(referral.dateOfReferral)}

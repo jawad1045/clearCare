@@ -112,7 +112,7 @@ export default function LoginPage() {
               <input
                 id="contactEmail"
                 type="email"
-                placeholder="your@email.com"
+                placeholder={t("login.emailPlaceholder")}
                 autoCapitalize="none"
                 autoComplete="email"
                 autoCorrect="off"

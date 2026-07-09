@@ -12,7 +12,7 @@ import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { ResultUploader } from "@/components/referrals/result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
-import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
+import { SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filters";
 import { useTranslation } from "@/locale/use-translation";
 
 type Referral = {
@@ -133,7 +133,7 @@ function ViewTab({ referral }: { referral: Referral }) {
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("common.serviceType")} value={serviceTypeLabel} />
             <InfoRow label={t("referrals.testType")} value={referral.type} />
-            <InfoRow label={t("common.priority")} value={referral.priority} />
+            <InfoRow label={t("common.priority")} value={getPriorityLabel(referral.priority, t)} />
             <InfoRow label={t("referrals.dateOfReferral")} value={formatDate(referral.dateOfReferral)} />
             <InfoRow label={t("referrals.dateOfPatientContact")} value={formatDate(referral.datePatientContact)} />
             <InfoRow label={t("referrals.methodOfContactLabel")} value={referral.methodOfContact} />
