@@ -24,10 +24,12 @@ export function ReferralHeader({ basePath, title, subtitle, showCreate = true, t
         <p className="text-muted-foreground">{subtitle ?? `${t("referrals.manageSubtitlePrefix")} ${resolvedTitle.toLowerCase()}`}</p>
       </div>
 
-      <div className="text-center">
-        <span className="text-sm font-medium text-brand">{t("referrals.totalPrefix")} {resolvedTitle}</span>
-        <p className="text-2xl font-bold text-brand">{total ?? 0}</p>
-      </div>
+      {showCreate && (
+        <div className="text-center">
+          <span className="text-sm font-medium text-brand">{t("referrals.totalPrefix")} {resolvedTitle}</span>
+          <p className="text-2xl font-bold text-brand">{total ?? 0}</p>
+        </div>
+      )}
 
       <div>
         {showCreate ? (
