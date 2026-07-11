@@ -17,7 +17,7 @@ export function IdleTimeoutWatcher({ timeoutMinutes }: { timeoutMinutes: number 
 
     async function handleIdle() {
       await logoutAction();
-      router.push("/?expired=1");
+      
     }
 
     function resetTimer() {

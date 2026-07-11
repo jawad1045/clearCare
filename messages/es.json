@@ -451,6 +451,7 @@
     "sessionTimeoutHint": "Cuánto tiempo puede un usuario permanecer conectado antes de cerrar sesión automáticamente y tener que iniciar sesión de nuevo.",
     "sessionTimeoutUpdated": "Tiempo de espera de sesión actualizado. Los nuevos inicios de sesión usarán esta duración.",
     "sessionTimeoutFailed": "No se pudo actualizar el tiempo de espera de sesión",
+    "min1": "1 minuto",
     "min15": "15 minutos",
     "min30": "30 minutos",
     "hour1": "1 hora",

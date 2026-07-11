@@ -6,7 +6,7 @@ import { DEFAULT_SESSION_TIMEOUT_MINUTES } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getServerTranslation } from "@/locale/server";
 
-const MIN_TIMEOUT_MINUTES = 5;
+const MIN_TIMEOUT_MINUTES = 1;
 const MAX_TIMEOUT_MINUTES = 60 * 24 * 7; // 7 days
 
 export async function getSessionTimeoutMinutes() {

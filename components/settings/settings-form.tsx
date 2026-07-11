@@ -86,6 +86,7 @@ function NotificationsSection() {
 }
 
 const SESSION_TIMEOUT_OPTIONS: { value: number; labelKey: TranslationKey }[] = [
+  { value: 1, labelKey: "settings.min1" },
   { value: 15, labelKey: "settings.min15" },
   { value: 30, labelKey: "settings.min30" },
   { value: 60, labelKey: "settings.hour1" },

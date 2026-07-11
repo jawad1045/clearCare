@@ -451,6 +451,7 @@
     "sessionTimeoutHint": "How long a user can stay signed in before they're automatically logged out and must log in again.",
     "sessionTimeoutUpdated": "Session timeout updated. New logins will use this duration.",
     "sessionTimeoutFailed": "Failed to update session timeout",
+    "min1": "1 minute",
     "min15": "15 minutes",
     "min30": "30 minutes",
     "hour1": "1 hour",
