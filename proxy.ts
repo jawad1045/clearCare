@@ -22,7 +22,6 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (!currentUser) {
       const url = new URL('/', request.url)
-      url.searchParams.set('redirect', pathname)
       if (sessionExpired) url.searchParams.set('expired', '1')
       return NextResponse.redirect(url)
     }
@@ -35,7 +34,6 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith('/user')) {
     if (!currentUser) {
       const url = new URL('/', request.url)
-      url.searchParams.set('redirect', pathname)
       if (sessionExpired) url.searchParams.set('expired', '1')
       return NextResponse.redirect(url)
     }
