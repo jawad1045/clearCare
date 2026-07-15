@@ -96,19 +96,13 @@ const SESSION_TIMEOUT_OPTIONS: { value: number; labelKey: TranslationKey }[] = [
   { value: 10080, labelKey: "settings.days7" },
 ];
 
-function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeoutMinutes: number }) {
+function SystemSection({ initialSessionTimeoutMinutes, portalName, supportEmail }: { initialSessionTimeoutMinutes: number; portalName: string; supportEmail: string }) {
   const { t } = useTranslation();
-  const [companyName, setCompanyName] = useState("HWP Portal");
-  const [supportEmail, setSupportEmail] = useState("support@hwp.com");
   const [sessionTimeout, setSessionTimeout] = useState(initialSessionTimeoutMinutes);
-  const [saving, setSaving] = useState(false);
   const [savingTimeout, setSavingTimeout] = useState(false);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setSaving(false);
     toast.success(t("settings.systemSettingsSaved"));
   }
 
@@ -136,17 +130,17 @@ function SystemSection({ initialSessionTimeoutMinutes }: { initialSessionTimeout
       <form onSubmit={handleSave} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="company-name">{t("settings.portalNameLabel")}</Label>
-          <Input id="company-name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t("settings.portalNamePlaceholder")} />
+          <Input id="company-name" value={portalName} readOnly />
           <p className="text-sm text-muted-foreground">{t("settings.portalNameHint")}</p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="support-email">{t("settings.supportEmailLabel")}</Label>
-          <Input id="support-email" type="email" value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} placeholder="support@hwp.com" />
+          <Input id="support-email" type="email" value={supportEmail} readOnly />
           <p className="text-sm text-muted-foreground">{t("settings.supportEmailHint")}</p>
         </div>
-        <Button type="submit" disabled={saving} className="flex items-center gap-2">
+        <Button type="submit" disabled className="flex items-center gap-2 opacity-60 cursor-not-allowed">
           <Save className="h-4 w-4" />
-          {saving ? t("common.saving") : t("settings.saveChangesBtn")}
+          {t("settings.readOnlyField")}
         </Button>
       </form>
 
@@ -233,12 +227,12 @@ function SidebarNav({ active, onChange }: { active: NavId; onChange: (id: NavId)
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
-export function SettingsForm({ initialSessionTimeoutMinutes }: { initialSessionTimeoutMinutes: number }) {
+export function SettingsForm({ initialSessionTimeoutMinutes, portalName, supportEmail }: { initialSessionTimeoutMinutes: number; portalName: string; supportEmail: string }) {
   const [active, setActive] = useState<NavId>("notifications");
 
   const sectionMap: Record<NavId, React.ReactNode> = {
     notifications: <NotificationsSection />,
-    system: <SystemSection initialSessionTimeoutMinutes={initialSessionTimeoutMinutes} />,
+    system: <SystemSection initialSessionTimeoutMinutes={initialSessionTimeoutMinutes} portalName={portalName} supportEmail={supportEmail} />,
   };
 
   return (

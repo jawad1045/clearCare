@@ -17,6 +17,9 @@ export default async function AdminSettingsPage() {
   const sessionTimeoutMinutes = await getSessionTimeoutMinutes();
   const { t } = await getServerTranslation();
 
+  const portalName = process.env.NEXT_PUBLIC_APP_NAME ?? "HWP Portal";
+  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@hwp.com";
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 pb-16">
       <div className="space-y-0.5">
@@ -26,7 +29,11 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
       <Separator />
-      <SettingsForm initialSessionTimeoutMinutes={sessionTimeoutMinutes} />
+      <SettingsForm
+        initialSessionTimeoutMinutes={sessionTimeoutMinutes}
+        portalName={portalName}
+        supportEmail={supportEmail}
+      />
     </div>
   );
 }
