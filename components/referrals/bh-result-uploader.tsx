@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useUploadThing } from "@/lib/utils/uploadthing";
+import { uploadFileToDropbox } from "@/lib/utils/dropbox-upload";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, Upload, Download } from "lucide-react";
 import { updateBHReferralResult } from "@/action/bh-referral.action";
@@ -21,13 +21,6 @@ export function BHResultUploader({ referralId, currentResult }: Props) {
   const [resultUrl, setResultUrl] = useState(currentResult);
   const [isPending, startTransition] = useTransition();
 
-  const { startUpload } = useUploadThing("imageUploader", {
-    onUploadError: (err) => {
-      toast.error(t("referrals.uploadFailedPrefix") + err.message);
-      setUploading(false);
-    },
-  });
-
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
@@ -39,11 +32,10 @@ export function BHResultUploader({ referralId, currentResult }: Props) {
     }
 
     setUploading(true);
-    const res = await startUpload([files[0]]);
-    setUploading(false);
 
-    if (res?.[0]) {
-      const url = res[0].ufsUrl;
+    try {
+      const uploaded = await uploadFileToDropbox(files[0]);
+      const url = uploaded.url;
       startTransition(async () => {
         try {
           await updateBHReferralResult(referralId, url);
@@ -53,6 +45,10 @@ export function BHResultUploader({ referralId, currentResult }: Props) {
           toast.error(t("referrals.resultUploadFailed"));
         }
       });
+    } catch (error) {
+      toast.error(t("referrals.uploadFailedPrefix") + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setUploading(false);
     }
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useUploadThing } from "@/lib/utils/uploadthing";
+import { uploadFileToDropbox } from "@/lib/utils/dropbox-upload";
 import { Button } from "@/components/ui/button";
 import { Paperclip, X, Loader2, FileText, ImageIcon } from "lucide-react";
 import { encodeAttachment } from "@/lib/parse-attachment";
@@ -26,13 +26,6 @@ export function AttachmentUploader({ value, onChange }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [fileNames, setFileNames] = useState<UploadedFile[]>([]);
 
-  const { startUpload } = useUploadThing("imageUploader", {
-    onUploadError: (err) => {
-      setError(err.message);
-      setPending(false);
-    },
-  });
-
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
@@ -53,13 +46,22 @@ export function AttachmentUploader({ value, onChange }: Props) {
     }
 
     setPending(true);
-    const res = await startUpload(files);
-    if (res) {
-      const uploaded = res.map((r, i) => ({ name: files[i]?.name ?? r.name, url: r.ufsUrl }));
+    setError(null);
+
+    try {
+      const uploaded = [] as UploadedFile[];
+      for (const file of files) {
+        const result = await uploadFileToDropbox(file);
+        uploaded.push({ name: result.name ?? file.name, url: result.url });
+      }
+
       setFileNames((prev) => [...prev, ...uploaded]);
       onChange([...value, ...uploaded.map((u) => encodeAttachment(u.name, u.url))]);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   function remove(actualUrl: string) {
