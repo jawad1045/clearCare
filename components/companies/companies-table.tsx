@@ -41,8 +41,7 @@ export function CompaniesTable({ companies }: { companies: Company[] }) {
             companies.map((company, i) => (
               <tr
                 key={company.id}
-                className="transition-colors hover:bg-muted/50"
-                style={i % 2 === 1 ? { backgroundColor: "#f8fafc" } : { backgroundColor: "#ffffff" }}
+                className={`transition-colors hover:bg-muted/50 ${i % 2 === 1 ? "table-row-even" : "table-row-odd"}`}
               >
                 <td className="px-4 py-3 font-medium">{company.organization}</td>
                 <td className="px-4 py-3 text-muted-foreground">{company.contactEmail}</td>

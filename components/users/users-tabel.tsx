@@ -70,9 +70,8 @@ export function UsersTable({
             </TableRow>
           ) : (
             users.map((user, i) => (
-              <TableRow key={user.id} className="transition-colors hover:bg-muted/50" 
-              style={i % 2 === 1 ? { backgroundColor: "#f8fafc" } : { backgroundColor: "#ffffff" }}
-              >
+              <TableRow key={user.id} className={`transition-colors hover:bg-muted/50
+               ${i % 2 === 1 ? "table-row-even" : "table-row-odd"}`}>
                 <TableCell>
                   {user.contactFirstName}{" "}
                   {user.contactLastName}

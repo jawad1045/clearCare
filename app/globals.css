@@ -133,6 +133,19 @@
   html {
     @apply font-sans;
   }
+  .table-row-even {
+    background-color: #f8fafc;
+  }
+  .table-row-odd {
+    background-color: #ffffff;
+  }
+
+  .dark .table-row-even {
+    background-color: #1C2D35; /* or your dark "muted" tone */
+  }
+  .dark .table-row-odd {
+    background-color: oklch(0.22 0.03 205); /* or your dark "background" tone */
+  }
 }
 
 @media print {
