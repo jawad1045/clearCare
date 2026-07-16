@@ -1,5 +1,7 @@
+// app/api/dropbox-upload/route.ts
 import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { getDropboxAccessToken } from "@/lib/dropbox/get-access-token";
 
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_SHARE_URL = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
@@ -17,9 +19,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const accessToken = process.env.DROPBOX_ACCESS_TOKEN;
-  if (!accessToken) {
-    return NextResponse.json({ error: "Dropbox storage is not configured." }, { status: 500 });
+  let accessToken: string;
+  try {
+    accessToken = await getDropboxAccessToken();
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Dropbox storage is not configured." },
+      { status: 500 }
+    );
   }
 
   const formData = await request.formData();
@@ -63,10 +70,7 @@ export async function POST(request: Request) {
     },
     body: JSON.stringify({
       path,
-      settings: {
-        access: "viewer",
-        allow_download: true,
-      },
+      settings: { access: "viewer", allow_download: true },
     }),
   });
 
@@ -78,9 +82,5 @@ export async function POST(request: Request) {
   const shareData = (await shareResponse.json()) as { url?: string };
   const sharedUrl = shareData.url?.replace("dl=0", "raw=1") ?? "";
 
-  return NextResponse.json({
-    url: sharedUrl,
-    name: file.name,
-    path,
-  });
+  return NextResponse.json({ url: sharedUrl, name: file.name, path });
 }
