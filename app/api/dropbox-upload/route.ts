@@ -2,12 +2,13 @@
 import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getDropboxAccessToken } from "@/lib/dropbox/get-access-token";
+import { getClearCareNamespaceHeader } from "@/lib/dropbox/namespace_header";
 
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
-const DROPBOX_SHARE_URL = "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings";
 
 function buildDropboxPath(fileName: string) {
-  const prefix = (process.env.DROPBOX_UPLOAD_PATH_PREFIX ?? "/uploads").replace(/\/+$/, "");
+  // Relative to the CLEAR-CARE namespace root — no "/CLEAR-CARE" prefix needed
+  const prefix = (process.env.DROPBOX_UPLOAD_SUBFOLDER ?? "/uploads").replace(/\/+$/, "");
   const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   return `${prefix}/${timestamp}-${safeName}`;
@@ -20,8 +21,10 @@ export async function POST(request: Request) {
   }
 
   let accessToken: string;
+  let namespaceHeader: string;
   try {
     accessToken = await getDropboxAccessToken();
+    namespaceHeader = getClearCareNamespaceHeader();
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Dropbox storage is not configured." },
@@ -43,6 +46,7 @@ export async function POST(request: Request) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      "Dropbox-API-Path-Root": namespaceHeader,
       "Dropbox-API-Arg": JSON.stringify({
         path: dropboxPath,
         mode: "add",
@@ -62,25 +66,11 @@ export async function POST(request: Request) {
   const uploadData = (await uploadResponse.json()) as { path_display?: string };
   const path = uploadData.path_display ?? dropboxPath;
 
-  const shareResponse = await fetch(DROPBOX_SHARE_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      path,
-      settings: { access: "viewer", allow_download: true },
-    }),
+  const proxyUrl = `/api/dropbox-file?path=${encodeURIComponent(path)}`;
+
+  return NextResponse.json({
+    url: proxyUrl,
+    name: file.name,
+    path,
   });
-
-  if (!shareResponse.ok) {
-    const errorText = await shareResponse.text();
-    return NextResponse.json({ error: errorText || "Dropbox link creation failed." }, { status: 502 });
-  }
-
-  const shareData = (await shareResponse.json()) as { url?: string };
-  const sharedUrl = shareData.url?.replace("dl=0", "raw=1") ?? "";
-
-  return NextResponse.json({ url: sharedUrl, name: file.name, path });
 }
