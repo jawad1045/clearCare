@@ -28,15 +28,15 @@ async function main() {
       contactPhone: '512-555-0100',
       contactFirstName: 'System',
       contactLastName: 'Administrator',
-      contactEmail: 'admin@hwp-system.com',
+      contactEmail: 'rehanemis@gmail.com',
     },
   });
   console.log(`✅ Organization created: ${company.organization}`);
 
   // 3. Generate secure password hashes using bcrypt
   const saltRounds = 10;
-  const adminHashedPassword = await bcrypt.hash('SuperAdminPassword123!', saltRounds);
-  const userHashedPassword = await bcrypt.hash('StandardUserPassword123!', saltRounds);
+  const adminHashedPassword = await bcrypt.hash('hwp123456', saltRounds);
+  const userHashedPassword = await bcrypt.hash('user123456', saltRounds);
   const newCustomUserHashedPassword = await bcrypt.hash('12345', saltRounds); // Hashing '12345'
 
   // 4. Record 1: The Global HWP Admin Account
@@ -46,7 +46,7 @@ async function main() {
       organization: company.organization,
       contactFirstName: 'Chief',
       contactLastName: 'Admin',
-      contactEmail: 'admin@hwp-system.com',
+      contactEmail: 'rehanemis@gmail.com',
       contactPhone: '512-555-0101',
       password: adminHashedPassword,
       userRole: 'Admin',
@@ -71,21 +71,6 @@ async function main() {
   });
   console.log(`👤 Record 2 Added: Company User Account (${regularUserAccount.contactEmail})`);
 
-  // 6. Record 3: New Custom User Account
-  const newCustomUser = await prisma.user.create({
-    data: {
-      acctId: company.id,
-      organization: company.organization,
-      contactFirstName: 'Test',
-      contactLastName: 'User',
-      contactEmail: 'xyz@abc.com', // Your new test email
-      contactPhone: '512-555-0103',
-      password: newCustomUserHashedPassword, // Securely encrypted '12345'
-      userRole: 'User',
-      isActive: true,
-    },
-  });
-  console.log(`👤 Record 3 Added: Custom User Account (${newCustomUser.contactEmail})`);
 
   console.log('\n🎉 System records successfully provisioned! Ready to test login.');
 }
