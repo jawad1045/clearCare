@@ -2,17 +2,16 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# Install dependencies
+RUN apk add --no-cache libc6-compat openssl
+
 COPY package*.json ./
+
 RUN npm ci
 
-# Copy project
 COPY . .
 
-# Generate Prisma Client
 RUN npx prisma generate
 
-# Build Next.js
 RUN npm run build
 
 EXPOSE 3000
