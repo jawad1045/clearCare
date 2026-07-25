@@ -47,6 +47,12 @@
     "roleUser": "User",
     "allRoles": "All Roles",
     "recordInfo": "Record Info",
+    "add": "Add",
+    "addCustomTitle": "Add custom title",
+    "deleteTitleConfirmTitle": "Delete title",
+    "titleAlreadyExists": "This title already exists",
+    "somethingWentWrong": "Something went wrong",
+    "deleteTitleConfirmDescription": "Are you sure you want to delete",
     "errors": {
       "unauthorized": "Unauthorized"
     },
@@ -180,6 +186,7 @@
     "unexpectedServerError": "An unexpected server error occurred."
   },
   "companies": {
+    "customTitlePlaceholder": "Enter custom title",
     "searchPlaceholder": "Search companies...",
     "noCompaniesFound": "No companies found",
     "totalCompanies": "Total Companies",

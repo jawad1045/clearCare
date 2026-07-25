@@ -47,6 +47,12 @@
     "roleUser": "Usuario",
     "allRoles": "Todos los Roles",
     "recordInfo": "Información del Registro",
+    "add": "Agregar",
+    "addCustomTitle": "Agregar título personalizado",
+    "deleteTitleConfirmTitle": "Eliminar título",
+    "titleAlreadyExists": "Este título ya existe",
+    "somethingWentWrong": "Algo salió mal",
+    "deleteTitleConfirmDescription": "¿Estás seguro de que deseas eliminar?",
     "errors": {
       "unauthorized": "No autorizado"
     },
@@ -180,6 +186,7 @@
     "unexpectedServerError": "Ocurrió un error inesperado en el servidor."
   },
   "companies": {
+    "customTitlePlaceholder": "Ingresar título personalizado",
     "searchPlaceholder": "Buscar empresas...",
     "noCompaniesFound": "No se encontraron empresas",
     "totalCompanies": "Total de Empresas",
