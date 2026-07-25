@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { KeyRound, UserPlus, Building2, MapPin, ShieldCheck, FileText } from "lucide-react";
+import { KeyRound, UserPlus, Building2, MapPin, ShieldCheck, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { createUser } from "@/action/user.action";
+import { createUserTitle, deleteUserTitle } from "@/action/user-title.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { formatPhoneInput } from "@/lib/utils";
 
@@ -33,16 +34,17 @@ type Company = {
   zip: string | null;
 };
 
-type CreateUserFormProps = { companies: Company[] };
+interface CustomTitle {
+  id: number;
+  name: string;
+}
 
-const TITLES = ["Administrator", "Manager", "Counselor", "Nurse", "Doctor"] as const;
-const TITLE_LABEL_KEYS = {
-  Administrator: "common.titleAdministrator",
-  Manager: "common.titleManager",
-  Counselor: "common.titleCounselor",
-  Nurse: "common.titleNurse",
-  Doctor: "common.titleDoctor",
-} as const;
+type CreateUserFormProps = {
+  companies: Company[];
+  initialCustomTitles?: CustomTitle[];
+};
+
+const ADD_CUSTOM_TITLE_VALUE = "__add_custom__";
 
 function useUserSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(
@@ -117,7 +119,7 @@ function Field({ label, required, error, children, full }: {
   );
 }
 
-export function CreateUserForm({ companies }: CreateUserFormProps) {
+export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUserFormProps) {
   const { t } = useTranslation();
   const userSchema = useUserSchema(t);
   const router = useRouter();
@@ -125,6 +127,14 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<UserFormValues | null>(null);
+
+  // Custom title state (DB-backed, shared with CreateCompanyForm)
+  const [customTitles, setCustomTitles] = useState<CustomTitle[]>(initialCustomTitles);
+  const [isAddingTitle, setIsAddingTitle] = useState(false);
+  const [newTitleInput, setNewTitleInput] = useState("");
+  const [titleToDelete, setTitleToDelete] = useState<CustomTitle | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [isTitlePending, startTitleTransition] = useTransition();
 
   const {
     register,
@@ -147,11 +157,55 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
   });
 
   const role = watch("role");
+  const selectedTitle = watch("title") ?? "";
+
+  const allTitleNames = useMemo(
+    () => customTitles.map((c) => c.name),
+    [customTitles]
+  );
 
   function handleRoleChange(value: string) {
     setValue("role", value, { shouldValidate: true });
     setValue("acctId", "");
     setSelectedCompany(null);
+  }
+
+  function handleAddCustomTitle() {
+    const trimmed = newTitleInput.trim();
+    setTitleError(null);
+    if (!trimmed) return;
+    if (allTitleNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) {
+      setTitleError(t("common.titleAlreadyExists"));
+      return;
+    }
+
+    startTitleTransition(async () => {
+      const result = await createUserTitle(trimmed);
+      if (result.error || !result.data) {
+        setTitleError(result.error ?? t("common.somethingWentWrong"));
+        return;
+      }
+      setCustomTitles((prev) => [...prev, result.data]);
+      setValue("title", result.data.name, { shouldValidate: true });
+      setNewTitleInput("");
+      setIsAddingTitle(false);
+    });
+  }
+
+  function handleDeleteCustomTitle(title: CustomTitle) {
+    const previous = customTitles;
+    setCustomTitles((prev) => prev.filter((c) => c.id !== title.id));
+    if (selectedTitle === title.name) {
+      setValue("title", "", { shouldValidate: true });
+    }
+    setTitleToDelete(null);
+
+    startTitleTransition(async () => {
+      const result = await deleteUserTitle(title.id);
+      if (result.error) {
+        setCustomTitles(previous);
+      }
+    });
   }
 
   async function submitUser(values: UserFormValues) {
@@ -219,6 +273,20 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
           description={t("users.createConfirmDescription")}
           confirmLabel={t("users.createUser")}
         />
+
+        <ConfirmDialog
+          open={titleToDelete !== null}
+          onConfirm={() => titleToDelete && handleDeleteCustomTitle(titleToDelete)}
+          onCancel={() => setTitleToDelete(null)}
+          title={t("common.deleteTitleConfirmTitle")}
+          description={
+            titleToDelete
+              ? `${t("common.deleteTitleConfirmDescription")} "${titleToDelete.name}"?`
+              : t("common.deleteTitleConfirmDescription")
+          }
+          confirmLabel={t("common.delete")}
+        />
+
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
           {/* Organization */}
@@ -306,18 +374,94 @@ export function CreateUserForm({ companies }: CreateUserFormProps) {
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
-            <Field label={t("common.title")}>
-              <Select onValueChange={(v) => setValue("title", v)}>
-                <SelectTrigger className="w-full border-border focus:ring-primary">
-                  <SelectValue placeholder={t("common.selectTitlePlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {TITLES.map((title) => (
-                    <SelectItem key={title} value={title}>{t(TITLE_LABEL_KEYS[title])}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+
+            {/* Title — select existing, add new, or delete custom ones */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-foreground/80">{t("common.title")}</Label>
+
+              {isAddingTitle ? (
+                <div className="space-y-1">
+                  <div className="flex gap-2">
+                    <Input
+                      autoFocus
+                      value={newTitleInput}
+                      disabled={isTitlePending}
+                      onChange={(e) => { setNewTitleInput(e.target.value); setTitleError(null); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomTitle();
+                        }
+                        if (e.key === "Escape") {
+                          setIsAddingTitle(false);
+                          setNewTitleInput("");
+                          setTitleError(null);
+                        }
+                      }}
+                      placeholder={t("companies.customTitlePlaceholder")}
+                      className="border-border bg-background focus-visible:ring-primary"
+                    />
+                    <Button type="button" size="sm" onClick={handleAddCustomTitle} disabled={isTitlePending}>
+                      {isTitlePending ? t("common.saving") : t("common.add")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={isTitlePending}
+                      onClick={() => { setIsAddingTitle(false); setNewTitleInput(""); setTitleError(null); }}
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                  </div>
+                  {titleError && <p className="text-xs text-destructive">{titleError}</p>}
+                </div>
+              ) : (
+                <Select
+                  value={selectedTitle || undefined}
+                  onValueChange={(v) => {
+                    if (v === ADD_CUSTOM_TITLE_VALUE) {
+                      setIsAddingTitle(true);
+                      return;
+                    }
+                    setValue("title", v, { shouldValidate: true });
+                  }}
+                >
+                  <SelectTrigger className="w-full border-border focus:ring-primary">
+                    <SelectValue placeholder={t("common.selectTitlePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customTitles.map((title) => (
+                      <SelectItem
+                        key={title.id}
+                        value={title.name}
+                        className="group relative pr-8 group-hover:[&>span:first-child]:opacity-0 [&>span:first-child]:transition-opacity"
+                      >
+                        <span className="flex-1">{title.name}</span>
+                        <button
+                          type="button"
+                          aria-label={t("common.delete")}
+                          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setTitleToDelete(title);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </SelectItem>
+                    ))}
+
+                    <SelectItem value={ADD_CUSTOM_TITLE_VALUE} className="font-medium text-primary">
+                      + {t("common.addCustomTitle")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </FieldGroup>
 
           <Separator className="bg-border/60" />
