@@ -20,11 +20,12 @@ export function CompanyHeader({ total }: { total: number }) {
         <h1 className="text-3xl font-bold text-brand">{t("companies.pageTitle")}</h1>
         <p className="text-muted-foreground">{t("companies.pageSubtitle")}</p>
       </div>
-
-      <Link href="/admin/companies/create">
-      <Plus className="mr-2 h-4 w-4" />
-        <Button className="px-6 py-5">{t("companies.addCompany")}</Button>
-      </Link>
+      <Button asChild className="px-6 py-5">
+        <Link href="/admin/companies/create">
+            <Plus className="mr-2 h-4 w-4" />
+            {t("companies.addCompany")}
+        </Link>
+        </Button>
     </div>
   );
 }
