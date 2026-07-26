@@ -1,8 +1,10 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@yourdomain.com";
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "HWS";
+const FROM = process.env.RESEND_FROM_EMAIL ?? "admin@healthworkspros.net";
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "HealthWorksPros";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://clearcarenj.com";
+const LOGO_URL = `${APP_URL}/logo.png`;
 
 function baseLayout(body: string) {
   return `
@@ -18,7 +20,7 @@ function baseLayout(body: string) {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:#1C2D35;padding:20px 32px;">
-            <span style="color:#ffffff;font-size:18px;font-weight:bold;">${APP_NAME}</span>
+            <img src="${LOGO_URL}" alt="${APP_NAME}" height="32" style="height:32px;width:auto;display:block;border:0;outline:none;text-decoration:none;" />
           </td>
         </tr>
         <tr>
