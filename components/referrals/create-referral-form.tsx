@@ -47,10 +47,11 @@ const PRIORITY_LABEL_KEYS: Record<(typeof PRIORITIES)[number], TranslationKey> =
   "Same-day": "referrals.prioritySameDay",
   "24-hours": "referrals.priority24Hours",
 };
-const GENDERS = ["Male", "Female", "Other"] as const;
+const GENDERS = ["Male", "Female", "Non-Binary", "Other"] as const;
 const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
   Male: "common.genderMale",
   Female: "common.genderFemale",
+  "Non-Binary": "common.genderNonBinary",
   Other: "common.genderOther",
 };
 const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;

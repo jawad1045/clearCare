@@ -27,11 +27,25 @@ import { toast } from "sonner";
 import { useTranslation } from "@/locale/use-translation";
 import type { TranslationKey } from "@/locale/config";
 
-const GENDERS = ["Male", "Female", "Other"] as const;
+const GENDERS = ["Male", "Female", "Non-Binary", "Other"] as const;
 const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
   Male: "common.genderMale",
   Female: "common.genderFemale",
+  "Non-Binary": "common.genderNonBinary",
   Other: "common.genderOther",
+};
+
+const REFERRAL_TYPES = [
+  "Psych Evaluation (Youth)",
+  "Psych Evaluation (Adult)",
+  "Neuro-developmental Evaluation",
+  "Neurological",
+] as const;
+const REFERRAL_TYPE_LABEL_KEYS: Record<(typeof REFERRAL_TYPES)[number], TranslationKey> = {
+  "Psych Evaluation (Youth)": "referrals.referralTypePsychYouth",
+  "Psych Evaluation (Adult)": "referrals.referralTypePsychAdult",
+  "Neuro-developmental Evaluation": "referrals.referralTypeNeuroDevelopmental",
+  Neurological: "referrals.referralTypeNeurological",
 };
 
 function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
@@ -51,6 +65,7 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           .regex(/^\d{4}$/, t("referrals.last4SsnFormat")),
         email: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
         gender: z.string().min(1, t("referrals.genderRequired")),
+        referralType: z.string().min(1, t("referrals.referralTypeRequired")),
         referrerName: z.string().optional(),
         notes: z.string().optional(),
       }),
@@ -107,6 +122,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
       last4SSN: "",
       email: "",
       gender: "",
+      referralType: "",
       referrerName,
       notes: "",
     },
@@ -120,6 +136,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
     formData.set("last4SSN", values.last4SSN);
     formData.set("email", values.email ?? "");
     formData.set("gender", values.gender);
+    formData.set("referralType", values.referralType);
     formData.set("referrerName", values.referrerName ?? "");
     formData.set("notes", values.notes ?? "");
     attachments.forEach((url) => formData.append("attachments", url));
@@ -239,6 +256,22 @@ export function CreateBHReferralForm({ referrerName }: Props) {
         {/* ── Referral Details ── */}
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field
+              label={t("referrals.referralTypeLabel")}
+              required
+              error={errors.referralType?.message}
+            >
+              <Select onValueChange={(v) => setValue("referralType", v, { shouldValidate: true })}>
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {REFERRAL_TYPES.map((rt) => (
+                    <SelectItem key={rt} value={rt}>{t(REFERRAL_TYPE_LABEL_KEYS[rt])}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
             <Field label={t("referrals.referrerNameLabel")}>
               <Input
                 {...register("referrerName")}

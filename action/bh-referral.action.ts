@@ -21,6 +21,13 @@ import { getServerTranslation } from "@/locale/server";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const SERVICE_TYPE = "Behavioral Health";
 
+const VALID_REFERRAL_TYPES = [
+  "Psych Evaluation (Youth)",
+  "Psych Evaluation (Adult)",
+  "Neuro-developmental Evaluation",
+  "Neurological",
+] as const;
+
 async function getAdmins() {
   return prisma.user.findMany({ where: { userRole: "Admin" } });
 }
@@ -153,6 +160,11 @@ export async function createBHReferral(formData: FormData) {
     throw new Error(t("referrals.errorLast4SsnOnly"));
   }
 
+  const referralType = (formData.get("referralType") as string) ?? "";
+  if (!VALID_REFERRAL_TYPES.includes(referralType as (typeof VALID_REFERRAL_TYPES)[number])) {
+    throw new Error(t("referrals.errorInvalidReferralType"));
+  }
+
   const bhReferral = await prisma.mentalHealthReferral.create({
     data: {
       userId: user.id,
@@ -163,6 +175,7 @@ export async function createBHReferral(formData: FormData) {
       last4SSN,
       email: (formData.get("email") as string) || null,
       gender: formData.get("gender") as string,
+      referralType,
       referName: (formData.get("referrerName") as string) || `${user.contactFirstName} ${user.contactLastName}`,
       notes: (formData.get("notes") as string) || null,
       clientAttachments: uploadedFiles,
