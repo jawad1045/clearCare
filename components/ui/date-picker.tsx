@@ -90,7 +90,7 @@ export function DatePicker({ name, required, onDateChange, className }: DatePick
             startMonth={new Date(1920, 0)}
             endMonth={new Date()}
             disabled={(d) => d > new Date()}
-            defaultMonth={selected ?? new Date(2000, 0)}
+            defaultMonth={selected ?? new Date()}
           />
         </PopoverContent>
       </Popover>

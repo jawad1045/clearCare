@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { calcAge, formatPhoneInput } from "@/lib/utils";
+import { calcAge, formatPhoneInput, formatSSNInput } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -373,8 +373,11 @@ export function CreateReferralForm({ referrerName }: Props) {
               <div className="relative">
                 <Input
                   type={showSSN ? "text" : "password"}
-                  {...register("ssn")}
+                  {...register("ssn", {
+                    onChange: (e) => { e.target.value = formatSSNInput(e.target.value); },
+                  })}
                   placeholder={t("referrals.ssnPlaceholder")}
+                  maxLength={11}
                   className="border-border bg-background pr-10 focus-visible:ring-primary"
                 />
                 <button

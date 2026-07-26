@@ -56,3 +56,12 @@ export async function lookupZipCode(zip: string): Promise<{ city: string; state:
     return null;
   }
 }
+
+export function formatSSNInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 9);
+  const parts: string[] = [];
+  if (digits.length > 0) parts.push(digits.slice(0, 3));
+  if (digits.length > 3) parts.push(digits.slice(3, 5));
+  if (digits.length > 5) parts.push(digits.slice(5, 9));
+  return parts.join("-");
+}
