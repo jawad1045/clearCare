@@ -101,6 +101,7 @@ model MentalHealthReferral {
   phone             String    @db.VarChar(20)
   last4SSN          String    @map("Last_4_SSN") @db.VarChar(4)
   email             String?   @db.VarChar(255)
+  referralType     String?   @map("Referral_Type") @db.VarChar(100)
   gender            String    @db.VarChar(20)
   status            String    @default("Pending") @db.VarChar(50)
   appointmentDate   DateTime? @map("Appointment_Date") @db.Date
