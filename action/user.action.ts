@@ -14,6 +14,20 @@ import { getServerTranslation } from "@/locale/server";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+export async function checkEmailExists(email: string) {
+  if (!email) return false;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      contactEmail: email.toLowerCase(),
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return !!user;
+}
 type GetUsersParams = {
   page?: number;
   limit?: number;

@@ -1,5 +1,7 @@
 {
   "common": {
+    "checkingEmail": "Checking email…",
+    "emailAlreadyRegistered": "This email is already registered",
     "serviceDrugTestOM": "Drug Test (OM)",
     "serviceNewEmploymentOM": "New Employment (OM)",
     "servicePrimaryCare": "Primary Care",

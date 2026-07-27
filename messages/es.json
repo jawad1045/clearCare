@@ -1,5 +1,7 @@
 {
   "common": {
+    "emailAlreadyRegistered": "Este correo electrónico ya está registrado",
+    "checkingEmail": "Verificando correo electrónico…",
     "serviceDrugTestOM": "Prueba de Droga (OM)",
     "serviceNewEmploymentOM": "Nuevo Empleo (OM)",
     "servicePrimaryCare": "Atención Primaria",

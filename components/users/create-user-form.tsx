@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +8,7 @@ import { z } from "zod";
 import { KeyRound, UserPlus, Building2, MapPin, ShieldCheck, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { createUser } from "@/action/user.action";
+import { createUser, checkEmailExists } from "@/action/user.action";
 import { createUserTitle, deleteUserTitle } from "@/action/user-title.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { formatPhoneInput } from "@/lib/utils";
@@ -127,7 +127,8 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<UserFormValues | null>(null);
-
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   // Custom title state (DB-backed, shared with CreateCompanyForm)
   const [customTitles, setCustomTitles] = useState<CustomTitle[]>(initialCustomTitles);
   const [isAddingTitle, setIsAddingTitle] = useState(false);
@@ -158,11 +159,25 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
 
   const role = watch("role");
   const selectedTitle = watch("title") ?? "";
+  const email = watch("email");
+  useEffect(() => {
+    if (!email) {
+      setEmailExists(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      validateEmail(email);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [email]);
 
   const allTitleNames = useMemo(
     () => customTitles.map((c) => c.name),
     [customTitles]
   );
+
 
   function handleRoleChange(value: string) {
     setValue("role", value, { shouldValidate: true });
@@ -190,6 +205,29 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
       setNewTitleInput("");
       setIsAddingTitle(false);
     });
+  }
+
+  async function validateEmail(email: string) {
+    if (!email) {
+      setEmailExists(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setEmailExists(false);
+      return;
+    }
+
+    setCheckingEmail(true);
+
+    try {
+      const exists = await checkEmailExists(email);
+      setEmailExists(exists);
+    } finally {
+      setCheckingEmail(false);
+    }
   }
 
   function handleDeleteCustomTitle(title: CustomTitle) {
@@ -232,6 +270,10 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
   }
 
   function onFormSubmit(values: UserFormValues) {
+    if (emailExists) {
+      toast.error(t("common.emailAlreadyRegistered"));
+      return;
+    }
     setPendingValues(values);
     setConfirmOpen(true);
   }
@@ -361,9 +403,31 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
               <Input {...register("lastName")}
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
-            <Field label={t("common.email")} required error={errors.email?.message}>
-              <Input type="email" {...register("email")}
-                className="border-border bg-background focus-visible:ring-primary" />
+            <Field
+              label={t("common.email")}
+              required
+              error={errors.email?.message}
+            >
+              <Input
+                type="email"
+                {...register("email")}
+                className={`bg-background focus-visible:ring-primary ${emailExists
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : "border-border"
+                  }`}
+              />
+
+              {checkingEmail && (
+                <p className="text-xs text-muted-foreground">
+                  {t("common.checkingEmail")}
+                </p>
+              )}
+
+              {emailExists && (
+                <p className="text-xs text-destructive">
+                  {t("common.emailAlreadyRegistered")}
+                </p>
+              )}
             </Field>
             <Field label={t("common.phone")} required error={errors.phone?.message}>
               <Input
@@ -505,7 +569,7 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
           <div className="flex justify-end pt-2">
             <Button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || emailExists || checkingEmail}
               className="min-w-35 px-6 py-2.5 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
             >
               {isPending ? (

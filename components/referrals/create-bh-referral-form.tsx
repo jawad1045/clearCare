@@ -167,169 +167,233 @@ export function CreateBHReferralForm({ referrerName }: Props) {
     setPendingValues(null);
   }
 
-  return (
-    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card w-full sm:w-3/5">
+ return (
+  <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card w-full sm:w-3/5">
+    {/* ── Header ── */}
+    <div className="bg-foreground px-6 py-4">
+      <h2 className="text-base font-bold text-primary-foreground">
+        {t("referrals.bhReferralFormTitle")}
+      </h2>
+      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
+        <span>{t("referrals.requiredFieldsNote")}</span>
+        <span className="text-primary/50">·</span>
+        <Lock className="h-3 w-3" />
+        <span>{t("referrals.hipaaEncryptedNote")}</span>
+      </div>
+    </div>
 
-      {/* ── Header ── */}
-      <div className="bg-foreground px-6 py-4">
-        <h2 className="text-base font-bold text-primary-foreground">
-          {t("referrals.bhReferralFormTitle")}
-        </h2>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
-          <span>{t("referrals.requiredFieldsNote")}</span>
-          <span className="text-primary/50">·</span>
-          <Lock className="h-3 w-3" />
-          <span>{t("referrals.hipaaEncryptedNote")}</span>
+    <ConfirmDialog
+      open={confirmOpen}
+      onConfirm={onConfirm}
+      onCancel={() => {
+        setConfirmOpen(false);
+        setPendingValues(null);
+      }}
+      title={t("referrals.submitBhReferral")}
+      description={t("referrals.submitBhReferralConfirmDescription")}
+      confirmLabel={t("referrals.submitBhReferral")}
+    />
+
+    <form
+      onSubmit={handleSubmit(onFormSubmit)}
+      className="pl-6 pr-10 py-6 space-y-6"
+    >
+      {/* ── Client Information ── */}
+      <div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label={t("common.firstName")}
+            required
+            error={errors.firstName?.message}
+          >
+            <Input
+              {...register("firstName")}
+              placeholder={t("referrals.clientFirstNamePlaceholder")}
+              className="border-border bg-background focus-visible:ring-primary"
+            />
+          </Field>
+
+          <Field
+            label={t("common.lastName")}
+            required
+            error={errors.lastName?.message}
+          >
+            <Input
+              {...register("lastName")}
+              placeholder={t("referrals.clientLastNamePlaceholder")}
+              className="border-border bg-background focus-visible:ring-primary"
+            />
+          </Field>
+
+          <Field
+            label={t("common.phone")}
+            required
+            error={errors.phone?.message}
+          >
+            <Input
+              {...register("phone", {
+                onChange: (e) => {
+                  e.target.value = formatPhoneInput(e.target.value);
+                },
+              })}
+              placeholder="(555) 000-0000"
+              maxLength={14}
+              className="border-border bg-background focus-visible:ring-primary"
+            />
+          </Field>
+
+          <Field label={t("common.email")}>
+            <Input
+              {...register("email")}
+              type="email"
+              placeholder={t("referrals.clientEmailPlaceholder")}
+              className="border-border bg-background focus-visible:ring-primary"
+            />
+            {errors.email && (
+              <p className="text-xs text-destructive">
+                {errors.email.message}
+              </p>
+            )}
+          </Field>
+
+          <Field
+            label={t("referrals.last4SsnLabel")}
+            required
+            error={errors.last4SSN?.message}
+          >
+            <Input
+              {...register("last4SSN", {
+                onChange: (e) => {
+                  e.target.value = e.target.value
+                    .replace(/\D/g, "")
+                    .slice(0, 4);
+                },
+              })}
+              inputMode="numeric"
+              maxLength={4}
+              placeholder={t("referrals.last4SsnPlaceholder")}
+              className="border-border bg-background focus-visible:ring-primary"
+            />
+          </Field>
+
+          <Field
+            label={t("referrals.genderLabel")}
+            required
+            error={errors.gender?.message}
+          >
+            <Select
+              onValueChange={(v) =>
+                setValue("gender", v, { shouldValidate: true })
+              }
+            >
+              <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                <SelectValue
+                  placeholder={t("referrals.selectPlaceholder")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {GENDERS.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {t(GENDER_LABEL_KEYS[g])}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field
+            label={t("referrals.referralTypeLabel")}
+            required
+            error={errors.referralType?.message}
+          >
+            <Select
+              onValueChange={(v) =>
+                setValue("referralType", v, {
+                  shouldValidate: true,
+                })
+              }
+            >
+              <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                <SelectValue
+                  placeholder={t("referrals.selectPlaceholder")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {REFERRAL_TYPES.map((rt) => (
+                  <SelectItem key={rt} value={rt}>
+                    {t(REFERRAL_TYPE_LABEL_KEYS[rt])}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label={t("referrals.gradeLabel")}>
+            <Select onValueChange={(v) => setValue("grade", v)}>
+              <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                <SelectValue
+                  placeholder={t("referrals.selectPlaceholder")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADES.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g === "K" ? t("referrals.gradeK") : g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
         </div>
       </div>
 
-      <ConfirmDialog
-        open={confirmOpen}
-        onConfirm={onConfirm}
-        onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-        title={t("referrals.submitBhReferral")}
-        description={t("referrals.submitBhReferralConfirmDescription")}
-        confirmLabel={t("referrals.submitBhReferral")}
+      {/* ── Referral Details ── */}
+      <div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label={t("referrals.referrerNameLabel")}>
+            <Input
+              {...register("referrerName")}
+              readOnly
+              className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+            />
+          </Field>
+
+          <Field label={t("common.notes")}>
+            <textarea
+              {...register("notes")}
+              placeholder={t("referrals.notesPlaceholder")}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              rows={3}
+            />
+          </Field>
+        </div>
+      </div>
+
+      {/* ── Attachments ── */}
+      <AttachmentUploader
+        value={attachments}
+        onChange={setAttachments}
       />
 
-      <form onSubmit={handleSubmit(onFormSubmit)} className="pl-6 pr-10 py-6 space-y-6">
-
-        {/* ── Client Information ── */}
-        <div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label={t("common.firstName")} required error={errors.firstName?.message}>
-              <Input
-                {...register("firstName")}
-                placeholder={t("referrals.clientFirstNamePlaceholder")}
-                className="border-border bg-background focus-visible:ring-primary"
-              />
-            </Field>
-            <Field label={t("common.lastName")} required error={errors.lastName?.message}>
-              <Input
-                {...register("lastName")}
-                placeholder={t("referrals.clientLastNamePlaceholder")}
-                className="border-border bg-background focus-visible:ring-primary"
-              />
-            </Field>
-            <Field label={t("common.phone")} required error={errors.phone?.message}>
-              <Input
-                {...register("phone", {
-                  onChange: (e) => { e.target.value = formatPhoneInput(e.target.value); },
-                })}
-                placeholder="(555) 000-0000"
-                maxLength={14}
-                className="border-border bg-background focus-visible:ring-primary"
-              />
-            </Field>
-            <Field label={t("common.email")}>
-              <Input
-                {...register("email")}
-                type="email"
-                placeholder={t("referrals.clientEmailPlaceholder")}
-                className="border-border bg-background focus-visible:ring-primary"
-              />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-            </Field>
-            <Field label={t("referrals.last4SsnLabel")} required error={errors.last4SSN?.message}>
-              <Input
-                {...register("last4SSN", {
-                  onChange: (e) => {
-                    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                  },
-                })}
-                inputMode="numeric"
-                maxLength={4}
-                placeholder={t("referrals.last4SsnPlaceholder")}
-                className="border-border bg-background focus-visible:ring-primary"
-              />
-            </Field>
-            <Field label={t("referrals.genderLabel")} required error={errors.gender?.message}>
-              <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENDERS.map((g) => (
-                    <SelectItem key={g} value={g}>{t(GENDER_LABEL_KEYS[g])}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label={t("referrals.gradeLabel")}>
-              <Select onValueChange={(v) => setValue("grade", v)}>
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADES.map((g) => (
-                    <SelectItem key={g} value={g}>{g === "K" ? t("referrals.gradeK") : g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
-        </div>
-
-        {/* ── Referral Details ── */}
-        <div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field
-              label={t("referrals.referralTypeLabel")}
-              required
-              error={errors.referralType?.message}
-            >
-              <Select onValueChange={(v) => setValue("referralType", v, { shouldValidate: true })}>
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {REFERRAL_TYPES.map((rt) => (
-                    <SelectItem key={rt} value={rt}>{t(REFERRAL_TYPE_LABEL_KEYS[rt])}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label={t("referrals.referrerNameLabel")}>
-              <Input
-                {...register("referrerName")}
-                readOnly
-                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
-              />
-            </Field>
-            <Field label={t("common.notes")}>
-              <textarea
-                {...register("notes")}
-                placeholder={t("referrals.notesPlaceholder")}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                rows={3}
-              />
-            </Field>
-          </div>
-        </div>
-
-        {/* ── Attachments ── */}
-        <AttachmentUploader value={attachments} onChange={setAttachments} />
-
-        {/* ── Submit ── */}
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full bg-foreground text-primary-foreground hover:bg-foreground/90 transition-colors h-11 px-6 py-2.5 text-sm font-semibold tracking-wide"
-        >
-          {isPending ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              {t("referrals.submitting")}
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              {t("referrals.submitBhReferral")}
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          )}
-        </Button>
-
-      </form>
-    </div>
-  );
+      {/* ── Submit ── */}
+      <Button
+        type="submit"
+        disabled={isPending}
+        className="w-full bg-foreground text-primary-foreground hover:bg-foreground/90 transition-colors h-11 px-6 py-2.5 text-sm font-semibold tracking-wide"
+      >
+        {isPending ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+            {t("referrals.submitting")}
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            {t("referrals.submitBhReferral")}
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        )}
+      </Button>
+    </form>
+  </div>
+);
 }
