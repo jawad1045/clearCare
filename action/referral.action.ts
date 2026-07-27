@@ -64,7 +64,7 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       serviceType: opts.serviceType,
-      viewUrl: `${APP_URL}${opts.userViewPath}`,
+      // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     // Email: each admin
     ...admins.map((admin) =>
