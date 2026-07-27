@@ -262,10 +262,10 @@
   "referrals": {
     "testTypeAndPriorityRequiredForDrugTest": "Test type and priority are required for drug tests.",
     "testDetailsOnlyForDrugTest": "Test details are only available for drug tests.",
-    "referralTypePsychYouth": "Psychological (Youth)",
-    "referralTypePsychAdult": "Psychological (Adult)",
+    "referralTypePsychYouth": "Psych Evaluation (Youth)",
+    "referralTypePsychAdult": "Psych Evaluation (Adult)",
     "referralTypeBh": "Behavioral Health",
-    "referralTypeNeuroDevelopmental": "Neurodevelopmental",
+    "referralTypeNeuroDevelopmental": "Neuro-developmental Evaluation",
     "referralTypeNeurological": "Neurological",
     "referralTypeRequired": "Referral type is required",
     "errorInvalidReferralType": "Invalid referral type",

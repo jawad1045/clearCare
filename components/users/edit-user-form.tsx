@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { UserCog, Building2, MapPin, ShieldCheck, ToggleLeft } from "lucide-react";
 
-import { updateUser } from "@/action/user.action";
+import { updateUser, checkEmailExists } from "@/action/user.action";
 import { formatPhoneInput } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -109,9 +109,45 @@ export function EditUserForm({ user, companies }: Props) {
   const [phone, setPhone] = useState(formatPhoneInput(user.contactPhone));
   const [contactTitle, setContactTitle] = useState(user.contactTitle ?? "");
 
+  // Email validation state
+  const [email, setEmail] = useState(user.contactEmail);
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
   function handleRoleChange(value: string) {
     setSelectedRole(value);
     setCompanyError(null);
+  }
+
+  useEffect(() => {
+    // No need to check if the email hasn't changed from the user's current one
+    if (!email || email.trim().toLowerCase() === user.contactEmail.trim().toLowerCase()) {
+      setEmailExists(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailExists(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      validateEmail(email);
+    }, 500);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email]);
+
+  async function validateEmail(value: string) {
+    setCheckingEmail(true);
+    try {
+      const exists = await checkEmailExists(value);
+      setEmailExists(exists);
+    } finally {
+      setCheckingEmail(false);
+    }
   }
 
   async function handleSubmit(formData: FormData) {
@@ -125,6 +161,9 @@ export function EditUserForm({ user, companies }: Props) {
     e.preventDefault();
     if (selectedRole !== "Admin" && !selectedCompany) {
       setCompanyError(t("users.orgRequiredForRole"));
+      return;
+    }
+    if (emailExists) {
       return;
     }
     setCompanyError(null);
@@ -252,8 +291,26 @@ export function EditUserForm({ user, companies }: Props) {
                 className="border-border bg-background focus-visible:ring-primary" />
             </Field>
             <Field label={t("common.email")} required>
-              <Input type="email" name="email" defaultValue={user.contactEmail} required
-                className="border-border bg-background focus-visible:ring-primary" />
+              <Input
+                type="email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className={`bg-background focus-visible:ring-primary ${
+                  emailExists ? "border-destructive focus-visible:ring-destructive" : "border-border"
+                }`}
+              />
+              {checkingEmail && (
+                <p className="text-xs text-muted-foreground">
+                  {t("common.checkingEmail")}
+                </p>
+              )}
+              {emailExists && (
+                <p className="text-xs text-destructive">
+                  {t("common.emailAlreadyRegistered")}
+                </p>
+              )}
             </Field>
             <Field label={t("common.phone")} required>
               <Input
@@ -317,7 +374,7 @@ export function EditUserForm({ user, companies }: Props) {
           <div className="flex justify-end pt-2">
             <Button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || emailExists || checkingEmail}
               className="min-w-35 bg-primary text-primary-foreground hover:bg-[#0D6B60] transition-colors"
             >
               {isPending ? (
