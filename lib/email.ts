@@ -113,7 +113,7 @@ export async function sendReferralSubmittedToUser(opts: {
   patientName: string;
   referralId: number;
   serviceType: string;
-  viewUrl: string;
+  // viewUrl: string;
 }) {
   await resend.emails.send({
     from: FROM,
@@ -133,7 +133,6 @@ export async function sendReferralSubmittedToUser(opts: {
         <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Status</td>
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#f59e0b;">Pending</td></tr>
       </table>
-      ${button("View Referral", opts.viewUrl)}
     `),
   });
 }
@@ -164,7 +163,7 @@ export async function sendReferralSubmittedToAdmin(opts: {
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
       </table>
-      ${button("Review Referral", opts.viewUrl)}
+      
     `),
   });
 }
@@ -193,7 +192,7 @@ export async function sendResultUploadedToUser(opts: {
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
       </table>
-      ${button("View & Download Result", opts.viewUrl)}
+      
     `),
   });
 }
@@ -232,7 +231,7 @@ export async function sendStatusChangedToUser(opts: {
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
       </table>
-      ${button("View Referral", opts.viewUrl)}
+      
     `),
   });
 }
