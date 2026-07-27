@@ -152,7 +152,7 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
                     {referral.parentLastName ?? "-"}
                   </TableCell>
                   <TableCell>{SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS] ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]) : referral.serviceType}</TableCell>
-                  <TableCell>{getPriorityLabel(referral.priority, t)}</TableCell>
+                  <TableCell>{getPriorityLabel(referral.priority ?? "", t)}</TableCell>
                   <TableCell>
                     <Badge
                       style={{ backgroundColor: getStatusColor(referral.status) + "22", color: getStatusColor(referral.status), borderColor: getStatusColor(referral.status) + "55" }}

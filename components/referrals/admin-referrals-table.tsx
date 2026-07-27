@@ -32,7 +32,8 @@ type Referral = {
   patientFirstName: string;
   patientLastName: string;
   serviceType: string;
-  priority: string;
+  priority: string | null;
+  
   status: string;
   dateOfReferral: Date;
   lastUpdated: Date;
@@ -208,7 +209,7 @@ export function AdminReferralsTable({ referrals, basePath }: Props) {
 
                   <TableCell>{SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS] ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]) : referral.serviceType}</TableCell>
 
-                  <TableCell>{getPriorityLabel(referral.priority, t)}</TableCell>
+                  <TableCell>{getPriorityLabel(referral.priority ?? "", t)}</TableCell>
 
                   <TableCell>
                     <Badge

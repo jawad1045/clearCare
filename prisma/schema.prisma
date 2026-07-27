@@ -70,12 +70,12 @@ model Referral {
   patientFirstName   String    @map("Patient_FirstName") @db.VarChar(100)
   patientLastName    String    @map("Patient_LastName") @db.VarChar(100)
   dob                DateTime  @map("DOB") @db.Date
-  grade              String    @db.VarChar(100)
+  grade              String?   @db.VarChar(100)   // ← was required, now optional
   race               String    @db.VarChar(100)
   gender             String    @db.VarChar(20)
   ssn                String    @map("SSN") @db.VarChar(255)
-  type               String    @db.VarChar(100)
-  priority           String    @db.VarChar(50)
+  type               String?   @db.VarChar(100)   // ← now optional (Drug Test only)
+  priority           String?   @db.VarChar(50)    // ← now optional (Drug Test only)
   status             String    @default("Pending") @db.VarChar(50)
   dateOfReferral     DateTime  @default(now()) @map("Date_of_Referral")
   referName          String    @map("Refer_Name") @db.VarChar(200)
@@ -101,7 +101,8 @@ model MentalHealthReferral {
   phone             String    @db.VarChar(20)
   last4SSN          String    @map("Last_4_SSN") @db.VarChar(4)
   email             String?   @db.VarChar(255)
-  referralType     String?   @map("Referral_Type") @db.VarChar(100)
+  grade             String?   @db.VarChar(100)   // ← NEW
+  referralType      String?   @map("Referral_Type") @db.VarChar(100)
   gender            String    @db.VarChar(20)
   status            String    @default("Pending") @db.VarChar(50)
   appointmentDate   DateTime? @map("Appointment_Date") @db.Date

@@ -35,6 +35,8 @@ const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
   Other: "common.genderOther",
 };
 
+const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
+
 const REFERRAL_TYPES = [
   "Psych Evaluation (Youth)",
   "Psych Evaluation (Adult)",
@@ -65,6 +67,7 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           .regex(/^\d{4}$/, t("referrals.last4SsnFormat")),
         email: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
         gender: z.string().min(1, t("referrals.genderRequired")),
+        grade: z.string().optional(),
         referralType: z.string().min(1, t("referrals.referralTypeRequired")),
         referrerName: z.string().optional(),
         notes: z.string().optional(),
@@ -122,6 +125,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
       last4SSN: "",
       email: "",
       gender: "",
+      grade: "",
       referralType: "",
       referrerName,
       notes: "",
@@ -136,6 +140,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
     formData.set("last4SSN", values.last4SSN);
     formData.set("email", values.email ?? "");
     formData.set("gender", values.gender);
+    formData.set("grade", values.grade ?? "");
     formData.set("referralType", values.referralType);
     formData.set("referrerName", values.referrerName ?? "");
     formData.set("notes", values.notes ?? "");
@@ -246,6 +251,18 @@ export function CreateBHReferralForm({ referrerName }: Props) {
                 <SelectContent>
                   {GENDERS.map((g) => (
                     <SelectItem key={g} value={g}>{t(GENDER_LABEL_KEYS[g])}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label={t("referrals.gradeLabel")}>
+              <Select onValueChange={(v) => setValue("grade", v)}>
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADES.map((g) => (
+                    <SelectItem key={g} value={g}>{g === "K" ? t("referrals.gradeK") : g}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

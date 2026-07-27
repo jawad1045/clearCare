@@ -25,12 +25,12 @@ type Referral = {
   patientFirstName: string;
   patientLastName: string;
   dob: Date;
-  grade: string;
+  grade: string | null;
   race: string;
   gender: string;
   ssn: string;
-  type: string;
-  priority: string;
+  type: string | null;
+  priority: string | null;
   status: string;
   dateOfReferral: Date;
   referName: string;
@@ -103,7 +103,7 @@ function ViewTab({ referral }: { referral: Referral }) {
             <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
             <InfoRow label={t("common.gender")} value={referral.gender} />
             <InfoRow label={t("referrals.raceLabel")} value={referral.race} />
-            <InfoRow label={t("referrals.gradeLabel")} value={referral.grade} />
+            {/* <InfoRow label={t("referrals.gradeLabel")} value={referral.grade} /> */}
             <InfoRow label={t("referrals.ssnLabel")} value="••••••••••" />
           </CardContent>
         </Card>
@@ -132,8 +132,8 @@ function ViewTab({ referral }: { referral: Referral }) {
           <Separator />
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("common.serviceType")} value={serviceTypeLabel} />
-            <InfoRow label={t("referrals.testType")} value={referral.type} />
-            <InfoRow label={t("common.priority")} value={getPriorityLabel(referral.priority, t)} />
+            <InfoRow label={t("referrals.testType")} value={referral.type ?? ""} />
+            <InfoRow label={t("common.priority")} value={getPriorityLabel(referral.priority ?? "", t)} />
             <InfoRow label={t("referrals.dateOfReferral")} value={formatDate(referral.dateOfReferral)} />
             <InfoRow label={t("referrals.dateOfPatientContact")} value={formatDate(referral.datePatientContact)} />
             <InfoRow label={t("referrals.methodOfContactLabel")} value={referral.methodOfContact} />

@@ -20,6 +20,7 @@ import {
 import { getServerTranslation } from "@/locale/server";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+const DRUG_TEST_SERVICE = "Drug Test";
 
 async function getAdmins() {
   return prisma.user.findMany({ where: { userRole: "Admin" } });
@@ -180,26 +181,33 @@ export async function createReferral(
     throw new Error(t("referrals.errorNoCompanyAssociated"));
   }
 
+  const serviceType = formData.get("serviceType") as string;
+
+  // type/priority/contactDate/contactMethod are only collected on the client when
+  // serviceType === "Drug Test". Normalize missing/empty values to null instead of
+  // persisting empty strings, and re-validate server-side since client validation
+  // can't be trusted alone.
+  const rawType = ((formData.get("type") as string) || "").trim();
+  const rawPriority = ((formData.get("priority") as string) || "").trim();
+  const rawGrade = ((formData.get("grade") as string) || "").trim();
+
+  if (serviceType === DRUG_TEST_SERVICE) {
+    if (!rawType || !rawPriority) {
+      throw new Error(t("referrals.testTypeAndPriorityRequiredForDrugTest"));
+    }
+  }
+
   const referral = await prisma.referral.create({
     data: {
       userId: user.id,
 
       companyAcctId: user.acctId,
 
-      serviceType:
-        formData.get(
-          "serviceType"
-        ) as string,
+      serviceType,
 
-      type:
-        formData.get(
-          "type"
-        ) as string,
+      type: rawType || null,
 
-      priority:
-        formData.get(
-          "priority"
-        ) as string,
+      priority: rawPriority || null,
 
       parentFirstName:
         formData.get(
@@ -237,10 +245,7 @@ export async function createReferral(
         ) as string
       ),
 
-      grade:
-        formData.get(
-          "grade"
-        ) as string,
+      grade: rawGrade || null,
 
       race:
         formData.get(
@@ -523,4 +528,3 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
   revalidatePath(`/user/referrals/${referralId}`);
   revalidatePath(`/user/bhreferrals/${referralId}`);
 }
-

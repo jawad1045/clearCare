@@ -1,5 +1,10 @@
 {
   "common": {
+    "serviceDrugTestOM": "Drug Test (OM)",
+    "serviceNewEmploymentOM": "New Employment (OM)",
+    "servicePrimaryCare": "Primary Care",
+    "serviceReturnToWorkOM": "Return-to-Work (OM)",
+    "serviceWorkersCompOM": "Worker's Compensation (OM)",
     "actions": "Actions",
     "email": "Email",
     "phone": "Phone",
@@ -253,6 +258,8 @@
     "errorEmailExists": "Email already exists"
   },
   "referrals": {
+    "testTypeAndPriorityRequiredForDrugTest": "Test type and priority are required for drug tests.",
+    "testDetailsOnlyForDrugTest": "Test details are only available for drug tests.",
     "referralTypePsychYouth": "Psychological (Youth)",
     "referralTypePsychAdult": "Psychological (Adult)",
     "referralTypeBh": "Behavioral Health",

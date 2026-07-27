@@ -13,6 +13,7 @@ interface DatePickerProps {
   required?: boolean
   onDateChange?: (iso: string) => void
   className?: string
+  disabled?: boolean
 }
 
 export function DatePicker({ name, required, onDateChange, className }: DatePickerProps) {

@@ -54,7 +54,6 @@ const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
   "Non-Binary": "common.genderNonBinary",
   Other: "common.genderOther",
 };
-const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
 const RACES = [
   "American Indian or Alaska Native",
   "Asian",
@@ -82,28 +81,48 @@ const CONTACT_METHOD_LABEL_KEYS: Record<(typeof CONTACT_METHODS)[number], Transl
   Email: "common.contactMethodEmail",
 };
 
+const DRUG_TEST_SERVICE = "Drug Test";
+
 function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(
     () =>
-      z.object({
-        serviceType: z.string().min(1, t("referrals.serviceTypeRequired")),
-        parentFirstName: z.string().optional(),
-        parentLastName: z.string().optional(),
-        parentEmail: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
-        parentPhone: z.string().optional(),
-        patientFirstName: z.string().min(1, t("referrals.patientFirstNameRequired")),
-        patientLastName: z.string().min(1, t("referrals.patientLastNameRequired")),
-        dob: z.string().min(1, t("referrals.dobRequired")),
-        race: z.string().min(1, t("referrals.raceRequired")),
-        grade: z.string().optional(),
-        gender: z.string().min(1, t("referrals.genderRequired")),
-        ssn: z.string().min(1, t("referrals.ssnRequired")),
-        type: z.string().min(1, t("referrals.testTypeRequired")),
-        priority: z.string().min(1, t("referrals.priorityRequired")),
-        referrerName: z.string().min(1, t("referrals.referrerNameRequired")),
-        contactDate: z.string().optional(),
-        contactMethod: z.array(z.string()).optional(),
-      }),
+      z
+        .object({
+          serviceType: z.string().min(1, t("referrals.serviceTypeRequired")),
+          parentFirstName: z.string().optional(),
+          parentLastName: z.string().optional(),
+          parentEmail: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
+          parentPhone: z.string().optional(),
+          patientFirstName: z.string().min(1, t("referrals.patientFirstNameRequired")),
+          patientLastName: z.string().min(1, t("referrals.patientLastNameRequired")),
+          dob: z.string().min(1, t("referrals.dobRequired")),
+          race: z.string().min(1, t("referrals.raceRequired")),
+          gender: z.string().min(1, t("referrals.genderRequired")),
+          ssn: z.string().min(1, t("referrals.ssnRequired")),
+          type: z.string().optional(),
+          priority: z.string().optional(),
+          referrerName: z.string().min(1, t("referrals.referrerNameRequired")),
+          contactDate: z.string().optional(),
+          contactMethod: z.array(z.string()).optional(),
+        })
+        .superRefine((data, ctx) => {
+          if (data.serviceType === DRUG_TEST_SERVICE) {
+            if (!data.type) {
+              ctx.addIssue({
+                path: ["type"],
+                code: z.ZodIssueCode.custom,
+                message: t("referrals.testTypeRequired"),
+              });
+            }
+            if (!data.priority) {
+              ctx.addIssue({
+                path: ["priority"],
+                code: z.ZodIssueCode.custom,
+                message: t("referrals.priorityRequired"),
+              });
+            }
+          }
+        }),
     [t]
   );
 }
@@ -171,7 +190,6 @@ export function CreateReferralForm({ referrerName }: Props) {
       patientLastName: "",
       dob: "",
       race: "",
-      grade: "",
       gender: "",
       ssn: "",
       type: "",
@@ -183,6 +201,18 @@ export function CreateReferralForm({ referrerName }: Props) {
   });
 
   const contactMethods = watch("contactMethod") ?? [];
+  const serviceType = watch("serviceType");
+  const isDrugTest = serviceType === DRUG_TEST_SERVICE;
+
+  function handleServiceTypeChange(v: string) {
+    setValue("serviceType", v, { shouldValidate: true });
+    if (v !== DRUG_TEST_SERVICE) {
+      setValue("type", "", { shouldValidate: true });
+      setValue("priority", "", { shouldValidate: true });
+      setValue("contactDate", "");
+      setValue("contactMethod", []);
+    }
+  }
 
   async function submitReferral(values: ReferralFormValues) {
     const formData = new FormData();
@@ -195,11 +225,10 @@ export function CreateReferralForm({ referrerName }: Props) {
     formData.set("patientLastName", values.patientLastName);
     formData.set("dob", values.dob);
     formData.set("race", values.race);
-    formData.set("grade", values.grade ?? "");
     formData.set("gender", values.gender);
     formData.set("ssn", values.ssn);
-    formData.set("type", values.type);
-    formData.set("priority", values.priority);
+    formData.set("type", values.type ?? "");
+    formData.set("priority", values.priority ?? "");
     formData.set("status", "Pending");
     formData.set("referrerName", values.referrerName);
     formData.set("contactDate", values.contactDate ?? "");
@@ -262,7 +291,7 @@ export function CreateReferralForm({ referrerName }: Props) {
 
         {/* ── Service Type ── */}
         <Field label={t("referrals.selectServiceType")} required error={errors.serviceType?.message}>
-          <Select onValueChange={(v) => setValue("serviceType", v, { shouldValidate: true })}>
+          <Select value={serviceType} onValueChange={handleServiceTypeChange}>
             <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
               <SelectValue placeholder={t("referrals.chooseServiceTypePlaceholder")} />
             </SelectTrigger>
@@ -273,6 +302,84 @@ export function CreateReferralForm({ referrerName }: Props) {
             </SelectContent>
           </Select>
         </Field>
+
+        {/* ── Test Details (directly under Service Type; enabled only for Drug Test) ── */}
+        <div>
+          <SectionLabel>{t("referrals.testDetails")}</SectionLabel>
+          {!isDrugTest && (
+            <p className="mb-3 text-xs italic text-muted-foreground">
+              {t("referrals.testDetailsOnlyForDrugTest")}
+            </p>
+          )}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label={t("referrals.testTypeLabel")} required={isDrugTest} error={errors.type?.message}>
+              <Select
+                disabled={!isDrugTest}
+                value={watch("type")}
+                onValueChange={(v) => setValue("type", v, { shouldValidate: true })}
+              >
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50">
+                  <SelectValue placeholder={t("referrals.selectTypePlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {REFERRAL_TYPES.map((rt) => (
+                    <SelectItem key={rt} value={rt}>{t(REFERRAL_TYPE_LABEL_KEYS[rt])}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label={t("common.priority")} required={isDrugTest} error={errors.priority?.message}>
+              <Select
+                disabled={!isDrugTest}
+                value={watch("priority")}
+                onValueChange={(v) => setValue("priority", v, { shouldValidate: true })}
+              >
+                <SelectTrigger className="w-full border-border bg-background focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50">
+                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p} value={p}>{t(PRIORITY_LABEL_KEYS[p])}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label={t("referrals.referrerNameLabel")} required error={errors.referrerName?.message}>
+              <Input
+                {...register("referrerName")}
+                readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
+              />
+            </Field>
+            <Field label={t("referrals.contactDateLabel")}>
+              <DatePicker
+                name="contactDate_display"
+                disabled={!isDrugTest}
+                onDateChange={(iso) => setValue("contactDate", iso)}
+                className="border-border bg-background focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </Field>
+            <Field label={t("referrals.methodOfContactLabel")}>
+              <div
+                className={`flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3 ${
+                  !isDrugTest ? "cursor-not-allowed opacity-50" : ""
+                }`}
+              >
+                {CONTACT_METHODS.map((method) => (
+                  <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
+                    <Checkbox
+                      disabled={!isDrugTest}
+                      checked={contactMethods.includes(method)}
+                      onCheckedChange={() => toggleContact(method)}
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-xs text-foreground/80">{t(CONTACT_METHOD_LABEL_KEYS[method])}</span>
+                  </label>
+                ))}
+              </div>
+            </Field>
+          </div>
+        </div>
 
         {/* ── Parent / Guardian ── */}
         <div>
@@ -346,18 +453,6 @@ export function CreateReferralForm({ referrerName }: Props) {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label={t("referrals.gradeLabel")}>
-              <Select onValueChange={(v) => setValue("grade", v)}>
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADES.map((g) => (
-                    <SelectItem key={g} value={g}>{g === "K" ? t("referrals.gradeK") : g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
             <Field label={t("referrals.genderLabel")} required error={errors.gender?.message}>
               <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
@@ -388,65 +483,6 @@ export function CreateReferralForm({ referrerName }: Props) {
                 >
                   {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-              </div>
-            </Field>
-          </div>
-        </div>
-
-        {/* ── Test Details ── */}
-        <div>
-          <SectionLabel>{t("referrals.testDetails")}</SectionLabel>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label={t("referrals.testTypeLabel")} required error={errors.type?.message}>
-              <Select onValueChange={(v) => setValue("type", v, { shouldValidate: true })}>
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder={t("referrals.selectTypePlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {REFERRAL_TYPES.map((rt) => (
-                    <SelectItem key={rt} value={rt}>{t(REFERRAL_TYPE_LABEL_KEYS[rt])}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label={t("common.priority")} required error={errors.priority?.message}>
-              <Select onValueChange={(v) => setValue("priority", v, { shouldValidate: true })}>
-                <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                  <SelectValue placeholder={t("referrals.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>{t(PRIORITY_LABEL_KEYS[p])}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label={t("referrals.referrerNameLabel")} required error={errors.referrerName?.message}>
-              <Input
-                {...register("referrerName")}
-                readOnly
-                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
-              />
-            </Field>
-            <Field label={t("referrals.contactDateLabel")}>
-              <DatePicker
-                name="contactDate_display"
-                onDateChange={(iso) => setValue("contactDate", iso)}
-                className="border-border bg-background focus-visible:ring-primary"
-              />
-            </Field>
-            <Field label={t("referrals.methodOfContactLabel")}>
-              <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
-                {CONTACT_METHODS.map((method) => (
-                  <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
-                    <Checkbox
-                      checked={contactMethods.includes(method)}
-                      onCheckedChange={() => toggleContact(method)}
-                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <span className="text-xs text-foreground/80">{t(CONTACT_METHOD_LABEL_KEYS[method])}</span>
-                  </label>
-                ))}
               </div>
             </Field>
           </div>

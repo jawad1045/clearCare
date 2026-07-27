@@ -210,8 +210,8 @@ export default async function UserReferralDetailsPage({ params }: PageProps) {
             <CardContent className="pt-4">
               <dl className="space-y-3 text-sm">
                 <InfoRow label={t("common.serviceType")} value={serviceTypeLabel} />
-                <InfoRow label={t("referrals.testType")} value={referral.type} />
-                <InfoRow label={t("common.priority")} value={getPriorityLabel(referral.priority, t)} />
+                <InfoRow label={t("referrals.testType")} value={referral.type ?? ""} />
+                <InfoRow label={t("common.priority")} value={getPriorityLabel(referral.priority ?? "", t)} />
                 <InfoRow
                   label={t("referrals.dateOfReferral")}
                   value={formatDate(referral.dateOfReferral)}

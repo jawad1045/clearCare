@@ -21,14 +21,29 @@ export const MONTH_LABEL_KEYS: Record<MonthKey, TranslationKey> = {
   december: "common.monthDecember",
 };
 
-export const SERVICE_TYPES = ["Drug Test", "Physical", "Medication Management", "IOP"] as const;
+export const SERVICE_TYPES = [
+  "Drug Test",
+  "Drug Test (OM)",
+  "IOP",
+  "Medication Management",
+  "New Employment (OM)",
+  "Physical",
+  "Primary Care",
+  "Return-to-Work (OM)",
+  "Worker's Compensation (OM)",
+] as const;
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 
 export const SERVICE_TYPE_LABEL_KEYS: Record<ServiceType, TranslationKey> = {
   "Drug Test": "common.serviceDrugTest",
-  "Physical": "common.servicePhysical",
-  "Medication Management": "common.serviceMedicationManagement",
+  "Drug Test (OM)": "common.serviceDrugTestOM",
   "IOP": "common.serviceIOP",
+  "Medication Management": "common.serviceMedicationManagement",
+  "New Employment (OM)": "common.serviceNewEmploymentOM",
+  "Physical": "common.servicePhysical",
+  "Primary Care": "common.servicePrimaryCare",
+  "Return-to-Work (OM)": "common.serviceReturnToWorkOM",
+  "Worker's Compensation (OM)": "common.serviceWorkersCompOM",
 };
 
 export const PRIORITY_LABEL_KEYS: Record<string, TranslationKey> = {

@@ -165,6 +165,8 @@ export async function createBHReferral(formData: FormData) {
     throw new Error(t("referrals.errorInvalidReferralType"));
   }
 
+  const grade = ((formData.get("grade") as string) || "").trim();
+
   const bhReferral = await prisma.mentalHealthReferral.create({
     data: {
       userId: user.id,
@@ -175,6 +177,7 @@ export async function createBHReferral(formData: FormData) {
       last4SSN,
       email: (formData.get("email") as string) || null,
       gender: formData.get("gender") as string,
+      grade: grade || null,
       referralType,
       referName: (formData.get("referrerName") as string) || `${user.contactFirstName} ${user.contactLastName}`,
       notes: (formData.get("notes") as string) || null,

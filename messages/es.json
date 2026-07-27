@@ -1,5 +1,10 @@
 {
   "common": {
+    "serviceDrugTestOM": "Prueba de Droga (OM)",
+    "serviceNewEmploymentOM": "Nuevo Empleo (OM)",
+    "servicePrimaryCare": "Atención Primaria",
+    "serviceReturnToWorkOM": "Regreso al Trabajo (OM)",
+    "serviceWorkersCompOM": "Compensación Laboral (OM)",
     "actions": "Acciones",
     "email": "Correo Electrónico",
     "phone": "Teléfono",
@@ -253,11 +258,13 @@
     "errorEmailExists": "El correo electrónico ya existe"
   },
   "referrals": {
+    "testTypeAndPriorityRequiredForDrugTest": "El tipo de prueba y la prioridad son obligatorios para las pruebas de drogas.",
+   "testDetailsOnlyForDrugTest": "Los detalles de la prueba solo están disponibles para pruebas de drogas.",
     "referralTypePsychYouth": "Psicológico (Juvenil)",
     "referralTypePsychAdult": "Psicológico (Adulto)",
     "referralTypeBh": "Salud Conductual",
     "referralTypeNeuroDevelopmental": "Neurodesarrollo",
-    "referralTypeNeurological": "Neurological",
+    "referralTypeNeurological": "Neurológico",
     "referralTypeRequired": "El tipo de referencia es obligatorio",
     "errorInvalidReferralType": "Tipo de referencia inválido",
     "referralTypeLabel": "Tipo de Referencia",
