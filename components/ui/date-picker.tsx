@@ -16,7 +16,13 @@ interface DatePickerProps {
   disabled?: boolean
 }
 
-export function DatePicker({ name, required, onDateChange, className }: DatePickerProps) {
+export function DatePicker({
+  name,
+  required,
+  onDateChange,
+  className,
+  disabled,
+}: DatePickerProps) {
   const [selected, setSelected] = React.useState<Date | undefined>()
   const [display, setDisplay] = React.useState("")
   const [iso, setIso] = React.useState("")
@@ -71,12 +77,21 @@ export function DatePicker({ name, required, onDateChange, className }: DatePick
         value={display}
         onChange={handleInputChange}
         required={required}
+        disabled={disabled}
         className={cn("pr-10", className)}
       />
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={disabled ? false : open}
+        onOpenChange={(value) => {
+          if (!disabled) {
+            setOpen(value);
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <button
             type="button"
+            disabled={disabled}
             className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
           >
             <CalendarIcon className="h-4 w-4" />
