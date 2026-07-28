@@ -39,7 +39,6 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Button
           variant="ghost"
-          className="px-0 hover:bg-sidebar/80 hover:text-sidebar-foreground"
           onClick={() =>
             column.toggleSorting(column.getIsSorted() === "asc")
           }
@@ -64,7 +63,6 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Button
           variant="ghost"
-          className="px-0 hover:bg-sidebar/80 hover:text-sidebar-foreground"
           onClick={() =>
             column.toggleSorting(column.getIsSorted() === "asc")
           }
@@ -83,7 +81,6 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Button
           variant="ghost"
-          className="px-0 hover:bg-sidebar/80 hover:text-sidebar-foreground"
           onClick={() =>
             column.toggleSorting(column.getIsSorted() === "asc")
           }
@@ -102,7 +99,6 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Button
           variant="ghost"
-          className="px-0 hover:bg-sidebar/80 hover:text-sidebar-foreground"
           onClick={() =>
             column.toggleSorting(column.getIsSorted() === "asc")
           }
@@ -132,7 +128,6 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Button
           variant="ghost"
-          className="px-0 hover:bg-sidebar/80 hover:text-sidebar-foreground"
           onClick={() =>
             column.toggleSorting(column.getIsSorted() === "asc")
           }
@@ -166,7 +161,6 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Button
           variant="ghost"
-          className="px-0 hover:bg-sidebar/80 hover:text-sidebar-foreground"
           onClick={() =>
             column.toggleSorting(column.getIsSorted() === "asc")
           }

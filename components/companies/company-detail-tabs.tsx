@@ -22,6 +22,7 @@ type Company = {
   contactTitle: string | null;
   notes: string | null;
   createdDate: Date;
+  isActive: boolean
 };
 
 type Props = { company: Company };
