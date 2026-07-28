@@ -32,17 +32,19 @@ export function UsersClient({ initialData }: Props) {
 
   const [isPending, startTransition] = useTransition();
   const debouncedSearch = useDebounce(search, 500);
+  const [limit, setLimit] = useState(20);
   useEffect(() => {
-  startTransition(async () => {
-    const result = await getUsers({
-      search: debouncedSearch,
-      role,
-      page,
-    });
+    startTransition(async () => {
+      const result = await getUsers({
+        search: debouncedSearch,
+        role,
+        page,
+        limit,
+      });
 
-    setData(result);
-  });
-}, [debouncedSearch, role, page]);
+      setData(result);
+    });
+  }, [debouncedSearch, role, page, limit]);
 
   return (
     <div className="space-y-6">
@@ -59,28 +61,21 @@ export function UsersClient({ initialData }: Props) {
         />
 
         <Select
-          value={role}
+          value={String(limit)}
           onValueChange={(value) => {
-            setRole(value);
+            setLimit(Number(value));
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-55">
-            <SelectValue placeholder={t("common.allRoles")} />
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Rows" />
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="all">
-              {t("common.allRoles")}
-            </SelectItem>
-
-            <SelectItem value="Admin">
-              {t("common.roleAdmin")}
-            </SelectItem>
-
-            <SelectItem value="User">
-              {t("common.roleUser")}
-            </SelectItem>
+            <SelectItem value="10">10 / page</SelectItem>
+            <SelectItem value="20">20 / page</SelectItem>
+            <SelectItem value="50">50 / page</SelectItem>
+            <SelectItem value="100">100 / page</SelectItem>
           </SelectContent>
         </Select>
       </div>

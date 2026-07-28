@@ -9,7 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default async function UsersPage() {
-  const initialData = await getUsers();
+  const initialData = await getUsers({
+    page: 1,
+    limit: 20,
+  });
 
   return (
     <div className="space-y-6 p-6">
