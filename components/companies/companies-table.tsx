@@ -57,9 +57,9 @@ export function CompaniesTable({
                   {header.isPlaceholder
                     ? null
                     : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
                 </TableHead>
               ))}
             </TableRow>
@@ -71,9 +71,12 @@ export function CompaniesTable({
             table.getRowModel().rows.map((row, index) => (
               <TableRow
                 key={row.id}
-                className={`hover:bg-muted/50 ${
-                  index % 2 ? "bg-muted/20" : ""
-                }`}
+                className={`
+                  ${index % 2 === 0
+                    ? "table-row-even"
+                    : "table-row-odd"
+                  }
+  `}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
