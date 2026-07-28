@@ -28,21 +28,24 @@ export async function checkEmailExists(email: string) {
 
   return !!user;
 }
+
 type GetUsersParams = {
   page?: number;
   limit?: number;
   search?: string;
   role?: string;
+  companyId?: number; // NEW - "group by company" dropdown filter
+  status?: "active" | "inactive" | "all"; // NEW
 };
 
-export async function getUsers(
-  {
-    page = 1,
-    limit = 10,
-    search = "",
-    role,
-  }: GetUsersParams = {}
-) {
+export async function getUsers({
+  page = 1,
+  limit = 10,
+  search = "",
+  role,
+  companyId,
+  status = "all",
+}: GetUsersParams = {}) {
   const skip = (page - 1) * limit;
 
   const where: Prisma.UserWhereInput = {};
@@ -82,14 +85,28 @@ export async function getUsers(
     where.userRole = role;
   }
 
+  // Company Filter (group by company dropdown)
+  if (companyId) {
+    where.acctId = companyId;
+  }
+
+  // Active / Inactive / All Filter
+  if (status === "active") {
+    where.isActive = true;
+  } else if (status === "inactive") {
+    where.isActive = false;
+  }
+  // status === "all" -> no filter applied
+
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
       skip,
       take: limit,
-      orderBy: {
-        createdDate: "desc",
-      },
+      orderBy: [
+        { isActive: "desc" }, // active users show first by default
+        { createdDate: "desc" },
+      ],
       select: {
         id: true,
         organization: true,
@@ -119,11 +136,15 @@ export async function getUsers(
 }
 
 /* ------------------------------------------------ */
-/* GET COMPANIES */
+/* GET COMPANIES (lightweight - for user form dropdown) */
 /* ------------------------------------------------ */
 
 export async function getCompanies() {
   return prisma.company.findMany({
+    // Only offer active companies when assigning a user
+    where: {
+      isActive: true,
+    },
     select: {
       id: true,
       organization: true,
@@ -184,6 +205,9 @@ export async function createUser(
     company = await prisma.company.findUnique({ where: { id: acctId } });
     if (!company) {
       throw new Error(t("users.errorCompanyNotFound"));
+    }
+    if (!company.isActive) {
+      throw new Error(t("users.errorCompanyInactive"));
     }
   }
 
@@ -346,6 +370,34 @@ export async function updateUser(
   redirect(
     "/admin/users"
   );
+}
+
+/* ------------------------------------------------ */
+/* TOGGLE USER ACTIVE STATUS (quick switch, no redirect) */
+/* ------------------------------------------------ */
+
+export async function toggleUserStatus(userId: number, isActive: boolean) {
+  const { t } = await getServerTranslation();
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error(t("users.userNotFound"));
+
+  // Prevent activating a user whose parent company is inactive
+  if (isActive && user.acctId) {
+    const company = await prisma.company.findUnique({
+      where: { id: user.acctId },
+    });
+    if (company && !company.isActive) {
+      throw new Error(t("users.errorCompanyInactive"));
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { isActive },
+  });
+
+  revalidatePath("/admin/users");
 }
 
 //get all user

@@ -1,65 +1,102 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { columns, Company } from "./columns";
 import { useTranslation } from "@/locale/use-translation";
 
-type Company = {
-  id: number;
-  organization: string;
-  city: string;
-  state: string;
-  contactEmail: string;
-  contactPhone: string;
-  createdDate: Date;
-};
+interface CompaniesTableProps {
+  companies: Company[];
+}
 
-export function CompaniesTable({ companies }: { companies: Company[] }) {
+export function CompaniesTable({
+  companies,
+}: CompaniesTableProps) {
   const { t } = useTranslation();
 
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const table = useReactTable({
+    data: companies,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   return (
-    <div className="overflow-x-auto border">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
-            <th className="px-4 py-3 text-left font-semibold">{t("common.organization")}</th>
-            <th className="px-4 py-3 text-left font-semibold">{t("common.email")}</th>
-            <th className="px-4 py-3 text-left font-semibold">{t("common.phone")}</th>
-            <th className="px-4 py-3 text-left font-semibold">{t("common.location")}</th>
-            <th className="px-4 py-3 text-left font-semibold">{t("common.created")}</th>
-            <th className="px-4 py-3 text-left font-semibold">{t("common.actions")}</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {companies.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                {t("companies.noCompaniesFound")}
-              </td>
-            </tr>
-          ) : (
-            companies.map((company, i) => (
-              <tr
-                key={company.id}
-                className={`transition-colors hover:bg-muted/50 ${i % 2 === 1 ? "table-row-even" : "table-row-odd"}`}
+    <div className="overflow-hidden rounded-lg border">
+      <Table>
+        <TableHeader className="bg-sidebar">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className="text-sidebar-foreground"
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+
+        <TableBody>
+          {table.getRowModel().rows.length ? (
+            table.getRowModel().rows.map((row, index) => (
+              <TableRow
+                key={row.id}
+                className={`hover:bg-muted/50 ${
+                  index % 2 ? "bg-muted/20" : ""
+                }`}
               >
-                <td className="px-4 py-3 font-medium">{company.organization}</td>
-                <td className="px-4 py-3 text-muted-foreground">{company.contactEmail}</td>
-                <td className="px-4 py-3 text-muted-foreground">{company.contactPhone}</td>
-                <td className="px-4 py-3 text-muted-foreground">{company.city}, {company.state}</td>
-                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                  {new Date(company.createdDate).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
-                  <Link href={`/admin/companies/${company.id}/edit`}>
-                    <Button size="sm" variant="outline">{t("common.edit")}</Button>
-                  </Link>
-                </td>
-              </tr>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
             ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="h-24 text-center text-muted-foreground"
+              >
+                {t("companies.noCompaniesFound")}
+              </TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

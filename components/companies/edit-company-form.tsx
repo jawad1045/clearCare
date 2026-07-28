@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, MapPin, User, FileText } from "lucide-react";
+import { Building2, MapPin, User, FileText, CheckCircle2, XCircle } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-import { updateCompany } from "@/action/company.action";
+import { updateCompany, toggleCompanyStatus } from "@/action/company.action";
 import { lookupZipCode, formatPhoneInput } from "@/lib/utils";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -48,6 +50,7 @@ type Company = {
   contactEmail: string;
   contactTitle: string | null;
   notes: string | null;
+  isActive: boolean; // NEW
 };
 
 type Props = { company: Company };
@@ -123,6 +126,12 @@ export function EditCompanyForm({ company }: Props) {
   const [isPending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<CompanyFormValues | null>(null);
+
+  // Active / Inactive status (separate from the main field form — cascades to users)
+  const [isActive, setIsActive] = useState(company.isActive);
+  const [pendingActive, setPendingActive] = useState<boolean | null>(null);
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+  const [isStatusPending, startStatusTransition] = useTransition();
 
   const zipLookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -200,22 +209,72 @@ export function EditCompanyForm({ company }: Props) {
     setPendingValues(null);
   }
 
+  // Status switch handlers
+  function handleStatusSwitchChange(checked: boolean) {
+    setPendingActive(checked);
+    setStatusConfirmOpen(true);
+  }
+
+  function onStatusConfirm() {
+    if (pendingActive === null) return;
+    const nextActive = pendingActive;
+    setStatusConfirmOpen(false);
+
+    startStatusTransition(async () => {
+      await toggleCompanyStatus(company.id, nextActive);
+      setIsActive(nextActive);
+      setPendingActive(null);
+    });
+  }
+
+  function onStatusCancel() {
+    setStatusConfirmOpen(false);
+    setPendingActive(null);
+  }
+
   return (
     <Card className="overflow-hidden border-border shadow-sm">
-      <div className="h-1 w-full bg-primary" />
+      <div className={`h-1 w-full ${isActive ? "bg-primary" : "bg-muted-foreground/40"}`} />
 
       <CardHeader className="pb-4 pt-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <Building2 className="h-5 w-5" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
+                  {t("companies.editTitle")}
+                </CardTitle>
+                <Badge
+                  variant={isActive ? "default" : "secondary"}
+                  className={isActive ? "gap-1 bg-primary/10 text-primary" : "gap-1 bg-muted text-muted-foreground"}
+                >
+                  {isActive ? (
+                    <CheckCircle2 className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  {isActive ? t("common.active") : t("common.inactive")}
+                </Badge>
+              </div>
+              <CardDescription className="text-xs text-muted-foreground">
+                {t("companies.editSubtitle")}
+              </CardDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
-              {t("companies.editTitle")}
-            </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">
-              {t("companies.editSubtitle")}
-            </CardDescription>
+
+          <div className="flex items-center gap-2">
+            <Label htmlFor="company-active-switch" className="text-xs font-medium text-foreground/80">
+              {isActive ? t("common.active") : t("common.inactive")}
+            </Label>
+            <Switch
+              id="company-active-switch"
+              checked={isActive}
+              disabled={isStatusPending}
+              onCheckedChange={handleStatusSwitchChange}
+            />
           </div>
         </div>
       </CardHeader>
@@ -231,6 +290,20 @@ export function EditCompanyForm({ company }: Props) {
           description={t("companies.editConfirmDescription")}
           confirmLabel={t("common.saveChanges")}
         />
+
+        <ConfirmDialog
+          open={statusConfirmOpen}
+          onConfirm={onStatusConfirm}
+          onCancel={onStatusCancel}
+          title={pendingActive ? t("companies.activateConfirmTitle") : t("companies.deactivateConfirmTitle")}
+          description={
+            pendingActive
+              ? t("companies.activateConfirmDescription")
+              : t("companies.deactivateConfirmDescription")
+          }
+          confirmLabel={pendingActive ? t("common.activate") : t("common.deactivate")}
+        />
+
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
 
           {/* Organization */}

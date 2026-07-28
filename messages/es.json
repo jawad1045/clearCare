@@ -1,5 +1,7 @@
 {
   "common": {
+    "activate": "Activar",
+    "deactivate": "Desactivar",
     "emailAlreadyRegistered": "Este correo electrónico ya está registrado",
     "checkingEmail": "Verificando correo electrónico…",
     "serviceDrugTestOM": "Prueba de Droga (OM)",
@@ -194,6 +196,10 @@
     "unexpectedServerError": "Ocurrió un error inesperado en el servidor."
   },
   "companies": {
+    "activateConfirmTitle": "Activar empresa",
+    "activateConfirmDescription": "¿Está seguro de que desea activar esta empresa? Los usuarios asociados con esta empresa podrán acceder al sistema.",
+    "deactivateConfirmTitle": "Desactivar empresa",
+    "deactivateConfirmDescription": "¿Está seguro de que desea desactivar esta empresa? Los usuarios asociados con esta empresa ya no podrán acceder al sistema.",
     "customTitlePlaceholder": "Ingresar título personalizado",
     "searchPlaceholder": "Buscar empresas...",
     "noCompaniesFound": "No se encontraron empresas",
@@ -223,6 +229,7 @@
     "companyNotFound": "Empresa no encontrada"
   },
   "users": {
+    "errorCompanyInactive": "La empresa seleccionada está inactiva. Por favor, elige una empresa activa.",
     "totalUsers": "Total de Usuarios",
     "pageTitle": "Usuarios",
     "pageSubtitle": "Gestionar usuarios y permisos",

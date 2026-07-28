@@ -1,5 +1,7 @@
 {
   "common": {
+    "activate": "Activate",
+    "deactivate": "Deactivate",
     "checkingEmail": "Checking email…",
     "emailAlreadyRegistered": "This email is already registered",
     "serviceDrugTestOM": "Drug Test (OM)",
@@ -194,6 +196,10 @@
     "unexpectedServerError": "An unexpected server error occurred."
   },
   "companies": {
+    "activateConfirmTitle": "Activate Company",
+    "activateConfirmDescription": "Are you sure you want to activate this company? Users associated with this company will be able to access the system.",
+    "deactivateConfirmTitle": "Deactivate Company",
+    "deactivateConfirmDescription": "Are you sure you want to deactivate this company? Users associated with this company will no longer be able to access the system.",
     "customTitlePlaceholder": "Enter custom title",
     "searchPlaceholder": "Search companies...",
     "noCompaniesFound": "No companies found",
@@ -223,6 +229,7 @@
     "companyNotFound": "Company not found"
   },
   "users": {
+    "errorCompanyInactive": "The selected company is inactive. Please choose an active company.",
     "totalUsers": "Total Users",
     "pageTitle": "Users",
     "pageSubtitle": "Manage users and permissions",
