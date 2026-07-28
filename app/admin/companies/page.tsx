@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { getCompanies } from "@/action/company.action";
 
+import { getCompanies } from "@/action/company.action";
 import { CompanyHeader } from "@/components/companies/company-header";
 import { CompaniesClient } from "@/components/companies/companies-client";
 
@@ -9,7 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CompaniesPage() {
-  const initialData = await getCompanies();
+  const initialData = await getCompanies({
+    page: 1,
+    limit: 20,
+  });
 
   return (
     <div className="space-y-6 p-6">
