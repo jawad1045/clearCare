@@ -40,7 +40,7 @@ type GetUsersParams = {
 
 export async function getUsers({
   page = 1,
-  limit = 10,
+  limit = 20,
   search = "",
   role,
   companyId,

@@ -1,6 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -11,121 +18,80 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ResetPasswordDialog } from "@/components/users/reset-password-dialog";
 import { useTranslation } from "@/locale/use-translation";
-
-type User = {
-  id: number;
-  organization: string;
-  contactFirstName: string;
-  contactLastName: string;
-  contactEmail: string;
-  userRole: string;
-  isActive: boolean;
-  createdDate: Date;
-};
+import { columns, User } from "./columns";
 
 type UsersTableProps = {
   users: User[];
 };
 
-const ROLE_LABEL_KEYS: Record<string, "common.roleAdmin" | "common.roleUser"> = {
-  Admin: "common.roleAdmin",
-  User: "common.roleUser",
-};
-
-export function UsersTable({
-  users,
-}: UsersTableProps) {
+export function UsersTable({ users }: UsersTableProps) {
   const { t } = useTranslation();
 
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   return (
-    <div className="border">
+    <div className="overflow-hidden rounded-lg border">
       <Table>
-        <TableHeader className="bg-sidebar text-sidebar-foreground">
-          <TableRow>
-            <TableHead className="text-sidebar-foreground">{t("common.name")}</TableHead>
-            <TableHead className="text-sidebar-foreground">{t("common.email")}</TableHead>
-            <TableHead className="text-sidebar-foreground">{t("common.organization")}</TableHead>
-            <TableHead className="text-sidebar-foreground">{t("common.role")}</TableHead>
-            <TableHead className="text-sidebar-foreground">{t("common.status")}</TableHead>
-            <TableHead className="text-sidebar-foreground">{t("common.created")}</TableHead>
-            <TableHead className="w-56 text-sidebar-foreground">
-              {t("common.actions")}
-            </TableHead>
-          </TableRow>
+        <TableHeader className="bg-sidebar">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className="text-sidebar-foreground"
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
         </TableHeader>
 
         <TableBody>
-          {users.length === 0 ? (
+          {table.getRowModel().rows.length ? (
+            table.getRowModel().rows.map((row, index) => (
+              <TableRow
+                key={row.id}
+                className={`transition-colors hover:bg-muted/50 ${
+                  index % 2 === 1 ? "bg-muted/20" : ""
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={columns.length}
                 className="py-8 text-center text-muted-foreground"
               >
                 {t("users.noUsersFound")}
               </TableCell>
             </TableRow>
-          ) : (
-            users.map((user, i) => (
-              <TableRow key={user.id} className={`transition-colors hover:bg-muted/50
-               ${i % 2 === 1 ? "table-row-even" : "table-row-odd"}`}>
-                <TableCell>
-                  {user.contactFirstName}{" "}
-                  {user.contactLastName}
-                </TableCell>
-
-                <TableCell>
-                  {user.contactEmail}
-                </TableCell>
-
-                <TableCell>
-                  {user.organization}
-                </TableCell>
-
-                <TableCell>
-                  <Badge variant="outline">
-                    {ROLE_LABEL_KEYS[user.userRole] ? t(ROLE_LABEL_KEYS[user.userRole]) : user.userRole}
-                  </Badge>
-                </TableCell>
-
-                <TableCell>
-                  <Badge
-                    variant={
-                      user.isActive
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {user.isActive
-                      ? t("common.active")
-                      : t("common.inactive")}
-                  </Badge>
-                </TableCell>
-
-                <TableCell>
-                  {new Date(
-                    user.createdDate
-                  ).toLocaleDateString()}
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/admin/users/${user.id}/edit`}>
-                      <Button size="sm" variant="outline">
-                        {t("common.edit")}
-                      </Button>
-                    </Link>
-                    <ResetPasswordDialog
-                      userId={user.id}
-                      userName={`${user.contactFirstName} ${user.contactLastName}`}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
           )}
         </TableBody>
       </Table>
