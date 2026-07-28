@@ -22,10 +22,10 @@ model Company {
   contactTitle          String?                @map("Contact_Title") @db.VarChar(100)
   notes                 String?
   createdDate           DateTime               @default(now()) @map("Created_Date")
+  isActive              Boolean                @default(true)             
   mentalHealthReferrals MentalHealthReferral[]
   referrals             Referral[]
   users                 User[]
-
   @@map("tbl_Companies")
 }
 
