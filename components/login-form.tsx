@@ -173,9 +173,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-primary/15 bg-primary/5 px-4 py-3 text-left">
+          <div className="mt-5 flex items-start  rounded-lg border border-primary/15 bg-primary/5 px-1 py-2 text-left">
             <svg
-              className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary"
+              className="mt-0.5 h-4 w-3 shrink-0 text-primary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -188,14 +188,14 @@ export default function LoginPage() {
               />
             </svg>
             <p className="text-xs leading-relaxed text-gray-600">
-              Don't have an active business account?{" "}
+              If you do not have an ACTIVE business account, please?{" "}
               <Link
                 href="https://form.typeform.com/to/wY7RUiTK"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-primary underline-offset-2 hover:underline"
               >
-                Request access
+                Click Here.
               </Link>
             </p>
           </div>
