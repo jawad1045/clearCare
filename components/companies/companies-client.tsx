@@ -11,6 +11,7 @@ import { CompaniesTable } from "./companies-table";
 import { Download } from "lucide-react";
 import { getCompaniesForExport } from "@/action/export.action";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { formatDate } from "@/lib/format-date";
 
 type Props = {
   initialData: Awaited<ReturnType<typeof getCompanies>>;
@@ -75,7 +76,7 @@ export function CompaniesClient({ initialData }: Props) {
         c.contactPhone,
         c.contactTitle || "",
         c.isActive ? "Active" : "Inactive",
-        new Date(c.createdDate).toLocaleDateString(),
+        formatDate(c.createdDate),
         c.notes || ""
       ]);
 
@@ -105,7 +106,7 @@ export function CompaniesClient({ initialData }: Props) {
         c.contactPhone,
         `${c.city}, ${c.state}`,
         c.isActive ? "Active" : "Inactive",
-        new Date(c.createdDate).toLocaleDateString()
+        formatDate(c.createdDate)
       ]);
 
       await exportToPDF("companies_export.pdf", "Companies List", headers, rows);

@@ -20,6 +20,7 @@ import { useTranslation } from "@/locale/use-translation";
 import { Download } from "lucide-react";
 import { getUsersForExport } from "@/action/export.action";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { formatDate } from "@/lib/format-date";
 
 type Props = {
   initialData: Awaited<ReturnType<typeof getUsers>>;
@@ -77,7 +78,7 @@ export function UsersClient({ initialData }: Props) {
         user.contactTitle || "",
         user.userRole,
         user.isActive ? "Active" : "Inactive",
-        new Date(user.createdDate).toLocaleDateString(),
+        formatDate(user.createdDate),
         user.organization,
         user.company ? `${user.company.street || ""}, ${user.company.city || ""}, ${user.company.state || ""} ${user.company.zip || ""}` : "",
         user.company?.contactPhone || "",
@@ -114,7 +115,7 @@ export function UsersClient({ initialData }: Props) {
         user.isActive ? "Active" : "Inactive",
         user.organization,
         user.company ? `${user.company.city || ""}, ${user.company.state || ""}` : "",
-        new Date(user.createdDate).toLocaleDateString()
+        formatDate(user.createdDate)
       ]);
 
       await exportToPDF("users_export.pdf", "Admin Users List", headers, rows);
