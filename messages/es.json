@@ -267,6 +267,7 @@
     "errorEmailExists": "El correo electrónico ya existe"
   },
   "referrals": {
+    "searchPlaceholder": "Buscar referencias",
     "testTypeAndPriorityRequiredForDrugTest": "El tipo de prueba y la prioridad son obligatorios para las pruebas de drogas.",
    "testDetailsOnlyForDrugTest": "Los detalles de la prueba solo están disponibles para pruebas de drogas.",
     "referralTypePsychYouth": "Psicológico (Juvenil)",

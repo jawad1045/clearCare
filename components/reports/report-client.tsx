@@ -9,7 +9,6 @@ import { Separator } from "@/components/ui/separator";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 import { ServiceTypeBarChart } from "@/components/charts/service-type-bar-chart";
 import { getStatusBadge, getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
-import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
 import { Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide-react";
 import type { ReportRow } from "@/action/report.action";
 import { useTranslation } from "@/locale/use-translation";
@@ -17,17 +16,22 @@ import type { TranslationKey } from "@/locale/config";
 import { ReportTable } from "./report-tabel";
 import { reportColumns } from "./report-column";
 
-const SERVICE_TYPES = [
-  "Drug Test",
-  "Physical",
-  "Behavioral Health",
-  "Medication Management",
-  "IOP",
-] as const;
-const SERVICE_TYPE_LABEL_KEYS_ALL: Record<(typeof SERVICE_TYPES)[number], TranslationKey> = {
+import {
+  SERVICE_TYPES,
+  SERVICE_TYPE_LABEL_KEYS,
+} from "@/lib/referral-filters";
+
+const SERVICE_TYPE_LABEL_KEYS_ALL = {
   ...SERVICE_TYPE_LABEL_KEYS,
   "Behavioral Health": "reports.serviceBehavioralHealth",
-};
+} satisfies Record<
+  (typeof SERVICE_TYPES)[number] | "Behavioral Health",
+  TranslationKey
+>;
+const REPORT_SERVICE_TYPES = [
+  ...SERVICE_TYPES,
+  "Behavioral Health",
+] as const;
 
 interface Props {
   rows: ReportRow[];
@@ -186,8 +190,10 @@ export function ReportClient({ rows, isAdmin }: Props) {
                   <SelectTrigger className="h-10 w-48 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("reports.allServices")}</SelectItem>
-                    {SERVICE_TYPES.map((s) => (
-                      <SelectItem key={s} value={s}>{t(SERVICE_TYPE_LABEL_KEYS_ALL[s])}</SelectItem>
+                    {REPORT_SERVICE_TYPES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {t(SERVICE_TYPE_LABEL_KEYS_ALL[s])}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
