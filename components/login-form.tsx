@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react"
 import { loginAction } from "@/action/auth/auth.model"
@@ -172,6 +173,32 @@ export default function LoginPage() {
             </button>
           </form>
 
+          <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-primary/15 bg-primary/5 px-4 py-3 text-left">
+            <svg
+              className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-xs leading-relaxed text-gray-600">
+              Don't have an active business account?{" "}
+              <Link
+                href="https://form.typeform.com/to/wY7RUiTK"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                Request access
+              </Link>
+            </p>
+          </div>
           <p className="mt-6 text-center text-[11px] text-gray-400">
             🔒 {t("login.sslNote")} &nbsp;·&nbsp; {t("login.hipaaCompliant")}
           </p>
