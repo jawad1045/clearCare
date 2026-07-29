@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createNotification } from "@/action/notification.action";
@@ -216,14 +217,72 @@ export async function getRecentBHReferrals(take = 6) {
   });
 }
 
-export async function getBHReferrals() {
-  return prisma.mentalHealthReferral.findMany({
-    include: { user: true, company: true },
-    orderBy: { dateOfReferral: "desc" },
-  });
+// ---------------------------------------------------------------------------
+// Pagination types shared by getBHReferrals / getMyBHReferrals
+// ---------------------------------------------------------------------------
+
+export type GetBHReferralsParams = {
+  search?: string;
+  status?: string; // "all" | actual status value
+  page?: number;
+  limit?: number;
+};
+
+export type PaginatedBHReferrals = Awaited<ReturnType<typeof getBHReferrals>>;
+
+function buildBHReferralWhere(
+  base: Prisma.MentalHealthReferralWhereInput,
+  { search, status }: Pick<GetBHReferralsParams, "search" | "status">
+): Prisma.MentalHealthReferralWhereInput {
+  const where: Prisma.MentalHealthReferralWhereInput = { ...base };
+
+  if (status && status !== "all") {
+    where.status = status;
+  }
+
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    where.OR = [
+      { firstName: { contains: trimmedSearch, mode: "insensitive" } },
+      { lastName: { contains: trimmedSearch, mode: "insensitive" } },
+      { email: { contains: trimmedSearch, mode: "insensitive" } },
+      { phone: { contains: trimmedSearch, mode: "insensitive" } },
+      { referName: { contains: trimmedSearch, mode: "insensitive" } },
+    ];
+  }
+
+  return where;
 }
 
-export async function getMyBHReferrals() {
+export async function getBHReferrals(params: GetBHReferralsParams = {}) {
+  const { search = "", status = "all" } = params;
+  const page = Math.max(1, params.page ?? 1);
+  // If no limit is given, return everything unpaginated — used by
+  // AdminBHReferralsTable, which paginates client-side after filtering.
+  const limit = params.limit != null ? Math.max(1, params.limit) : undefined;
+
+  const where = buildBHReferralWhere({}, { search, status });
+
+  const [referrals, total] = await Promise.all([
+    prisma.mentalHealthReferral.findMany({
+      where,
+      include: { user: true, company: true },
+      orderBy: { dateOfReferral: "desc" },
+      ...(limit != null ? { skip: (page - 1) * limit, take: limit } : {}),
+    }),
+    prisma.mentalHealthReferral.count({ where }),
+  ]);
+
+  return {
+    referrals,
+    total,
+    page,
+    limit: limit ?? total,
+    totalPages: limit != null ? Math.max(1, Math.ceil(total / limit)) : 1,
+  };
+}
+
+export async function getMyBHReferrals(params: GetBHReferralsParams = {}) {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
@@ -231,11 +290,34 @@ export async function getMyBHReferrals() {
     throw new Error(t("common.errors.unauthorized"));
   }
 
-  return prisma.mentalHealthReferral.findMany({
-    where: { userId: currentUser.id },
-    include: { company: true },
-    orderBy: { dateOfReferral: "desc" },
-  });
+  const { search = "", status = "all" } = params;
+  const page = Math.max(1, params.page ?? 1);
+  // If no limit is given, return everything unpaginated — used by
+  // UserBHReferralsTable, which paginates client-side after filtering.
+  const limit = params.limit != null ? Math.max(1, params.limit) : undefined;
+
+  const where = buildBHReferralWhere(
+    { userId: currentUser.id },
+    { search, status }
+  );
+
+  const [referrals, total] = await Promise.all([
+    prisma.mentalHealthReferral.findMany({
+      where,
+      include: { company: true },
+      orderBy: { dateOfReferral: "desc" },
+      ...(limit != null ? { skip: (page - 1) * limit, take: limit } : {}),
+    }),
+    prisma.mentalHealthReferral.count({ where }),
+  ]);
+
+  return {
+    referrals,
+    total,
+    page,
+    limit: limit ?? total,
+    totalPages: limit != null ? Math.max(1, Math.ceil(total / limit)) : 1,
+  };
 }
 
 export async function getBHReferralById(id: number) {

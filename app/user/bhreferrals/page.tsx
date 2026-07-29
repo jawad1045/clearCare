@@ -9,14 +9,14 @@ export const metadata: Metadata = {
 };
 
 export default async function MyBHReferralsPage() {
-  const referrals = await getMyBHReferrals();
-  const { t } = await getServerTranslation();
+const { referrals, total } = await getMyBHReferrals();
+const { t } = await getServerTranslation();
 
-  return (
-    <div className="space-y-6 p-6">
-      <ReferralHeader basePath="/user/bhreferrals" title={t("referrals.bhPageTitleUser")} total={referrals.length} />
+return (
+<div className="space-y-6 p-6">
+<ReferralHeader basePath="/user/bhreferrals" title={t("referrals.bhPageTitleUser")} total={total} />
 
-      <UserBHReferralsTable referrals={referrals} basePath="/user/bhreferrals" />
-    </div>
+<UserBHReferralsTable referrals={referrals} basePath="/user/bhreferrals" />
+</div>
   );
 }

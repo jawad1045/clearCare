@@ -15,27 +15,27 @@ export const metadata: Metadata = {
 
 export default async function BHReferralsPage() {
 
-  const referrals = await getBHReferrals();
+const { referrals, total } = await getBHReferrals();
 
-  const { t } = await getServerTranslation();
-
-
-  return (
-    <div className="space-y-6 p-6">
-
-      <ReferralHeader
-        basePath="/admin/bhreferrals"
-        title={t("referrals.bhPageTitleAdmin")}
-        showCreate={false}
-        total={referrals.length}
-      />
+const { t } = await getServerTranslation();
 
 
-      <AdminBHReferralsTable
-        referrals={referrals}
-        basePath="/admin/bhreferrals"
-      />
+return (
+<div className="space-y-6 p-6">
 
-    </div>
+<ReferralHeader
+basePath="/admin/bhreferrals"
+title={t("referrals.bhPageTitleAdmin")}
+showCreate={false}
+total={total}
+/>
+
+
+<AdminBHReferralsTable
+referrals={referrals}
+basePath="/admin/bhreferrals"
+/>
+
+</div>
   );
 }

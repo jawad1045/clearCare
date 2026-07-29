@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
@@ -28,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import { Pagination } from "@/components/pagination";
 
 import { useTranslation } from "@/locale/use-translation";
 
@@ -74,6 +77,12 @@ export function AdminBHReferralsTable({
 
   const [filterMonth, setFilterMonth] =
     useState("all");
+
+  const [pageSize, setPageSize] =
+    useState(20);
+
+  const [pageIndex, setPageIndex] =
+    useState(0);
 
 
 
@@ -191,10 +200,23 @@ export function AdminBHReferralsTable({
 
     state: {
       sorting,
+      pagination: {
+        pageIndex,
+        pageSize,
+      },
     },
 
     onSortingChange:
       setSorting,
+
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize })
+          : updater;
+      setPageIndex(next.pageIndex);
+      setPageSize(next.pageSize);
+    },
 
     getCoreRowModel:
       getCoreRowModel(),
@@ -202,7 +224,20 @@ export function AdminBHReferralsTable({
     getSortedRowModel:
       getSortedRowModel(),
 
+    getPaginationRowModel:
+      getPaginationRowModel(),
+
   });
+
+
+  // Reset to page 1 whenever a filter/search changes so we don't land
+  // on a now-empty page.
+  const filterKey = `${search}|${filterStatus}|${filterOrg}|${filterMonth}`;
+  const prevFilterKey = useRef(filterKey);
+  if (prevFilterKey.current !== filterKey) {
+    prevFilterKey.current = filterKey;
+    if (pageIndex !== 0) setPageIndex(0);
+  }
 
 
 
@@ -334,6 +369,25 @@ export function AdminBHReferralsTable({
                 )
               )}
 
+            </SelectContent>
+
+          </Select>
+
+
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => setPageSize(Number(value))}
+          >
+
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Rows" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="10">10 / page</SelectItem>
+              <SelectItem value="20">20 / page</SelectItem>
+              <SelectItem value="50">50 / page</SelectItem>
+              <SelectItem value="100">100 / page</SelectItem>
             </SelectContent>
 
           </Select>
@@ -472,6 +526,14 @@ export function AdminBHReferralsTable({
 
 
       </div>
+
+
+      <Pagination
+        page={pageIndex + 1}
+        totalPages={Math.max(1, table.getPageCount())}
+        total={filtered.length}
+        onPageChange={(p) => setPageIndex(p - 1)}
+      />
 
 
     </div>
