@@ -267,6 +267,7 @@
     "errorEmailExists": "Email already exists"
   },
   "referrals": {
+    "searchPlaceholder": "Search referrals...",
     "testTypeAndPriorityRequiredForDrugTest": "Test type and priority are required for drug tests.",
     "testDetailsOnlyForDrugTest": "Test details are only available for drug tests.",
     "referralTypePsychYouth": "Psych Evaluation (Youth)",

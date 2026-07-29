@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -310,44 +311,122 @@ export async function createReferral(
   );
 }
 
+// ---------------------------------------------------------------------------
+// Pagination types shared by getReferrals / getMyReferrals
+// ---------------------------------------------------------------------------
 
-export async function getReferrals() {
-  return prisma.referral.findMany({
-    where: {
-      serviceType: { not: "Behavioral Health" },
-    },
-    include: {
-      user: true,
-      company: true,
-    },
-    orderBy: {
-      dateOfReferral: "desc",
-    },
-  });
+export type GetReferralsParams = {
+  search?: string;
+  status?: string; // "all" | actual status value
+  page?: number;
+  limit?: number;
+};
+
+export type PaginatedReferrals = Awaited<ReturnType<typeof getReferrals>>;
+
+function buildReferralWhere(
+  base: Prisma.ReferralWhereInput,
+  { search, status }: Pick<GetReferralsParams, "search" | "status">
+): Prisma.ReferralWhereInput {
+  const where: Prisma.ReferralWhereInput = { ...base };
+
+  if (status && status !== "all") {
+    where.status = status;
+  }
+
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    where.OR = [
+      { patientFirstName: { contains: trimmedSearch, mode: "insensitive" } },
+      { patientLastName: { contains: trimmedSearch, mode: "insensitive" } },
+      { parentFirstName: { contains: trimmedSearch, mode: "insensitive" } },
+      { parentLastName: { contains: trimmedSearch, mode: "insensitive" } },
+      { parentEmail: { contains: trimmedSearch, mode: "insensitive" } },
+      { referName: { contains: trimmedSearch, mode: "insensitive" } },
+    ];
+  }
+
+  return where;
+}
+
+export async function getReferrals(params: GetReferralsParams = {}) {
+  const { search = "", status = "all" } = params;
+  const page = Math.max(1, params.page ?? 1);
+  const limit = Math.max(1, params.limit ?? 20);
+
+  const where = buildReferralWhere(
+    { serviceType: { not: "Behavioral Health" } },
+    { search, status }
+  );
+
+  const [referrals, total] = await Promise.all([
+    prisma.referral.findMany({
+      where,
+      include: {
+        user: true,
+        company: true,
+      },
+      orderBy: {
+        dateOfReferral: "desc",
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.referral.count({ where }),
+  ]);
+
+  return {
+    referrals,
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
 }
 
 
-export async function getMyReferrals() {
-  const currentUser =
-    await getCurrentUser();
+export async function getMyReferrals(params: GetReferralsParams = {}) {
+  const currentUser = await getCurrentUser();
 
   if (!currentUser) {
     const { t } = await getServerTranslation();
     throw new Error(t("common.errors.unauthorized"));
   }
 
-  return prisma.referral.findMany({
-    where: {
+  const { search = "", status = "all" } = params;
+  const page = Math.max(1, params.page ?? 1);
+  const limit = Math.max(1, params.limit ?? 20);
+
+  const where = buildReferralWhere(
+    {
       userId: currentUser.id,
       serviceType: { not: "Behavioral Health" },
     },
-    include: {
-      company: true,
-    },
-    orderBy: {
-      dateOfReferral: "desc",
-    },
-  });
+    { search, status }
+  );
+
+  const [referrals, total] = await Promise.all([
+    prisma.referral.findMany({
+      where,
+      include: {
+        company: true,
+      },
+      orderBy: {
+        dateOfReferral: "desc",
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.referral.count({ where }),
+  ]);
+
+  return {
+    referrals,
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
 }
 
 
