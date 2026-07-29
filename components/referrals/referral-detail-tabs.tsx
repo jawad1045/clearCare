@@ -248,18 +248,6 @@ function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
   return (
     <div className="space-y-4">
 
-      {/* Result PDF */}
-      <Card>
-        <CardHeader className="pb-3">
-          <SectionHeader icon={FileOutput} title={t("referrals.resultReportSection")} />
-          <CardDescription className="text-xs">{t("referrals.uploadResultHint")}</CardDescription>
-        </CardHeader>
-        <Separator />
-        <CardContent className="pt-4">
-          <ResultUploader referralId={referral.id} currentResult={referral.pdfResult ?? null} />
-        </CardContent>
-      </Card>
-
       {/* Status */}
       <Card>
         <CardHeader className="pb-3">
@@ -288,6 +276,18 @@ function ManageTab({ referral, isBH }: { referral: Referral; isBH: boolean }) {
               <UpdateStatusForm referralId={referral.id} currentStatus={referral.status} isBH={isBH} />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Result PDF */}
+      <Card>
+        <CardHeader className="pb-3">
+          <SectionHeader icon={FileOutput} title={t("referrals.resultReportSection")} />
+          <CardDescription className="text-xs">{t("referrals.uploadResultHint")}</CardDescription>
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-4">
+          <ResultUploader referralId={referral.id} currentResult={referral.pdfResult ?? null} />
         </CardContent>
       </Card>
 

@@ -76,7 +76,7 @@ async function notifySubmission(opts: {
         submittedBy: opts.userName,
         referralId: opts.referralId,
         serviceType: SERVICE_TYPE,
-        viewUrl: `${APP_URL}${opts.adminViewPath}`,
+        // viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
     notifySlackNewReferral({
@@ -116,7 +116,7 @@ async function notifyStatusChange(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       newStatus: opts.newStatus,
-      viewUrl: `${APP_URL}${opts.userViewPath}`,
+      // viewUrl: `${APP_URL}${opts.userViewPath}`, 
     }),
     notifySlackStatusChanged({
       referralId: opts.referralId,
@@ -419,7 +419,7 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
       toName: userName,
       patientName,
       referralId,
-      viewUrl: `${APP_URL}${userViewPath}`,
+      // viewUrl: `${APP_URL}${userViewPath}`,
     }),
     notifySlackResultUploaded({
       referralId,

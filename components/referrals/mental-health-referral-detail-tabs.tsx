@@ -218,18 +218,6 @@ function ManageTab({ referral }: { referral: MentalHealthReferral }) {
   return (
     <div className="space-y-4">
 
-      {/* Result PDF */}
-      <Card>
-        <CardHeader className="pb-3">
-          <SectionHeader icon={FileOutput} title={t("referrals.resultReportSection")} />
-          <CardDescription className="text-xs">{t("referrals.uploadResultHint")}</CardDescription>
-        </CardHeader>
-        <Separator />
-        <CardContent className="pt-4">
-          <BHResultUploader referralId={referral.id} currentResult={referral.pdfReport ?? null} />
-        </CardContent>
-      </Card>
-
       {/* Status */}
       <Card>
         <CardHeader className="pb-3">
@@ -258,6 +246,18 @@ function ManageTab({ referral }: { referral: MentalHealthReferral }) {
               <UpdateStatusForm referralId={referral.id} currentStatus={referral.status} isBH />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Result PDF */}
+      <Card>
+        <CardHeader className="pb-3">
+          <SectionHeader icon={FileOutput} title={t("referrals.resultReportSection")} />
+          <CardDescription className="text-xs">{t("referrals.uploadResultHint")}</CardDescription>
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-4">
+          <BHResultUploader referralId={referral.id} currentResult={referral.pdfReport ?? null} />
         </CardContent>
       </Card>
 

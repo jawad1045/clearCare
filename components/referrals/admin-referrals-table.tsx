@@ -381,12 +381,10 @@ export function AdminReferralsTable({
 
 
       {/* Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-3 overflow-x-auto">
-
+        {/* Left: Filter dropdowns */}
+        <div className="flex flex-wrap gap-3 overflow-x-auto">
 
             <Select
               value={filterService}
@@ -474,7 +472,6 @@ export function AdminReferralsTable({
 
 
 
-
             <Select
               value={filterOrg}
               onValueChange={setFilterOrg}
@@ -512,7 +509,6 @@ export function AdminReferralsTable({
 
 
             </Select>
-
 
 
 
@@ -577,40 +573,29 @@ export function AdminReferralsTable({
               </SelectContent>
 
             </Select>
+        </div>
 
-
-          </div>
-
-
-
-
+        {/* Right: Search + Export buttons */}
+        <div className="flex items-center gap-2 shrink-0">
           <Input
-
-            className="max-w-xs"
-
+            className="w-56"
             placeholder={
               t(
                 "referrals.searchAdminReferrals"
               )
             }
-
             value={search}
-
             onChange={(e)=>
               setSearch(
                 e.target.value
               )
             }
-
           />
-        </div>
-
-        <div className="flex gap-2 shrink-0">
-          <Button onClick={handleExportCSV} variant="outline" size="sm" className="flex items-center gap-1.5">
+          <Button onClick={handleExportCSV} variant="outline" size="sm" className="flex items-center gap-1.5 whitespace-nowrap">
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
-          <Button onClick={handleExportPDF} variant="outline" size="sm" className="flex items-center gap-1.5">
+          <Button onClick={handleExportPDF} variant="outline" size="sm" className="flex items-center gap-1.5 whitespace-nowrap">
             <Download className="h-4 w-4" />
             Export PDF
           </Button>

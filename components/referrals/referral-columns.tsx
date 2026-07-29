@@ -252,6 +252,68 @@ export const referralColumns = (
 
  cell:({row})=>
  formatDateTime(row.original.lastUpdated)
-}
+},
+
+
+{
+ id: "actions",
+
+ enableSorting: false,
+
+ header: () => t("common.actions"),
+
+ cell: ({ row }) => {
+  const referral = row.original;
+
+  return (
+   <div className="flex items-center gap-2">
+
+    <Button
+     asChild
+     size="sm"
+     variant="outline"
+    >
+     <Link href={`${basePath}/${referral.id}`}>
+      {t("common.view")}
+     </Link>
+    </Button>
+
+    {
+     referral.pdfResult
+     ?
+     <Button
+      asChild
+      size="sm"
+      variant="outline"
+      className="gap-1.5"
+     >
+      <Link
+       href={referral.pdfResult}
+       target="_blank"
+       rel="noopener noreferrer"
+       download
+      >
+       <Download className="h-3.5 w-3.5" />
+       {t("common.result")}
+      </Link>
+     </Button>
+     :
+     <Button
+      asChild
+      size="sm"
+      variant="outline"
+      className="gap-1.5 text-muted-foreground"
+     >
+      <Link href={`${basePath}/${referral.id}`}>
+       <Upload className="h-3.5 w-3.5" />
+       {t("common.uploadResult")}
+      </Link>
+     </Button>
+    }
+
+   </div>
+  );
+ },
+},
 
 ];
