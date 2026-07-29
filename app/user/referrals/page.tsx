@@ -8,13 +8,19 @@ export const metadata: Metadata = {
 };
 
 export default async function MyReferralsPage() {
-  const referrals = await getMyReferrals();
+  const data = await getMyReferrals();
 
   return (
     <div className="space-y-6 p-6">
-      <ReferralHeader basePath="/user/referrals" total={referrals.length} />
+      <ReferralHeader
+        basePath="/user/referrals"
+        total={data.total}
+      />
 
-      <UserReferralsTable referrals={referrals} basePath="/user/referrals" />
+      <UserReferralsTable
+        referrals={data.referrals}
+        basePath="/user/referrals"
+      />
     </div>
   );
 }
