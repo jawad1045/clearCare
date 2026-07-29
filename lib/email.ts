@@ -19,8 +19,9 @@ function baseLayout(body: string) {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:#1C2D35;padding:20px 32px;">
-            <img src="${LOGO_URL}" alt="${APP_NAME}" height="32" style="height:32px;width:auto;display:block;border:0;outline:none;text-decoration:none;" />
+          <td style="background:#1C2D35;padding:28px 32px;text-align:center;">
+            <img src="${LOGO_URL}" alt="${APP_NAME}" height="56" style="height:56px;width:auto;display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" />
+            <div style="color:#ffffff;font-size:18px;font-weight:bold;letter-spacing:0.3px;">${APP_NAME}</div>
           </td>
         </tr>
         <tr>
@@ -113,7 +114,6 @@ export async function sendReferralSubmittedToUser(opts: {
   patientName: string;
   referralId: number;
   serviceType: string;
-  // viewUrl: string;
 }) {
   await resend.emails.send({
     from: FROM,
@@ -144,7 +144,6 @@ export async function sendReferralSubmittedToAdmin(opts: {
   submittedBy: string;
   referralId: number;
   serviceType: string;
-  viewUrl: string;
 }) {
   await resend.emails.send({
     from: FROM,
@@ -163,7 +162,6 @@ export async function sendReferralSubmittedToAdmin(opts: {
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
       </table>
-      
     `),
   });
 }
@@ -174,7 +172,6 @@ export async function sendResultUploadedToUser(opts: {
   toName: string;
   patientName: string;
   referralId: number;
-  viewUrl: string;
 }) {
   await resend.emails.send({
     from: FROM,
@@ -192,7 +189,6 @@ export async function sendResultUploadedToUser(opts: {
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
       </table>
-      
     `),
   });
 }
@@ -204,7 +200,6 @@ export async function sendStatusChangedToUser(opts: {
   patientName: string;
   referralId: number;
   newStatus: string;
-  viewUrl: string;
 }) {
   const statusColor: Record<string, string> = {
     Approved: "#16a34a",
@@ -231,7 +226,6 @@ export async function sendStatusChangedToUser(opts: {
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
       </table>
-      
     `),
   });
 }
