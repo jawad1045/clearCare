@@ -50,6 +50,10 @@ import {
   referralColumns,
   Referral,
 } from "./referral-columns";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+
 
 
 type Props = {
@@ -277,6 +281,99 @@ export function AdminReferralsTable({
     if (pageIndex !== 0) setPageIndex(0);
   }
 
+  const handleExportCSV = () => {
+    try {
+      const headers = [
+        "Referral ID",
+        "Patient First Name",
+        "Patient Last Name",
+        "Date of Birth",
+        "Service Type",
+        "Priority",
+        "Status",
+        "Date of Referral",
+        "Parent First Name",
+        "Parent Last Name",
+        "Parent Email",
+        "Parent Phone",
+        "Race",
+        "Gender",
+        "SSN",
+        "Type",
+        "Referrer Name",
+        "Date Patient Contact",
+        "Method of Contact",
+        "Notes",
+        "Submitted By Name",
+        "Submitted By Email",
+        "Organization Name",
+        "Company Address",
+        "Company Phone"
+      ];
+
+      const rows = (filtered as any[]).map(r => [
+        r.id,
+        r.patientFirstName,
+        r.patientLastName,
+        r.dob ? new Date(r.dob).toLocaleDateString() : "",
+        r.serviceType,
+        r.priority || "",
+        r.status,
+        new Date(r.dateOfReferral).toLocaleDateString(),
+        r.parentFirstName || "",
+        r.parentLastName || "",
+        r.parentEmail || "",
+        r.parentPhone || "",
+        r.race || "",
+        r.gender || "",
+        r.ssn || "",
+        r.type || "",
+        r.referName || "",
+        r.datePatientContact ? new Date(r.datePatientContact).toLocaleDateString() : "",
+        r.methodOfContact || "",
+        r.notes || "",
+        r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
+        r.user?.contactEmail || "",
+        r.company?.organization || "",
+        r.company ? `${r.company.street || ""}, ${r.company.city || ""}, ${r.company.state || ""} ${r.company.zip || ""}` : "",
+        r.company?.contactPhone || ""
+      ]);
+
+      exportToCSV("referrals_export.csv", headers, rows);
+    } catch (error) {
+      console.error("Export CSV failed", error);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const headers = [
+        "ID",
+        "Patient Name",
+        "Service Type",
+        "Priority",
+        "Status",
+        "Referrer",
+        "Organization",
+        "Date"
+      ];
+
+      const rows = (filtered as any[]).map(r => [
+        r.id,
+        `${r.patientFirstName} ${r.patientLastName}`,
+        r.serviceType,
+        r.priority || "",
+        r.status,
+        r.referName || "",
+        r.company?.organization || "",
+        new Date(r.dateOfReferral).toLocaleDateString()
+      ]);
+
+      await exportToPDF("referrals_export.pdf", "Referrals List", headers, rows);
+    } catch (error) {
+      console.error("Export PDF failed", error);
+    }
+  };
 
 
   return (
@@ -284,227 +381,240 @@ export function AdminReferralsTable({
 
 
       {/* Filters */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
 
-        <div className="flex gap-3 overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-3 overflow-x-auto">
 
 
-          <Select
-            value={filterService}
-            onValueChange={setFilterService}
-          >
+            <Select
+              value={filterService}
+              onValueChange={setFilterService}
+            >
 
-            <SelectTrigger className="w-44">
-              <SelectValue
-                placeholder={
-                  t("common.allServiceTypes")
-                }
-              />
-            </SelectTrigger>
-
-
-            <SelectContent>
-
-              <SelectItem value="all">
-                {t("common.allServiceTypes")}
-              </SelectItem>
-
-
-              {SERVICE_TYPES.map(service => (
-
-                <SelectItem
-                  key={service}
-                  value={service}
-                >
-
-                  {
-                    t(
-                      SERVICE_TYPE_LABEL_KEYS[service]
-                    )
+              <SelectTrigger className="w-44">
+                <SelectValue
+                  placeholder={
+                    t("common.allServiceTypes")
                   }
+                />
+              </SelectTrigger>
 
+
+              <SelectContent>
+
+                <SelectItem value="all">
+                  {t("common.allServiceTypes")}
                 </SelectItem>
 
-              ))}
+
+                {SERVICE_TYPES.map(service => (
+
+                  <SelectItem
+                    key={service}
+                    value={service}
+                  >
+
+                    {
+                      t(
+                        SERVICE_TYPE_LABEL_KEYS[service]
+                      )
+                    }
+
+                  </SelectItem>
+
+                ))}
 
 
-            </SelectContent>
+              </SelectContent>
 
 
-          </Select>
-                    <Select
-            value={filterStatus}
-            onValueChange={setFilterStatus}
-          >
+            </Select>
+                      <Select
+              value={filterStatus}
+              onValueChange={setFilterStatus}
+            >
 
-            <SelectTrigger className="w-36">
-              <SelectValue
-                placeholder={
-                  t("common.allStatuses")
-                }
-              />
-            </SelectTrigger>
-
-
-            <SelectContent>
-
-              <SelectItem value="all">
-                {t("common.allStatuses")}
-              </SelectItem>
+              <SelectTrigger className="w-36">
+                <SelectValue
+                  placeholder={
+                    t("common.allStatuses")
+                  }
+                />
+              </SelectTrigger>
 
 
-              {REFERRAL_STATUSES.map(status => (
+              <SelectContent>
 
-                <SelectItem
-                  key={status}
-                  value={status}
-                >
-                  {getStatusLabel(
-                    status,
-                    locale
-                  )}
+                <SelectItem value="all">
+                  {t("common.allStatuses")}
                 </SelectItem>
 
-              ))}
+
+                {REFERRAL_STATUSES.map(status => (
+
+                  <SelectItem
+                    key={status}
+                    value={status}
+                  >
+                    {getStatusLabel(
+                      status,
+                      locale
+                    )}
+                  </SelectItem>
+
+                ))}
 
 
-            </SelectContent>
+              </SelectContent>
 
-          </Select>
-
-
+            </Select>
 
 
 
-          <Select
-            value={filterOrg}
-            onValueChange={setFilterOrg}
-          >
-
-            <SelectTrigger className="w-44">
-              <SelectValue
-                placeholder={
-                  t("common.allOrganizations")
-                }
-              />
-            </SelectTrigger>
 
 
-            <SelectContent>
+            <Select
+              value={filterOrg}
+              onValueChange={setFilterOrg}
+            >
 
-              <SelectItem value="all">
-                {t("common.allOrganizations")}
-              </SelectItem>
+              <SelectTrigger className="w-44">
+                <SelectValue
+                  placeholder={
+                    t("common.allOrganizations")
+                  }
+                />
+              </SelectTrigger>
 
 
-              {orgs.map(org => (
+              <SelectContent>
 
-                <SelectItem
-                  key={org}
-                  value={org}
-                >
-                  {org}
+                <SelectItem value="all">
+                  {t("common.allOrganizations")}
                 </SelectItem>
 
-              ))}
+
+                {orgs.map(org => (
+
+                  <SelectItem
+                    key={org}
+                    value={org}
+                  >
+                    {org}
+                  </SelectItem>
+
+                ))}
 
 
-            </SelectContent>
+              </SelectContent>
 
 
-          </Select>
+            </Select>
 
 
 
 
 
-          <Select
-            value={filterMonth}
-            onValueChange={setFilterMonth}
-          >
+            <Select
+              value={filterMonth}
+              onValueChange={setFilterMonth}
+            >
 
-            <SelectTrigger className="w-36">
-              <SelectValue
-                placeholder={
-                  t("common.allMonths")
-                }
-              />
-            </SelectTrigger>
-
-
-            <SelectContent>
-
-              <SelectItem value="all">
-                {t("common.allMonths")}
-              </SelectItem>
+              <SelectTrigger className="w-36">
+                <SelectValue
+                  placeholder={
+                    t("common.allMonths")
+                  }
+                />
+              </SelectTrigger>
 
 
-              {MONTH_KEYS.map(month => (
+              <SelectContent>
 
-                <SelectItem
-                  key={month}
-                  value={month}
-                >
-
-                  {t(
-                    MONTH_LABEL_KEYS[month]
-                  )}
-
+                <SelectItem value="all">
+                  {t("common.allMonths")}
                 </SelectItem>
 
-              ))}
+
+                {MONTH_KEYS.map(month => (
+
+                  <SelectItem
+                    key={month}
+                    value={month}
+                  >
+
+                    {t(
+                      MONTH_LABEL_KEYS[month]
+                    )}
+
+                  </SelectItem>
+
+                ))}
 
 
-            </SelectContent>
+              </SelectContent>
 
 
-          </Select>
+            </Select>
 
 
-          <Select
-            value={String(pageSize)}
-            onValueChange={(value) => setPageSize(Number(value))}
-          >
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => setPageSize(Number(value))}
+            >
 
-            <SelectTrigger className="w-28">
-              <SelectValue placeholder="Rows" />
-            </SelectTrigger>
+              <SelectTrigger className="w-28">
+                <SelectValue placeholder="Rows" />
+              </SelectTrigger>
 
-            <SelectContent>
-              <SelectItem value="10">10 / page</SelectItem>
-              <SelectItem value="20">20 / page</SelectItem>
-              <SelectItem value="50">50 / page</SelectItem>
-              <SelectItem value="100">100 / page</SelectItem>
-            </SelectContent>
+              <SelectContent>
+                <SelectItem value="10">10 / page</SelectItem>
+                <SelectItem value="20">20 / page</SelectItem>
+                <SelectItem value="50">50 / page</SelectItem>
+                <SelectItem value="100">100 / page</SelectItem>
+              </SelectContent>
 
-          </Select>
+            </Select>
 
 
+          </div>
+
+
+
+
+          <Input
+
+            className="max-w-xs"
+
+            placeholder={
+              t(
+                "referrals.searchAdminReferrals"
+              )
+            }
+
+            value={search}
+
+            onChange={(e)=>
+              setSearch(
+                e.target.value
+              )
+            }
+
+          />
         </div>
 
-
-
-
-        <Input
-
-          className="max-w-xs"
-
-          placeholder={
-            t(
-              "referrals.searchAdminReferrals"
-            )
-          }
-
-          value={search}
-
-          onChange={(e)=>
-            setSearch(
-              e.target.value
-            )
-          }
-
-        />
+        <div className="flex gap-2 shrink-0">
+          <Button onClick={handleExportCSV} variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button onClick={handleExportPDF} variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            Export PDF
+          </Button>
+        </div>
 
 
       </div>

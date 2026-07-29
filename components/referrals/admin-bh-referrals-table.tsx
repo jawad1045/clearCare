@@ -45,6 +45,10 @@ import {
 } from "@/lib/referral-filters";
 
 import { columns, BHReferral } from "./columns";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+
 
 
 type Props = {
@@ -239,8 +243,87 @@ export function AdminBHReferralsTable({
     if (pageIndex !== 0) setPageIndex(0);
   }
 
+  const handleExportCSV = () => {
+    try {
+      const headers = [
+        "Referral ID",
+        "Patient First Name",
+        "Patient Last Name",
+        "Phone",
+        "Email",
+        "Last 4 SSN",
+        "Gender",
+        "Grade",
+        "Referral Type",
+        "Referrer Name",
+        "Status",
+        "Date of Referral",
+        "Appointment Date",
+        "Notes",
+        "Submitted By Name",
+        "Submitted By Email",
+        "Organization Name",
+        "Company Address",
+        "Company Phone"
+      ];
 
+      const rows = (filtered as any[]).map(r => [
+        r.id,
+        r.firstName,
+        r.lastName,
+        r.phone,
+        r.email || "",
+        r.last4SSN || "",
+        r.gender,
+        r.grade || "",
+        r.referralType || "",
+        r.referName || "",
+        r.status,
+        new Date(r.dateOfReferral).toLocaleDateString(),
+        r.appointmentDate ? new Date(r.appointmentDate).toLocaleDateString() : "",
+        r.notes || "",
+        r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
+        r.user?.contactEmail || "",
+        r.company?.organization || "",
+        r.company ? `${r.company.street || ""}, ${r.company.city || ""}, ${r.company.state || ""} ${r.company.zip || ""}` : "",
+        r.company?.contactPhone || ""
+      ]);
 
+      exportToCSV("bh_referrals_export.csv", headers, rows);
+    } catch (error) {
+      console.error("Export CSV failed", error);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const headers = [
+        "ID",
+        "Patient Name",
+        "Phone",
+        "Referral Type",
+        "Referrer",
+        "Status",
+        "Organization",
+        "Date"
+      ];
+
+      const rows = (filtered as any[]).map(r => [
+        r.id,
+        `${r.firstName} ${r.lastName}`,
+        r.phone,
+        r.referralType || "",
+        r.referName || "",
+        r.status,
+        r.company?.organization || "",
+        new Date(r.dateOfReferral).toLocaleDateString()
+      ]);
+
+      await exportToPDF("bh_referrals_export.pdf", "Behavioral Health Referrals", headers, rows);
+    } catch (error) {
+      console.error("Export PDF failed", error);
+    }
+  };
 
   return (
 
@@ -249,173 +332,186 @@ export function AdminBHReferralsTable({
 
       {/* Filters */}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
 
-        <div className="flex gap-3 overflow-x-auto">
-          <Select
-            value={filterStatus}
-            onValueChange={setFilterStatus}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue
-                placeholder={
-                  t("common.allStatuses")
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {t("common.allStatuses")}
-              </SelectItem>
-              {REFERRAL_STATUSES.map(
-                (status) => (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-3 overflow-x-auto">
+            <Select
+              value={filterStatus}
+              onValueChange={setFilterStatus}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue
+                  placeholder={
+                    t("common.allStatuses")
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("common.allStatuses")}
+                </SelectItem>
+                {REFERRAL_STATUSES.map(
+                  (status) => (
 
-                  <SelectItem
-                    key={status}
-                    value={status}
-                  >
-                    {getStatusLabel(
-                      status,
-                      tableLocale
-                    )}
-                  </SelectItem>
+                    <SelectItem
+                      key={status}
+                      value={status}
+                    >
+                      {getStatusLabel(
+                        status,
+                        tableLocale
+                      )}
+                    </SelectItem>
 
-                )
-              )}
+                  )
+                )}
 
-            </SelectContent>
+              </SelectContent>
 
-          </Select>
-
-
-
-
-          <Select
-            value={filterOrg}
-            onValueChange={setFilterOrg}
-          >
-
-            <SelectTrigger className="w-44">
-
-              <SelectValue
-                placeholder={
-                  t("common.allOrganizations")
-                }
-              />
-
-            </SelectTrigger>
+            </Select>
 
 
-            <SelectContent>
-
-              <SelectItem value="all">
-                {t("common.allOrganizations")}
-              </SelectItem>
 
 
-              {orgs.map(
-                (org) => (
+            <Select
+              value={filterOrg}
+              onValueChange={setFilterOrg}
+            >
 
-                  <SelectItem
-                    key={org}
-                    value={org}
-                  >
-                    {org}
-                  </SelectItem>
+              <SelectTrigger className="w-44">
 
-                )
-              )}
+                <SelectValue
+                  placeholder={
+                    t("common.allOrganizations")
+                  }
+                />
 
-            </SelectContent>
-
-
-          </Select>
-          <Select
-            value={filterMonth}
-            onValueChange={setFilterMonth}
-          >
-
-            <SelectTrigger className="w-36">
-
-              <SelectValue
-                placeholder={
-                  t("common.allMonths")
-                }
-              />
-
-            </SelectTrigger>
+              </SelectTrigger>
 
 
-            <SelectContent>
+              <SelectContent>
 
-              <SelectItem value="all">
-                {t("common.allMonths")}
-              </SelectItem>
-
-
-              {MONTH_KEYS.map(
-                (month) => (
-
-                  <SelectItem
-                    key={month}
-                    value={month}
-                  >
-                    {t(
-                      MONTH_LABEL_KEYS[month]
-                    )}
-                  </SelectItem>
-
-                )
-              )}
-
-            </SelectContent>
-
-          </Select>
+                <SelectItem value="all">
+                  {t("common.allOrganizations")}
+                </SelectItem>
 
 
-          <Select
-            value={String(pageSize)}
-            onValueChange={(value) => setPageSize(Number(value))}
-          >
+                {orgs.map(
+                  (org) => (
 
-            <SelectTrigger className="w-28">
-              <SelectValue placeholder="Rows" />
-            </SelectTrigger>
+                    <SelectItem
+                      key={org}
+                      value={org}
+                    >
+                      {org}
+                    </SelectItem>
 
-            <SelectContent>
-              <SelectItem value="10">10 / page</SelectItem>
-              <SelectItem value="20">20 / page</SelectItem>
-              <SelectItem value="50">50 / page</SelectItem>
-              <SelectItem value="100">100 / page</SelectItem>
-            </SelectContent>
+                  )
+                )}
 
-          </Select>
+              </SelectContent>
 
 
+            </Select>
+            <Select
+              value={filterMonth}
+              onValueChange={setFilterMonth}
+            >
+
+              <SelectTrigger className="w-36">
+
+                <SelectValue
+                  placeholder={
+                    t("common.allMonths")
+                  }
+                />
+
+              </SelectTrigger>
+
+
+              <SelectContent>
+
+                <SelectItem value="all">
+                  {t("common.allMonths")}
+                </SelectItem>
+
+
+                {MONTH_KEYS.map(
+                  (month) => (
+
+                    <SelectItem
+                      key={month}
+                      value={month}
+                    >
+                      {t(
+                        MONTH_LABEL_KEYS[month]
+                      )}
+                    </SelectItem>
+
+                  )
+                )}
+
+              </SelectContent>
+
+            </Select>
+
+
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => setPageSize(Number(value))}
+            >
+
+              <SelectTrigger className="w-28">
+                <SelectValue placeholder="Rows" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="10">10 / page</SelectItem>
+                <SelectItem value="20">20 / page</SelectItem>
+                <SelectItem value="50">50 / page</SelectItem>
+                <SelectItem value="100">100 / page</SelectItem>
+              </SelectContent>
+
+            </Select>
+
+
+          </div>
+
+
+
+          <Input
+
+            className="max-w-xs"
+
+            placeholder={
+              t(
+                "referrals.searchAdminBhReferrals"
+              )
+            }
+
+            value={search}
+
+            onChange={(e) =>
+              setSearch(
+                e.target.value
+              )
+            }
+
+          />
         </div>
 
-
-
-        <Input
-
-          className="max-w-xs"
-
-          placeholder={
-            t(
-              "referrals.searchAdminBhReferrals"
-            )
-          }
-
-          value={search}
-
-          onChange={(e) =>
-            setSearch(
-              e.target.value
-            )
-          }
-
-        />
+        <div className="flex gap-2 shrink-0">
+          <Button onClick={handleExportCSV} variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button onClick={handleExportPDF} variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            Export PDF
+          </Button>
+        </div>
 
 
       </div>

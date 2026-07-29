@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 
 import { useDebounce } from "@/hooks/use-debounce";
 import { CompaniesTable } from "./companies-table";
+import { Download } from "lucide-react";
+import { getCompaniesForExport } from "@/action/export.action";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 
 type Props = {
   initialData: Awaited<ReturnType<typeof getCompanies>>;
@@ -39,34 +42,119 @@ export function CompaniesClient({ initialData }: Props) {
     });
   }, [debouncedSearch, page, limit]);
 
+  const handleExportCSV = async () => {
+    try {
+      const companies = await getCompaniesForExport({ search: debouncedSearch, status });
+      const headers = [
+        "Company ID",
+        "Organization Name",
+        "Street",
+        "City",
+        "State",
+        "Zip",
+        "Contact First Name",
+        "Contact Last Name",
+        "Contact Email",
+        "Contact Phone",
+        "Contact Title",
+        "Status",
+        "Created Date",
+        "Notes"
+      ];
+      
+      const rows = companies.map(c => [
+        c.id,
+        c.organization,
+        c.street || "",
+        c.city,
+        c.state,
+        c.zip || "",
+        c.contactFirstName,
+        c.contactLastName,
+        c.contactEmail,
+        c.contactPhone,
+        c.contactTitle || "",
+        c.isActive ? "Active" : "Inactive",
+        new Date(c.createdDate).toLocaleDateString(),
+        c.notes || ""
+      ]);
+
+      exportToCSV("companies_export.csv", headers, rows);
+    } catch (error) {
+      console.error("Export CSV failed", error);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const companies = await getCompaniesForExport({ search: debouncedSearch, status });
+      const headers = [
+        "ID",
+        "Organization Name",
+        "Email",
+        "Phone",
+        "Location",
+        "Status",
+        "Created"
+      ];
+      
+      const rows = companies.map(c => [
+        c.id,
+        c.organization,
+        c.contactEmail,
+        c.contactPhone,
+        `${c.city}, ${c.state}`,
+        c.isActive ? "Active" : "Inactive",
+        new Date(c.createdDate).toLocaleDateString()
+      ]);
+
+      await exportToPDF("companies_export.pdf", "Companies List", headers, rows);
+    } catch (error) {
+      console.error("Export PDF failed", error);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
 
-      <div className="flex gap-4">
-        <Input
-          placeholder="Search companies..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-1 gap-4">
+          <Input
+            placeholder="Search companies..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="max-w-sm"
+          />
 
-        <select
-          value={limit}
-          onChange={(e) => {
-            setLimit(Number(e.target.value));
-            setPage(1);
-          }}
-          className="border rounded px-3"
-        >
-          <option value={10}>10 / page</option>
-          <option value={20}>20 / page</option>
-          <option value={50}>50 / page</option>
-          <option value={100}>100 / page</option>
-        </select>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            className="border rounded px-3 bg-background text-foreground"
+          >
+            <option value={10}>10 / page</option>
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
+          </select>
+        </div>
+
+        <div className="flex gap-2">
+          <Button onClick={handleExportCSV} variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button onClick={handleExportPDF} variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Download className="h-4 w-4" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
 
