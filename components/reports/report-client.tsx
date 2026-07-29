@@ -14,6 +14,8 @@ import { Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide
 import type { ReportRow } from "@/action/report.action";
 import { useTranslation } from "@/locale/use-translation";
 import type { TranslationKey } from "@/locale/config";
+import { ReportTable } from "./report-tabel";
+import { reportColumns } from "./report-column";
 
 const SERVICE_TYPES = [
   "Drug Test",
@@ -332,132 +334,50 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* Referral Records table */}
       <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-brand">{t("reports.referralRecords")}</CardTitle>
+          <CardTitle className="text-sm font-medium text-brand">
+            {t("reports.referralRecords")}
+          </CardTitle>
         </CardHeader>
+
         <Separator />
-        <CardContent className="p-0">
-          <div className="overflow-x-auto print:overflow-visible">
-            <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
-              <thead>
-                <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.id")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.patient")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.company")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.service")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.status")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.date")}</th>
-                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">{t("referrals.referredByLabel")}</th>}
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.result")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {referralRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={isAdmin ? 8 : 7} className="px-4 py-10 text-center text-muted-foreground">
-                      {t("reports.noReferralRecordsMatch")}
-                    </td>
-                  </tr>
-                ) : (
-                  referralRows.map((r, i) => (
-                    <tr
-                      key={`${r.type}-${r.id}`}
-                      className="transition-colors hover:bg-muted/50"
-                      style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}
-                    >
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">#{r.id}</td>
-                      <td className="px-4 py-3 font-medium">{r.patientName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{r.companyName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{r.serviceType}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(r.status)}`}>
-                          {getStatusLabel(r.status, locale)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                        {new Date(r.dateOfReferral).toLocaleDateString()}
-                      </td>
-                      {isAdmin && (
-                        <td className="px-4 py-3 text-muted-foreground">{r.referName}</td>
-                      )}
-                      <td className="px-4 py-3">
-                        {r.hasPdfResult ? (
-                          <span className="text-xs text-emerald-600 font-medium">{t("reports.available")}</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+
+        <CardContent className="p-1">
+          <ReportTable
+            data={referralRows}
+            columns={reportColumns(
+              t,
+              locale as "en" | "es",
+              isAdmin
+            )}
+            emptyMessage={t(
+              "reports.noReferralRecordsMatch"
+            )}
+          />
         </CardContent>
       </Card>
 
       {/* BH Referral Records table */}
       <Card className="border-t-4 border-t-brand">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium text-brand">{t("reports.bhReferralRecords")}</CardTitle>
+          <CardTitle className="text-sm font-medium text-brand">
+            {t("reports.bhReferralRecords")}
+          </CardTitle>
         </CardHeader>
+
         <Separator />
-        <CardContent className="p-0">
-          <div className="overflow-x-auto print:overflow-visible">
-            <table className="w-full text-sm print:w-full print:table-fixed print:text-[10px]">
-              <thead>
-                <tr className="border-b bg-sidebar text-xs text-sidebar-foreground">
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.id")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.patient")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.company")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.service")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.status")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.date")}</th>
-                  {isAdmin && <th className="px-4 py-3 text-left font-semibold">{t("referrals.referredByLabel")}</th>}
-                  <th className="px-4 py-3 text-left font-semibold">{t("common.result")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {bhReferralRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={isAdmin ? 8 : 7} className="px-4 py-10 text-center text-muted-foreground">
-                      {t("reports.noBhReferralRecordsMatch")}
-                    </td>
-                  </tr>
-                ) : (
-                  bhReferralRows.map((r, i) => (
-                    <tr
-                      key={`${r.type}-${r.id}`}
-                      className="transition-colors hover:bg-muted/50"
-                      style={i % 2 === 1 ? { backgroundColor: "rgba(0,122,125,0.08)" } : undefined}
-                    >
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">#{r.id}</td>
-                      <td className="px-4 py-3 font-medium">{r.patientName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{r.companyName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{r.serviceType}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(r.status)}`}>
-                          {getStatusLabel(r.status, locale)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                        {new Date(r.dateOfReferral).toLocaleDateString()}
-                      </td>
-                      {isAdmin && (
-                        <td className="px-4 py-3 text-muted-foreground">{r.referName}</td>
-                      )}
-                      <td className="px-4 py-3">
-                        {r.hasPdfResult ? (
-                          <span className="text-xs text-emerald-600 font-medium">{t("reports.available")}</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+
+        <CardContent className="p-1">
+          <ReportTable
+            data={bhReferralRows}
+            columns={reportColumns(
+              t,
+              locale as "en" | "es",
+              isAdmin
+            )}
+            emptyMessage={t(
+              "reports.noBhReferralRecordsMatch"
+            )}
+          />
         </CardContent>
       </Card>
     </div>
