@@ -19,9 +19,9 @@ function baseLayout(body: string) {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <tr>
-          <td style="background:#1C2D35;padding:28px 32px;text-align:center;">
-            <img src="${LOGO_URL}" alt="${APP_NAME}" height="56" style="height:56px;width:auto;display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" />
-            <div style="color:#ffffff;font-size:18px;font-weight:bold;letter-spacing:0.3px;">${APP_NAME}</div>
+          <td style="background:#1C2D35;padding:36px 32px;text-align:center;">
+            <img src="${LOGO_URL}" alt="${APP_NAME}" height="96" style="height:96px;width:auto;max-width:320px;display:block;margin:0 auto 14px;border:0;outline:none;text-decoration:none;" />
+            <div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.4px;line-height:1.3;">${APP_NAME}</div>
           </td>
         </tr>
         <tr>

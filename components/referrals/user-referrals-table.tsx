@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Download } from "lucide-react";
 
 import {
   ColumnDef,
@@ -37,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/pagination";
+import ExportButton from "@/components/ExportButton";
 import { formatDateTime } from "@/lib/format-date";
 import { REFERRAL_STATUSES, getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import {
@@ -46,6 +46,11 @@ import {
   SERVICE_TYPE_LABEL_KEYS,
   getPriorityLabel,
 } from "@/lib/referral-filters";
+import {
+  REFERRAL_HEADERS,
+  getReferralExportRows,
+  type ReferralWithRelations,
+} from "@/lib/exportConfigs";
 import { useTranslation } from "@/locale/use-translation";
 import { columns, Referral } from "./user-referrals-column";
 
@@ -115,158 +120,178 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-    return (
-      <div className="space-y-4">
-        {/* Filters + search */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Select
-              value={filterService}
-              onValueChange={(v) => {
-                setFilterService(v);
-                table.getColumn("serviceType")?.setFilterValue(v === "all" ? undefined : v);
-                setPageIndex(0);
-              }}
-            >
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder={t("common.allServiceTypes")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("common.allServiceTypes")}</SelectItem>
-                {SERVICE_TYPES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {t(SERVICE_TYPE_LABEL_KEYS[s])}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+  // Export honors whatever filters/search are currently applied, not just
+  // the current page — table.getFilteredRowModel() already reflects
+  // columnFilters + globalFilter but ignores pagination.
+  const exportRows = useMemo(
+    () =>
+      getReferralExportRows(
+        table.getFilteredRowModel().rows.map((r) => r.original) as ReferralWithRelations[]
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table.getFilteredRowModel().rows]
+  );
 
-            <Select
-              value={filterStatus}
-              onValueChange={(v) => {
-                setFilterStatus(v);
-                table.getColumn("status")?.setFilterValue(v === "all" ? undefined : v);
-                setPageIndex(0);
-              }}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder={t("common.allStatuses")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
-                {REFERRAL_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {getStatusLabel(s, locale)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+  return (
+    <div className="space-y-4">
+      {/* Filters + search */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Select
+            value={filterService}
+            onValueChange={(v) => {
+              setFilterService(v);
+              table.getColumn("serviceType")?.setFilterValue(v === "all" ? undefined : v);
+              setPageIndex(0);
+            }}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder={t("common.allServiceTypes")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("common.allServiceTypes")}</SelectItem>
+              {SERVICE_TYPES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {t(SERVICE_TYPE_LABEL_KEYS[s])}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Select
-              value={filterMonth}
-              onValueChange={(v) => {
-                setFilterMonth(v);
-                const idx = v === "all" ? undefined : MONTH_KEYS.indexOf(v as (typeof MONTH_KEYS)[number]);
-                table.getColumn("month")?.setFilterValue(idx);
-                setPageIndex(0);
-              }}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder={t("common.allMonths")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("common.allMonths")}</SelectItem>
-                {MONTH_KEYS.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {t(MONTH_LABEL_KEYS[m])}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Select
+            value={filterStatus}
+            onValueChange={(v) => {
+              setFilterStatus(v);
+              table.getColumn("status")?.setFilterValue(v === "all" ? undefined : v);
+              setPageIndex(0);
+            }}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder={t("common.allStatuses")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("common.allStatuses")}</SelectItem>
+              {REFERRAL_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {getStatusLabel(s, locale)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => {
-                setPageSize(Number(v));
-                setPageIndex(0);
-              }}
-            >
-              <SelectTrigger className="w-28">
-                <SelectValue placeholder="Rows" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 / page</SelectItem>
-                <SelectItem value="20">20 / page</SelectItem>
-                <SelectItem value="50">50 / page</SelectItem>
-                <SelectItem value="100">100 / page</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={filterMonth}
+            onValueChange={(v) => {
+              setFilterMonth(v);
+              const idx = v === "all" ? undefined : MONTH_KEYS.indexOf(v as (typeof MONTH_KEYS)[number]);
+              table.getColumn("month")?.setFilterValue(idx);
+              setPageIndex(0);
+            }}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder={t("common.allMonths")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("common.allMonths")}</SelectItem>
+              {MONTH_KEYS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {t(MONTH_LABEL_KEYS[m])}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Input
-              placeholder={t("referrals.searchUserReferrals")}
-              value={globalFilter}
-              onChange={(e) => {
-                setGlobalFilter(e.target.value);
-                setPageIndex(0);
-              }}
-              className="max-w-xs"
-            />
-          </div>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => {
+              setPageSize(Number(v));
+              setPageIndex(0);
+            }}
+          >
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Rows" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10 / page</SelectItem>
+              <SelectItem value="20">20 / page</SelectItem>
+              <SelectItem value="50">50 / page</SelectItem>
+              <SelectItem value="100">100 / page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="border">
-          <Table>
-            <TableHeader className="bg-sidebar text-sidebar-foreground">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="text-sidebar-foreground">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            placeholder={t("referrals.searchUserReferrals")}
+            value={globalFilter}
+            onChange={(e) => {
+              setGlobalFilter(e.target.value);
+              setPageIndex(0);
+            }}
+            className="max-w-xs"
+          />
+
+          <ExportButton
+            filename="my_referrals_export"
+            title={t("referrals.myReferrals") ?? "My Referrals"}
+            sheetName="Referrals"
+            headers={REFERRAL_HEADERS}
+            rows={exportRows}
+          />
+        </div>
+      </div>
+
+      <div className="border">
+        <Table>
+          <TableHeader className="bg-sidebar text-sidebar-foreground">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="text-sidebar-foreground">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={table.getVisibleFlatColumns().length}
+                  className="text-center text-muted-foreground py-6"
+                >
+                  {t("referrals.noReferralsFound")}
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row, i) => (
+                <TableRow
+                  key={row.id}
+                  className={`transition-colors hover:bg-muted/50 ${
+                    i % 2 === 1 ? "table-row-even" : "table-row-odd"
+                  }`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={table.getVisibleFlatColumns().length}
-                    className="text-center text-muted-foreground py-6"
-                  >
-                    {t("referrals.noReferralsFound")}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row, i) => (
-                  <TableRow
-                    key={row.id}
-                    className={`transition-colors hover:bg-muted/50 ${
-                      i % 2 === 1 ? "table-row-even" : "table-row-odd"
-                    }`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <Pagination
-          page={pageIndex + 1}
-          totalPages={Math.max(1, table.getPageCount())}
-          total={table.getFilteredRowModel().rows.length}
-          onPageChange={(p) => setPageIndex(p - 1)}
-        />
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
-    );
+
+      <Pagination
+        page={pageIndex + 1}
+        totalPages={Math.max(1, table.getPageCount())}
+        total={table.getFilteredRowModel().rows.length}
+        onPageChange={(p) => setPageIndex(p - 1)}
+      />
+    </div>
+  );
 }

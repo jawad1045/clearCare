@@ -1,20 +1,17 @@
-"use client";
+import * as XLSX from "xlsx";
 
-/**
- * Utility functions for exporting data to CSV and PDF client-side.
- */
-
+/* ----------------------------- CSV EXPORT ----------------------------- */
 export function exportToCSV(filename: string, headers: string[], rows: any[][]) {
   const csvContent = [
-    headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(","),
-    ...rows.map(row =>
+    headers.map((h) => `"${String(h).replace(/"/g, '""')}"`).join(","),
+    ...rows.map((row) =>
       row
-        .map(cell => {
+        .map((cell) => {
           const val = cell === null || cell === undefined ? "" : String(cell);
           return `"${val.replace(/"/g, '""')}"`;
         })
         .join(",")
-    )
+    ),
   ].join("\n");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -26,7 +23,62 @@ export function exportToCSV(filename: string, headers: string[], rows: any[][]) 
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
+
+/* ---------------------------- EXCEL EXPORT ----------------------------- */
+// True .xlsx export (not just CSV renamed). Auto-sizes columns and
+// freezes the header row for readability.
+
+export function exportToExcel(
+  filename: string,
+  sheetName: string,
+  headers: string[],
+  rows: any[][]
+) {
+  if (typeof window === "undefined") return;
+
+  const normalizedRows = rows.map((row) =>
+    row.map((cell) => (cell === null || cell === undefined ? "" : cell))
+  );
+
+  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...normalizedRows]);
+
+  // Auto-width columns based on content length
+  worksheet["!cols"] = headers.map((h, colIndex) => {
+    const maxLen = Math.max(
+      String(h).length,
+      ...normalizedRows.map((r) => String(r[colIndex] ?? "").length)
+    );
+    return { wch: Math.min(Math.max(maxLen + 2, 10), 50) };
+  });
+
+  // Freeze header row
+  worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+
+  // Bold header row styling (only applies with cellStyles-enabled builds;
+  // safe no-op otherwise)
+  const headerRange = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
+  for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (worksheet[cellRef]) {
+      worksheet[cellRef].s = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "007A7D" } },
+      };
+    }
+  }
+
+  const workbook = XLSX.utils.book_new();
+  // Sheet names are capped at 31 chars by the Excel spec
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName.slice(0, 31));
+
+  const safeFilename = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
+  XLSX.writeFile(workbook, safeFilename, { compression: true });
+}
+
+/* ----------------------------- PDF EXPORT ------------------------------ */
+// (unchanged from your existing implementation)
 
 export async function exportToPDF(
   filename: string,
@@ -95,5 +147,6 @@ export async function exportToPDF(
     },
   });
 
-  doc.save(filename);
+  const safeFilename = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
+  doc.save(safeFilename);
 }
