@@ -31,9 +31,12 @@ async function notifySubmission(opts: {
   userId: number;
   userEmail: string;
   userName: string;
+  companyName?: string;
   referralId: number;
   patientName: string;
   serviceType: string;
+  status?: string;
+  dateSubmitted?: string;
   userViewPath: string;
   adminViewPath: string;
 }) {
@@ -65,6 +68,10 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       serviceType: opts.serviceType,
+      companyName: opts.companyName,
+      submittedBy: opts.userName,
+      status: opts.status ?? "Pending",
+      dateSubmitted: opts.dateSubmitted,
       // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     // Email: each admin
@@ -75,6 +82,9 @@ async function notifySubmission(opts: {
         submittedBy: opts.userName,
         referralId: opts.referralId,
         serviceType: opts.serviceType,
+        companyName: opts.companyName,
+        status: opts.status ?? "Pending",
+        dateSubmitted: opts.dateSubmitted,
         // viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
@@ -91,16 +101,18 @@ async function notifySubmission(opts: {
 async function notifyStatusChange(opts: {
   referralId: number;
   newStatus: string;
+  previousStatus?: string;
   userViewPath: string;
   patientName: string;
 }) {
   const referral = await prisma.referral.findUnique({
     where: { id: opts.referralId },
-    include: { user: true },
+    include: { user: true, company: true },
   });
   if (!referral) return;
 
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  const companyName = referral.company?.organization;
 
   await Promise.allSettled([
     createNotification({
@@ -116,6 +128,13 @@ async function notifyStatusChange(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       newStatus: opts.newStatus,
+      previousStatus: opts.previousStatus,
+      companyName,
+      updatedDate: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
       // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     notifySlackStatusChanged({
@@ -143,6 +162,9 @@ export async function createReferral(
     await prisma.user.findUnique({
       where: {
         id: currentUser.id,
+      },
+      include: {
+        company: true,
       },
     });
 
@@ -277,14 +299,23 @@ export async function createReferral(
 
   const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
+  const companyName = user.company?.organization;
+  const dateSubmitted = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
   await notifySubmission({
     userId: user.id,
     userEmail: user.contactEmail,
     userName,
+    companyName,
     referralId: referral.id,
     patientName,
     serviceType: referral.serviceType,
+    status: referral.status,
+    dateSubmitted,
     userViewPath: `/user/referrals/${referral.id}`,
     adminViewPath: `/admin/referrals/${referral.id}`,
   }).catch(() => {});
@@ -476,6 +507,11 @@ export async function updateReferralStatus(
     throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
   }
 
+  const currentReferral = await prisma.referral.findUnique({
+    where: { id: referralId },
+    select: { status: true },
+  });
+
   const updated = await prisma.referral.update({
     where: { id: referralId },
     data: { status },
@@ -484,6 +520,7 @@ export async function updateReferralStatus(
   await notifyStatusChange({
     referralId,
     newStatus: status,
+    previousStatus: currentReferral?.status,
     patientName: `${updated.patientFirstName} ${updated.patientLastName}`,
     userViewPath: `/user/referrals/${referralId}`,
   }).catch(() => {});

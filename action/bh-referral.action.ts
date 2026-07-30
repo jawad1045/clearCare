@@ -37,8 +37,11 @@ async function notifySubmission(opts: {
   userId: number;
   userEmail: string;
   userName: string;
+  companyName?: string;
   referralId: number;
   patientName: string;
+  status?: string;
+  dateSubmitted?: string;
   userViewPath: string;
   adminViewPath: string;
 }) {
@@ -67,6 +70,10 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       serviceType: SERVICE_TYPE,
+      companyName: opts.companyName,
+      submittedBy: opts.userName,
+      status: opts.status ?? "Pending",
+      dateSubmitted: opts.dateSubmitted,
       // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     ...admins.map((admin) =>
@@ -76,6 +83,9 @@ async function notifySubmission(opts: {
         submittedBy: opts.userName,
         referralId: opts.referralId,
         serviceType: SERVICE_TYPE,
+        companyName: opts.companyName,
+        status: opts.status ?? "Pending",
+        dateSubmitted: opts.dateSubmitted,
         // viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
@@ -91,16 +101,18 @@ async function notifySubmission(opts: {
 async function notifyStatusChange(opts: {
   referralId: number;
   newStatus: string;
+  previousStatus?: string;
   userViewPath: string;
   patientName: string;
 }) {
   const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id: opts.referralId },
-    include: { user: true },
+    include: { user: true, company: true },
   });
   if (!referral) return;
 
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  const companyName = referral.company?.organization;
 
   await Promise.allSettled([
     createNotification({
@@ -116,6 +128,13 @@ async function notifyStatusChange(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       newStatus: opts.newStatus,
+      previousStatus: opts.previousStatus,
+      companyName,
+      updatedDate: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
       // viewUrl: `${APP_URL}${opts.userViewPath}`, 
     }),
     notifySlackStatusChanged({
@@ -140,6 +159,7 @@ export async function createBHReferral(formData: FormData) {
 
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
+    include: { company: true },
   });
 
   if (!user) {
@@ -188,13 +208,22 @@ export async function createBHReferral(formData: FormData) {
 
   const patientName = `${bhReferral.firstName} ${bhReferral.lastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
+  const companyName = user.company?.organization;
+  const dateSubmitted = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
   await notifySubmission({
     userId: user.id,
     userEmail: user.contactEmail,
     userName,
+    companyName,
     referralId: bhReferral.id,
     patientName,
+    status: bhReferral.status,
+    dateSubmitted,
     userViewPath: `/user/bhreferrals/${bhReferral.id}`,
     adminViewPath: `/admin/bhreferrals/${bhReferral.id}`,
   }).catch(() => {});
@@ -334,6 +363,11 @@ export async function updateBHReferralStatus(referralId: number, status: string)
     throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
   }
 
+  const currentReferral = await prisma.mentalHealthReferral.findUnique({
+    where: { id: referralId },
+    select: { status: true },
+  });
+
   const updated = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { status },
@@ -342,6 +376,7 @@ export async function updateBHReferralStatus(referralId: number, status: string)
   await notifyStatusChange({
     referralId,
     newStatus: status,
+    previousStatus: currentReferral?.status,
     patientName: `${updated.firstName} ${updated.lastName}`,
     userViewPath: `/user/bhreferrals/${referralId}`,
   }).catch(() => {});

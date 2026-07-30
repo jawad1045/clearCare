@@ -6,7 +6,7 @@ const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "HWP Clear-Care® Portal";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://clearcarenj.com";
 const LOGO_URL = `${APP_URL}/logo.png`;
 
-function baseLayout(body: string) {
+function baseLayout(title: string, body: string) {
   return `
 <!DOCTYPE html>
 <html>
@@ -16,26 +16,54 @@ function baseLayout(body: string) {
 </head>
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="background:#1C2D35;padding:36px 32px;text-align:center;">
-            <img src="${LOGO_URL}" alt="${APP_NAME}" height="96" style="height:96px;width:auto;max-width:320px;display:block;margin:0 auto 14px;border:0;outline:none;text-decoration:none;" />
-            <div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.4px;line-height:1.3;">${APP_NAME}</div>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px;">
-            ${body}
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f4f6f8;padding:16px 32px;text-align:center;">
-            <span style="color:#9ca3af;font-size:12px;">This is an automated message from ${APP_NAME}. Please do not reply.</span>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+          <tr>
+            <td style="background:#1C2D35;padding:24px 32px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="90" valign="middle">
+                    <img
+                      src="${LOGO_URL}"
+                      alt="${APP_NAME}"
+                      width="70"
+                      style="display:block;border:0;"
+                    />
+                  </td>
+
+                  <td valign="middle" style="padding-left:16px;">
+                    <div style="color:#ffffff;font-size:24px;font-weight:700;line-height:1.2;">
+                      ${APP_NAME}
+                    </div>
+
+                    <div style="margin-top:6px;color:#ffffff;font-size:14px font-weight:600;">
+                      ${title}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px;">
+              ${body}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#f4f6f8;padding:16px 32px;text-align:center;">
+              <span style="color:#9ca3af;font-size:12px;">
+                This is an automated message from ${APP_NAME}. Please do not reply.
+              </span>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
   </table>
 </body>
 </html>`;
@@ -56,23 +84,48 @@ export async function sendWelcomeEmail(opts: {
     from: FROM,
     to: opts.toEmail,
     subject: `Welcome to ${APP_NAME} – Your Account is Ready`,
-    html: baseLayout(`
-      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Welcome to ${APP_NAME}</h2>
-      <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
-      <p style="color:#4b5563;font-size:14px;line-height:1.6;">
-        An account has been created for you. Use the temporary password below to log in, then change it right away from your profile.
-      </p>
-      <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Email</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.toEmail}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Temporary Password</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:14px;font-weight:bold;color:#111827;font-family:monospace;">${opts.temporaryPassword}</td></tr>
-      </table>
-      <p style="color:#4b5563;font-size:13px;line-height:1.6;margin-top:16px;">
-        For your security, please change this password as soon as you log in.
-      </p>
-      ${button("Log In & Change Password", opts.loginUrl)}
-    `),
+    html: baseLayout(
+      "Welcome to Your Account",
+      `
+        <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">
+          Welcome to ${APP_NAME}
+        </h2>
+
+        <p style="color:#4b5563;font-size:14px;line-height:1.6;">
+          Hi ${opts.toName},
+        </p>
+
+        <p style="color:#4b5563;font-size:14px;line-height:1.6;">
+          An account has been created for you. Use the temporary password below to log in, then change it immediately from your profile after signing in.
+        </p>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+          <tr>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
+              Email
+            </td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">
+              ${opts.toEmail}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
+              Temporary Password
+            </td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:14px;font-weight:bold;color:#111827;font-family:monospace;">
+              ${opts.temporaryPassword}
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#4b5563;font-size:13px;line-height:1.6;margin-top:16px;">
+          For your security, please change your temporary password immediately after your first login.
+        </p>
+
+        ${button("Log In & Change Password", opts.loginUrl)}
+      `
+    ),
   });
 }
 
@@ -87,8 +140,9 @@ export async function sendPasswordResetEmail(opts: {
     from: FROM,
     to: opts.toEmail,
     subject: `Your ${APP_NAME} Password Has Been Reset`,
-    html: baseLayout(`
-      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Password Reset</h2>
+    html: baseLayout(
+      "Password Reset Notification",
+      `
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">
         An administrator has reset your password. Use the temporary password below to log in, then change it right away from your profile.
@@ -114,24 +168,35 @@ export async function sendReferralSubmittedToUser(opts: {
   patientName: string;
   referralId: number;
   serviceType: string;
+  companyName?: string;
+  submittedBy?: string;
+  status?: string;
+  dateSubmitted?: string;
 }) {
   await resend.emails.send({
     from: FROM,
     to: opts.toEmail,
     subject: `Referral Submitted – ${opts.patientName}`,
-    html: baseLayout(`
-      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Referral Submitted Successfully</h2>
+    html: baseLayout(
+      "Referral Submitted Successfully",
+      `
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">
         Your referral for <strong>${opts.patientName}</strong> has been submitted and is now under review.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Status</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#f59e0b;">Pending</td></tr>
+        ${opts.companyName ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.companyName}</td></tr>` : ''}
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy ?? opts.toName}</td></tr>
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient Name</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Current Status</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#f59e0b;">${opts.status ?? "Pending"}</td></tr>
+        ${opts.dateSubmitted ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Date Submitted</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.dateSubmitted}</td></tr>` : ''}
       </table>
     `),
   });
@@ -144,23 +209,31 @@ export async function sendReferralSubmittedToAdmin(opts: {
   submittedBy: string;
   referralId: number;
   serviceType: string;
+  companyName?: string;
+  status?: string;
+  dateSubmitted?: string;
 }) {
   await resend.emails.send({
     from: FROM,
     to: opts.toEmail,
     subject: `New Referral Submitted – #${opts.referralId}`,
-    html: baseLayout(`
-      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">New Referral Received</h2>
+    html: baseLayout(
+      "New Referral Received",
+      `
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">A new referral has been submitted and requires your review.</p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
+        ${opts.companyName ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.companyName}</td></tr>` : ''}
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy}</td></tr>
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient Name</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Current Status</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#f59e0b;">${opts.status ?? "Pending"}</td></tr>
+        ${opts.dateSubmitted ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Date Submitted</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.dateSubmitted}</td></tr>` : ''}
       </table>
     `),
   });
@@ -177,8 +250,9 @@ export async function sendResultUploadedToUser(opts: {
     from: FROM,
     to: opts.toEmail,
     subject: `Result Available – Referral #${opts.referralId}`,
-    html: baseLayout(`
-      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Your Result is Ready</h2>
+    html: baseLayout(
+      "Your Result is Ready",
+      `
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">
         The result for your referral for <strong>${opts.patientName}</strong> (#${opts.referralId}) has been uploaded and is now available for download.
@@ -200,6 +274,9 @@ export async function sendStatusChangedToUser(opts: {
   patientName: string;
   referralId: number;
   newStatus: string;
+  companyName?: string;
+  previousStatus?: string;
+  updatedDate?: string;
 }) {
   const statusColor: Record<string, string> = {
     Approved: "#16a34a",
@@ -214,17 +291,23 @@ export async function sendStatusChangedToUser(opts: {
     from: FROM,
     to: opts.toEmail,
     subject: `Referral Status Updated – #${opts.referralId}`,
-    html: baseLayout(`
-      <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">Referral Status Updated</h2>
+    html: baseLayout(
+      "Referral Status Updated",
+      `
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">Hi ${opts.toName},</p>
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">
         The status of your referral for <strong>${opts.patientName}</strong> has been updated.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+        ${opts.companyName ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.companyName}</td></tr>` : ''}
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient Name</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
         <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
+        ${opts.previousStatus ? `<tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Previous Status</td><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#6b7280;">${opts.previousStatus}</td></tr>` : ''}
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
+        ${opts.updatedDate ? `<tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Updated Date</td><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.updatedDate}</td></tr>` : ''}
       </table>
     `),
   });
