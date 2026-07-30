@@ -12,6 +12,7 @@ export default async function UsersPage() {
   const initialData = await getUsers({
     page: 1,
     limit: 20,
+    isActive: true,
   });
 
   return (

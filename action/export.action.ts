@@ -3,8 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 
-export async function getUsersForExport(params: { search?: string; role?: string } = {}) {
-  const { search = "", role = "all" } = params;
+export async function getUsersForExport(
+  params: { search?: string; role?: string; acctId?: number } = {}
+) {
+  const { search = "", role = "all", acctId } = params;
 
   const where: Prisma.UserWhereInput = {};
 
@@ -19,6 +21,10 @@ export async function getUsersForExport(params: { search?: string; role?: string
 
   if (role && role !== "all") {
     where.userRole = role;
+  }
+
+  if (acctId) {
+    where.acctId = acctId;
   }
 
   return prisma.user.findMany({

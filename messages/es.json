@@ -229,6 +229,12 @@
     "companyNotFound": "Empresa no encontrada"
   },
   "users": {
+     "filterByStatus": "Filtrar por estado",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "allStatuses": "Todos los estados",
+    "filterByCompany": "Filtrar por Empresa",
+    "allCompanies": "Todas las Empresas",
     "errorCompanyInactive": "La empresa seleccionada está inactiva. Por favor, elige una empresa activa.",
     "totalUsers": "Total de Usuarios",
     "pageTitle": "Usuarios",

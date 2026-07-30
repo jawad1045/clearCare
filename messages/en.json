@@ -229,6 +229,12 @@
     "companyNotFound": "Company not found"
   },
   "users": {
+    "filterByStatus": "Filter by Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "allStatuses": "All Statuses",
+    "filterByCompany": "Filter by company",
+    "allCompanies": "All Companies",
     "errorCompanyInactive": "The selected company is inactive. Please choose an active company.",
     "totalUsers": "Total Users",
     "pageTitle": "Users",

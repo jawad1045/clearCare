@@ -33,58 +33,41 @@ type GetUsersParams = {
   limit?: number;
   search?: string;
   role?: string;
+  acctId?: number;
+  isActive?: boolean; // NEW
 };
 
-export async function getUsers(
-  {
-    page = 1,
-    limit = 10,
-    search = "",
-    role,
-  }:{
-    search?: string;
-  role?: string;
-  page?: number;
-  limit?: number;
-  }, GetUsersParams = {}
-) {
+export async function getUsers({
+  page = 1,
+  limit = 10,
+  search = "",
+  role,
+  acctId,
+  isActive, // NEW
+}: GetUsersParams = {}) {
   const skip = (page - 1) * limit;
 
   const where: Prisma.UserWhereInput = {};
 
-  // Search
   if (search.trim()) {
     where.OR = [
-      {
-        contactFirstName: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
-      {
-        contactLastName: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
-      {
-        contactEmail: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
-      {
-        organization: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
+      { contactFirstName: { contains: search, mode: "insensitive" } },
+      { contactLastName: { contains: search, mode: "insensitive" } },
+      { contactEmail: { contains: search, mode: "insensitive" } },
+      { organization: { contains: search, mode: "insensitive" } },
     ];
   }
 
-  // Role Filter
   if (role && role !== "all") {
     where.userRole = role;
+  }
+
+  if (acctId) {
+    where.acctId = acctId;
+  }
+
+  if (typeof isActive === "boolean") {
+    where.isActive = isActive;
   }
 
   const [users, total] = await Promise.all([
@@ -92,9 +75,7 @@ export async function getUsers(
       where,
       skip,
       take: limit,
-      orderBy: {
-        createdDate: "desc",
-      },
+      orderBy: { createdDate: "desc" },
       select: {
         id: true,
         organization: true,
@@ -109,10 +90,7 @@ export async function getUsers(
         acctId: true,
       },
     }),
-
-    prisma.user.count({
-      where,
-    }),
+    prisma.user.count({ where }),
   ]);
 
   return {
@@ -122,6 +100,7 @@ export async function getUsers(
     totalPages: Math.ceil(total / limit),
   };
 }
+
 
 /* ------------------------------------------------ */
 /* GET COMPANIES */
