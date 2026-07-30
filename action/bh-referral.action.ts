@@ -1,4 +1,4 @@
-"use server"
+"use server";
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +18,7 @@ import {
   notifySlackResultUploaded,
 } from "@/lib/slack";
 import { getServerTranslation } from "@/locale/server";
+import { formatDateTime } from "@/lib/format-date";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const SERVICE_TYPE = "Behavioral Health";
@@ -37,21 +38,20 @@ async function notifySubmission(opts: {
   userId: number;
   userEmail: string;
   userName: string;
-  companyName?: string;
   referralId: number;
   patientName: string;
-  status?: string;
-  dateSubmitted?: string;
   userViewPath: string;
   adminViewPath: string;
+  submittedAt?: string;
 }) {
   const admins = await getAdmins();
+  const formattedDateTime = opts.submittedAt ?? formatDateTime(new Date());
 
   await Promise.allSettled([
     createNotification({
       userId: opts.userId,
       title: "Referral Submitted",
-      message: `Your behavioral health referral for ${opts.patientName} (#${opts.referralId}) has been submitted and is pending review.`,
+      message: `Your behavioral health referral for ${opts.patientName} (#${opts.referralId}) was submitted on ${formattedDateTime} and is pending review.`,
       type: "referral_submitted",
       link: opts.userViewPath,
     }),
@@ -59,7 +59,7 @@ async function notifySubmission(opts: {
       createNotification({
         userId: admin.id,
         title: "New Referral Received",
-        message: `${opts.userName} submitted a behavioral health referral for ${opts.patientName} (#${opts.referralId}).`,
+        message: `${opts.userName} submitted a behavioral health referral for ${opts.patientName} (#${opts.referralId}) on ${formattedDateTime}.`,
         type: "referral_submitted",
         link: opts.adminViewPath,
       })
@@ -70,10 +70,7 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       serviceType: SERVICE_TYPE,
-      companyName: opts.companyName,
-      submittedBy: opts.userName,
-      status: opts.status ?? "Pending",
-      dateSubmitted: opts.dateSubmitted,
+      submittedAt: formattedDateTime,
       // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     ...admins.map((admin) =>
@@ -83,9 +80,7 @@ async function notifySubmission(opts: {
         submittedBy: opts.userName,
         referralId: opts.referralId,
         serviceType: SERVICE_TYPE,
-        companyName: opts.companyName,
-        status: opts.status ?? "Pending",
-        dateSubmitted: opts.dateSubmitted,
+        submittedAt: formattedDateTime,
         // viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
@@ -101,24 +96,24 @@ async function notifySubmission(opts: {
 async function notifyStatusChange(opts: {
   referralId: number;
   newStatus: string;
-  previousStatus?: string;
   userViewPath: string;
   patientName: string;
+  updatedAt?: string;
 }) {
   const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id: opts.referralId },
-    include: { user: true, company: true },
+    include: { user: true },
   });
   if (!referral) return;
 
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
-  const companyName = referral.company?.organization;
+  const formattedDateTime = opts.updatedAt ?? formatDateTime(new Date());
 
   await Promise.allSettled([
     createNotification({
       userId: referral.userId,
       title: "Referral Status Updated",
-      message: `Your behavioral health referral for ${opts.patientName} (#${opts.referralId}) is now ${opts.newStatus}.`,
+      message: `Your behavioral health referral for ${opts.patientName} (#${opts.referralId}) is now ${opts.newStatus} (${formattedDateTime}).`,
       type: "status_changed",
       link: opts.userViewPath,
     }),
@@ -128,13 +123,7 @@ async function notifyStatusChange(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       newStatus: opts.newStatus,
-      previousStatus: opts.previousStatus,
-      companyName,
-      updatedDate: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+      updatedAt: formattedDateTime,
       // viewUrl: `${APP_URL}${opts.userViewPath}`, 
     }),
     notifySlackStatusChanged({
@@ -159,7 +148,6 @@ export async function createBHReferral(formData: FormData) {
 
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
-    include: { company: true },
   });
 
   if (!user) {
@@ -208,24 +196,17 @@ export async function createBHReferral(formData: FormData) {
 
   const patientName = `${bhReferral.firstName} ${bhReferral.lastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
-  const companyName = user.company?.organization;
-  const dateSubmitted = new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const nowFormatted = formatDateTime(new Date());
 
   await notifySubmission({
     userId: user.id,
     userEmail: user.contactEmail,
     userName,
-    companyName,
     referralId: bhReferral.id,
     patientName,
-    status: bhReferral.status,
-    dateSubmitted,
     userViewPath: `/user/bhreferrals/${bhReferral.id}`,
     adminViewPath: `/admin/bhreferrals/${bhReferral.id}`,
+    submittedAt: nowFormatted,
   }).catch(() => {});
 
   revalidatePath("/admin/bhreferrals");
@@ -246,13 +227,9 @@ export async function getRecentBHReferrals(take = 6) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Pagination types shared by getBHReferrals / getMyBHReferrals
-// ---------------------------------------------------------------------------
-
 export type GetBHReferralsParams = {
   search?: string;
-  status?: string; // "all" | actual status value
+  status?: string;
   page?: number;
   limit?: number;
 };
@@ -286,8 +263,6 @@ function buildBHReferralWhere(
 export async function getBHReferrals(params: GetBHReferralsParams = {}) {
   const { search = "", status = "all" } = params;
   const page = Math.max(1, params.page ?? 1);
-  // If no limit is given, return everything unpaginated — used by
-  // AdminBHReferralsTable, which paginates client-side after filtering.
   const limit = params.limit != null ? Math.max(1, params.limit) : undefined;
 
   const where = buildBHReferralWhere({}, { search, status });
@@ -321,8 +296,6 @@ export async function getMyBHReferrals(params: GetBHReferralsParams = {}) {
 
   const { search = "", status = "all" } = params;
   const page = Math.max(1, params.page ?? 1);
-  // If no limit is given, return everything unpaginated — used by
-  // UserBHReferralsTable, which paginates client-side after filtering.
   const limit = params.limit != null ? Math.max(1, params.limit) : undefined;
 
   const where = buildBHReferralWhere(
@@ -363,22 +336,19 @@ export async function updateBHReferralStatus(referralId: number, status: string)
     throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
   }
 
-  const currentReferral = await prisma.mentalHealthReferral.findUnique({
-    where: { id: referralId },
-    select: { status: true },
-  });
-
   const updated = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { status },
   });
 
+  const nowFormatted = formatDateTime(new Date());
+
   await notifyStatusChange({
     referralId,
     newStatus: status,
-    previousStatus: currentReferral?.status,
     patientName: `${updated.firstName} ${updated.lastName}`,
     userViewPath: `/user/bhreferrals/${referralId}`,
+    updatedAt: nowFormatted,
   }).catch(() => {});
 
   revalidatePath("/admin/bhreferrals");
@@ -440,12 +410,13 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
   const patientName = `${referral.firstName} ${referral.lastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
   const userViewPath = `/user/bhreferrals/${referralId}`;
+  const nowFormatted = formatDateTime(new Date());
 
   await Promise.allSettled([
     createNotification({
       userId: referral.userId,
       title: "Result Available",
-      message: `The result for ${patientName} (#${referralId}) has been uploaded and is ready to download.`,
+      message: `The result for ${patientName} (#${referralId}) was uploaded on ${nowFormatted} and is ready to download.`,
       type: "result_uploaded",
       link: userViewPath,
     }),
@@ -454,6 +425,7 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
       toName: userName,
       patientName,
       referralId,
+      uploadedAt: nowFormatted,
       // viewUrl: `${APP_URL}${userViewPath}`,
     }),
     notifySlackResultUploaded({

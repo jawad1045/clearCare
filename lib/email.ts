@@ -38,7 +38,7 @@ function baseLayout(title: string, body: string) {
                       ${APP_NAME}
                     </div>
 
-                    <div style="margin-top:6px;color:#ffffff;font-size:14px font-weight:600;">
+                    <div style="margin-top:6px;color:#ffffff;font-size:16px;font-weight:600;">
                       ${title}
                     </div>
                   </td>
@@ -73,7 +73,6 @@ function button(label: string, href: string) {
   return `<a href="${href}" style="display:inline-block;margin-top:20px;padding:12px 28px;background:#1C2D35;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:bold;">${label}</a>`;
 }
 
-// ── Email: new user account created → welcome email with temp password ──────
 export async function sendWelcomeEmail(opts: {
   toEmail: string;
   toName: string;
@@ -87,7 +86,7 @@ export async function sendWelcomeEmail(opts: {
     html: baseLayout(
       "Welcome to Your Account",
       `
-        <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;">
+        <h2 style="margin:0 0 8px;color:#1C2D35;font-size:20px;font-weight:bold;">
           Welcome to ${APP_NAME}
         </h2>
 
@@ -129,7 +128,6 @@ export async function sendWelcomeEmail(opts: {
   });
 }
 
-// ── Email: admin reset a user's password → temp password sent to user ───────
 export async function sendPasswordResetEmail(opts: {
   toEmail: string;
   toName: string;
@@ -161,7 +159,6 @@ export async function sendPasswordResetEmail(opts: {
   });
 }
 
-// ── Email: new referral submitted → sent to submitting user ──────────────────
 export async function sendReferralSubmittedToUser(opts: {
   toEmail: string;
   toName: string;
@@ -172,7 +169,10 @@ export async function sendReferralSubmittedToUser(opts: {
   submittedBy?: string;
   status?: string;
   dateSubmitted?: string;
+  submittedAt?: string;
 }) {
+  const formattedDate = opts.dateSubmitted ?? opts.submittedAt;
+
   await resend.emails.send({
     from: FROM,
     to: opts.toEmail,
@@ -185,24 +185,23 @@ export async function sendReferralSubmittedToUser(opts: {
         Your referral for <strong>${opts.patientName}</strong> has been submitted and is now under review.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-        ${opts.companyName ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.companyName}</td></tr>` : ''}
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy ?? opts.toName}</td></tr>
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient Name</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Current Status</td>
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
+        ${
+          formattedDate
+            ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Date Submitted</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${formattedDate}</td></tr>`
+            : ""
+        }
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Status</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#f59e0b;">${opts.status ?? "Pending"}</td></tr>
-        ${opts.dateSubmitted ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Date Submitted</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.dateSubmitted}</td></tr>` : ''}
       </table>
     `),
   });
 }
 
-// ── Email: new referral submitted → sent to admin ────────────────────────────
 export async function sendReferralSubmittedToAdmin(opts: {
   toEmail: string;
   patientName: string;
@@ -212,7 +211,10 @@ export async function sendReferralSubmittedToAdmin(opts: {
   companyName?: string;
   status?: string;
   dateSubmitted?: string;
+  submittedAt?: string;
 }) {
+  const formattedDate = opts.dateSubmitted ?? opts.submittedAt;
+
   await resend.emails.send({
     from: FROM,
     to: opts.toEmail,
@@ -222,29 +224,31 @@ export async function sendReferralSubmittedToAdmin(opts: {
       `
       <p style="color:#4b5563;font-size:14px;line-height:1.6;">A new referral has been submitted and requires your review.</p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-        ${opts.companyName ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.companyName}</td></tr>` : ''}
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy}</td></tr>
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient Name</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Current Status</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#f59e0b;">${opts.status ?? "Pending"}</td></tr>
-        ${opts.dateSubmitted ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Date Submitted</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.dateSubmitted}</td></tr>` : ''}
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
+        ${
+          formattedDate
+            ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Date & Time</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${formattedDate}</td></tr>`
+            : ""
+        }
       </table>
     `),
   });
 }
 
-// ── Email: result PDF uploaded → sent to the referral's user ────────────────
 export async function sendResultUploadedToUser(opts: {
   toEmail: string;
   toName: string;
   patientName: string;
   referralId: number;
+  uploadedAt?: string;
 }) {
   await resend.emails.send({
     from: FROM,
@@ -262,12 +266,17 @@ export async function sendResultUploadedToUser(opts: {
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+        ${
+          opts.uploadedAt
+            ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Uploaded At</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.uploadedAt}</td></tr>`
+            : ""
+        }
       </table>
     `),
   });
 }
 
-// ── Email: status changed → sent to the referral's user ─────────────────────
 export async function sendStatusChangedToUser(opts: {
   toEmail: string;
   toName: string;
@@ -277,6 +286,7 @@ export async function sendStatusChangedToUser(opts: {
   companyName?: string;
   previousStatus?: string;
   updatedDate?: string;
+  updatedAt?: string;
 }) {
   const statusColor: Record<string, string> = {
     Approved: "#16a34a",
@@ -286,6 +296,7 @@ export async function sendStatusChangedToUser(opts: {
     Pending: "#f59e0b",
   };
   const color = statusColor[opts.newStatus] ?? "#6b7280";
+  const formattedDate = opts.updatedDate ?? opts.updatedAt;
 
   await resend.emails.send({
     from: FROM,
@@ -299,15 +310,16 @@ export async function sendStatusChangedToUser(opts: {
         The status of your referral for <strong>${opts.patientName}</strong> has been updated.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-        ${opts.companyName ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.companyName}</td></tr>` : ''}
-        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient Name</td>
-            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
         <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
-        ${opts.previousStatus ? `<tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Previous Status</td><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#6b7280;">${opts.previousStatus}</td></tr>` : ''}
-        <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
-            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
-        ${opts.updatedDate ? `<tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Updated Date</td><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.updatedDate}</td></tr>` : ''}
+        <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
+        ${
+          formattedDate
+            ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Updated At</td>
+            <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${formattedDate}</td></tr>`
+            : ""
+        }
       </table>
     `),
   });
