@@ -5,6 +5,13 @@ import { useEffect, useState, useTransition } from "react";
 import { getCompanies } from "@/action/company.action";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { useDebounce } from "@/hooks/use-debounce";
 import { CompaniesTable } from "./companies-table";
@@ -21,6 +28,7 @@ export function CompaniesClient({ initialData }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [status, setStatus] = useState<"active" | "inactive" | "all">("active"); // default active
 
   const [data, setData] = useState(initialData);
 
@@ -28,9 +36,9 @@ export function CompaniesClient({ initialData }: Props) {
 
   const debouncedSearch = useDebounce(search, 500);
 
-  const [status, setStatus] = useState("all");
-
   useEffect(() => {
+    let ignore = false;
+
     startTransition(async () => {
       const result = await getCompanies({
         search: debouncedSearch,
@@ -39,9 +47,15 @@ export function CompaniesClient({ initialData }: Props) {
         status,
       });
 
-      setData(result);
+      if (!ignore) {
+        setData(result);
+      }
     });
-  }, [debouncedSearch, page, limit]);
+
+    return () => {
+      ignore = true;
+    };
+  }, [debouncedSearch, page, limit, status]); // status now included
 
   const handleExportCSV = async () => {
     try {
@@ -60,10 +74,10 @@ export function CompaniesClient({ initialData }: Props) {
         "Contact Title",
         "Status",
         "Created Date",
-        "Notes"
+        "Notes",
       ];
-      
-      const rows = companies.map(c => [
+
+      const rows = companies.map((c) => [
         c.id,
         c.organization,
         c.street || "",
@@ -77,7 +91,7 @@ export function CompaniesClient({ initialData }: Props) {
         c.contactTitle || "",
         c.isActive ? "Active" : "Inactive",
         formatDate(c.createdDate),
-        c.notes || ""
+        c.notes || "",
       ]);
 
       exportToCSV("companies_export.csv", headers, rows);
@@ -89,24 +103,16 @@ export function CompaniesClient({ initialData }: Props) {
   const handleExportPDF = async () => {
     try {
       const companies = await getCompaniesForExport({ search: debouncedSearch, status });
-      const headers = [
-        "ID",
-        "Organization Name",
-        "Email",
-        "Phone",
-        "Location",
-        "Status",
-        "Created"
-      ];
-      
-      const rows = companies.map(c => [
+      const headers = ["ID", "Organization Name", "Email", "Phone", "Location", "Status", "Created"];
+
+      const rows = companies.map((c) => [
         c.id,
         c.organization,
         c.contactEmail,
         c.contactPhone,
         `${c.city}, ${c.state}`,
         c.isActive ? "Active" : "Inactive",
-        formatDate(c.createdDate)
+        formatDate(c.createdDate),
       ]);
 
       await exportToPDF("companies_export.pdf", "Companies List", headers, rows);
@@ -115,10 +121,8 @@ export function CompaniesClient({ initialData }: Props) {
     }
   };
 
-
   return (
     <div className="space-y-6">
-
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-1 gap-4">
           <Input
@@ -130,6 +134,23 @@ export function CompaniesClient({ initialData }: Props) {
             }}
             className="max-w-sm"
           />
+           {/* Status Filter */}
+          <Select
+            value={status}
+            onValueChange={(value) => {
+              setStatus(value as "active" | "inactive" | "all");
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="all">All statuses</SelectItem>
+            </SelectContent>
+          </Select>
 
           <select
             value={limit}
@@ -158,33 +179,17 @@ export function CompaniesClient({ initialData }: Props) {
         </div>
       </div>
 
-
-      {isPending && (
-        <p className="text-sm text-muted-foreground">
-          Loading companies...
-        </p>
-      )}
-
+      {isPending && <p className="text-sm text-muted-foreground">Loading companies...</p>}
 
       <CompaniesTable companies={data.companies} />
 
-
       {data.totalPages > 1 && (
         <div className="flex justify-center gap-2">
-
-          <Button
-            variant="outline"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
+          <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
             Previous
           </Button>
 
-
-          {Array.from(
-            { length: data.totalPages },
-            (_, i) => i + 1
-          ).map((number) => (
+          {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((number) => (
             <Button
               key={number}
               variant={page === number ? "default" : "outline"}
@@ -194,7 +199,6 @@ export function CompaniesClient({ initialData }: Props) {
             </Button>
           ))}
 
-
           <Button
             variant="outline"
             disabled={page === data.totalPages}
@@ -202,10 +206,8 @@ export function CompaniesClient({ initialData }: Props) {
           >
             Next
           </Button>
-
         </div>
       )}
-
     </div>
   );
 }

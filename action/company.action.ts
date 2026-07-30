@@ -17,12 +17,7 @@ export async function getCompanies({
   limit = 20,
   search = "",
   status = "all",
-}: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-}){
+}: GetCompaniesParams = {}) {
   const skip = (page - 1) * limit;
 
   const where: Prisma.CompanyWhereInput = {};

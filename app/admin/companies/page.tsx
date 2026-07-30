@@ -12,6 +12,7 @@ export default async function CompaniesPage() {
   const initialData = await getCompanies({
     page: 1,
     limit: 20,
+    status: "active",
   });
 
   return (
