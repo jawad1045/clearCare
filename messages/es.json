@@ -273,6 +273,7 @@
     "errorEmailExists": "El correo electrónico ya existe"
   },
   "referrals": {
+    "errorInvalidDob": "Fecha de nacimiento inválida",
     "myReferrals": "Mis Referencias",
     "searchPlaceholder": "Buscar referencias",
     "testTypeAndPriorityRequiredForDrugTest": "El tipo de prueba y la prioridad son obligatorios para las pruebas de drogas.",

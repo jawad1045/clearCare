@@ -21,7 +21,6 @@ import {
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const DRUG_TEST_SERVICE = "Drug Test";
 
 async function getAdmins() {
@@ -35,6 +34,7 @@ async function notifySubmission(opts: {
   referralId: number;
   patientName: string;
   serviceType: string;
+  companyName?: string;
   userViewPath: string;
   adminViewPath: string;
   submittedAt?: string;
@@ -56,7 +56,7 @@ async function notifySubmission(opts: {
       createNotification({
         userId: admin.id,
         title: "New Referral Received",
-        message: `${opts.userName} submitted a referral for ${opts.patientName} (#${opts.referralId}) on ${formattedDateTime}.`,
+        message: `${opts.userName}${opts.companyName ? ` (${opts.companyName})` : ""} submitted a referral for ${opts.patientName} (#${opts.referralId}) on ${formattedDateTime}.`,
         type: "referral_submitted",
         link: opts.adminViewPath,
       })
@@ -68,8 +68,8 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       serviceType: opts.serviceType,
+      companyName: opts.companyName,
       submittedAt: formattedDateTime,
-      // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     // Email: each admin
     ...admins.map((admin) =>
@@ -79,8 +79,8 @@ async function notifySubmission(opts: {
         submittedBy: opts.userName,
         referralId: opts.referralId,
         serviceType: opts.serviceType,
+        companyName: opts.companyName,
         submittedAt: formattedDateTime,
-        // viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
     // Slack
@@ -89,6 +89,7 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       submittedBy: opts.userName,
       serviceType: opts.serviceType,
+      companyName: opts.companyName ?? "",
     }),
   ]);
 }
@@ -99,14 +100,22 @@ async function notifyStatusChange(opts: {
   userViewPath: string;
   patientName: string;
   updatedAt?: string;
+  companyName?: string;
 }) {
   const referral = await prisma.referral.findUnique({
     where: { id: opts.referralId },
-    include: { user: true },
+    include: {
+      user: true,
+      company: true,
+    },
   });
   if (!referral) return;
 
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  const companyName =
+    referral.company?.organization ??
+    referral.user.organization ??
+    "Unknown Company";
   const formattedDateTime = opts.updatedAt ?? formatDateTime(new Date());
 
   await Promise.allSettled([
@@ -123,13 +132,14 @@ async function notifyStatusChange(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       newStatus: opts.newStatus,
+      companyName,
       updatedAt: formattedDateTime,
-      // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     notifySlackStatusChanged({
       referralId: opts.referralId,
       patientName: opts.patientName,
       newStatus: opts.newStatus,
+      companyName, // Fixed: Uses calculated local companyName
     }),
   ]);
 }
@@ -142,8 +152,12 @@ export async function createReferral(formData: FormData) {
     throw new Error(t("common.errors.unauthorized"));
   }
 
+  // Fixed: Included company relation
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
+    include: {
+      company: true,
+    },
   });
 
   if (!user) {
@@ -174,6 +188,12 @@ export async function createReferral(formData: FormData) {
     }
   }
 
+  const rawDob = formData.get("dob") as string;
+  const parsedDob = rawDob ? new Date(rawDob) : null;
+  if (!parsedDob || isNaN(parsedDob.getTime())) {
+    throw new Error(t("referrals.errorInvalidDob"));
+  }
+
   const referral = await prisma.referral.create({
     data: {
       userId: user.id,
@@ -187,7 +207,7 @@ export async function createReferral(formData: FormData) {
       parentPhone: formData.get("parentPhone") as string,
       patientFirstName: formData.get("patientFirstName") as string,
       patientLastName: formData.get("patientLastName") as string,
-      dob: new Date(formData.get("dob") as string),
+      dob: parsedDob,
       grade: rawGrade || null,
       race: formData.get("race") as string,
       gender: formData.get("gender") as string,
@@ -201,6 +221,9 @@ export async function createReferral(formData: FormData) {
 
   const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
+  
+  // Fixed: Priority hierarchy for company name
+  const companyName = user.company?.organization ?? user.organization ?? "Unknown Company";
   const nowFormatted = formatDateTime(new Date());
 
   await notifySubmission({
@@ -210,6 +233,7 @@ export async function createReferral(formData: FormData) {
     referralId: referral.id,
     patientName,
     serviceType: referral.serviceType,
+    companyName,
     userViewPath: `/user/referrals/${referral.id}`,
     adminViewPath: `/admin/referrals/${referral.id}`,
     submittedAt: nowFormatted,
@@ -405,13 +429,24 @@ export async function updateReferralStatus(
 }
 
 export async function getReferralById(id: number) {
-  return prisma.referral.findUnique({
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return null;
+
+  const referral = await prisma.referral.findUnique({
     where: { id },
     include: {
       user: true,
       company: true,
     },
   });
+
+  if (!referral) return null;
+
+  if (currentUser.role !== "Admin" && referral.userId !== currentUser.id) {
+    return null;
+  }
+
+  return referral;
 }
 
 export async function getMyReferralCounts() {
@@ -475,14 +510,25 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
     throw new Error(t("referrals.errorOnlyAdminsUploadResults"));
   }
 
+  // Fixed: Included company relation
   const referral = await prisma.referral.update({
     where: { id: referralId },
     data: { pdfResult: pdfUrl },
-    include: { user: true },
+    include: {
+      user: true,
+      company: true,
+    },
   });
 
   const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  
+  // Fixed: Priority hierarchy for company name
+  const companyName =
+    referral.company?.organization ??
+    referral.user.organization ??
+    "Unknown Company";
+
   const isBH = referral.serviceType === "Behavioral Health";
   const userViewPath = isBH
     ? `/user/bhreferrals/${referralId}`
@@ -502,12 +548,13 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
       toName: userName,
       patientName,
       referralId,
+      companyName,
       uploadedAt: nowFormatted,
-      // viewUrl: `${APP_URL}${userViewPath}`,
     }),
     notifySlackResultUploaded({
       referralId,
       patientName,
+      companyName,
     }),
   ]);
 

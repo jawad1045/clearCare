@@ -11,6 +11,7 @@ import { generateTempPassword } from "@/lib/generate-password";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "@/lib/email";
 import { notifySlackNewUser } from "@/lib/slack";
 import { getServerTranslation } from "@/locale/server";
+import { getCurrentUser } from "@/lib/auth";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -28,13 +29,14 @@ export async function checkEmailExists(email: string) {
 
   return !!user;
 }
+
 type GetUsersParams = {
   page?: number;
   limit?: number;
   search?: string;
   role?: string;
   acctId?: number;
-  isActive?: boolean; // NEW
+  isActive?: boolean;
 };
 
 export async function getUsers({
@@ -43,7 +45,7 @@ export async function getUsers({
   search = "",
   role,
   acctId,
-  isActive, // NEW
+  isActive,
 }: GetUsersParams = {}) {
   const skip = (page - 1) * limit;
 
@@ -88,6 +90,16 @@ export async function getUsers({
         isActive: true,
         createdDate: true,
         acctId: true,
+        company: {
+          select: {
+            id: true,
+            organization: true,
+            street: true,
+            city: true,
+            state: true,
+            zip: true,
+          },
+        },
       },
     }),
     prisma.user.count({ where }),
@@ -100,7 +112,6 @@ export async function getUsers({
     totalPages: Math.ceil(total / limit),
   };
 }
-
 
 /* ------------------------------------------------ */
 /* GET COMPANIES */
@@ -126,32 +137,17 @@ export async function getCompanies() {
 /* CREATE USER */
 /* ------------------------------------------------ */
 
-export async function createUser(
-  formData: FormData
-) {
+export async function createUser(formData: FormData) {
   const acctIdRaw = formData.get("acctId") as string;
   const acctId = acctIdRaw ? Number(acctIdRaw) : null;
 
-  const firstName =
-    formData.get("firstName") as string;
-
-  const lastName =
-    formData.get("lastName") as string;
-
-  const email =
-    formData.get("email") as string;
-
-  const phone =
-    formData.get("phone") as string;
-
-  const title =
-    formData.get("title") as string;
-
-  const role =
-    formData.get("role") as string;
-
-  const notes =
-    formData.get("notes") as string | null;
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const title = formData.get("title") as string;
+  const role = formData.get("role") as string;
+  const notes = formData.get("notes") as string | null;
 
   const { t } = await getServerTranslation();
 
@@ -172,57 +168,41 @@ export async function createUser(
   }
 
   // Email Check
-  const existingUser =
-    await prisma.user.findUnique({
-      where: {
-        contactEmail: email,
-      },
-    });
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      contactEmail: email,
+    },
+  });
 
   if (existingUser) {
-    throw new Error(
-      t("users.errorEmailExists")
-    );
+    throw new Error(t("users.errorEmailExists"));
   }
 
-  // Auto-generate a temporary password — admins never set this manually
+  // Auto-generate temporary password
   const temporaryPassword = generateTempPassword();
-  const hashedPassword =
-    await bcrypt.hash(
-      temporaryPassword,
-      12
-    );
+  const hashedPassword = await bcrypt.hash(temporaryPassword, 12);
 
   // Create User
   const user = await prisma.user.create({
-  data: {
-    acctId: acctId || null,
-
-    organization: company?.organization ?? "",
-
-    street: company?.street ?? null,
-    city: company?.city ?? null,
-    state: company?.state ?? null,
-    zip: company?.zip ?? null,
-
-    contactFirstName: firstName,
-    contactLastName: lastName,
-    contactEmail: email,
-    contactPhone: phone,
-
-    contactTitle: title || null,
-
-    userRole: role,
-
-    password: hashedPassword,
-
-    notes: notes || null,
-
-    isActive: true,
-
-    mustChangePassword: true,
-  },
-});
+    data: {
+      acctId: acctId || null,
+      organization: company?.organization ?? "",
+      street: company?.street ?? null,
+      city: company?.city ?? null,
+      state: company?.state ?? null,
+      zip: company?.zip ?? null,
+      contactFirstName: firstName,
+      contactLastName: lastName,
+      contactEmail: email,
+      contactPhone: phone,
+      contactTitle: title || null,
+      userRole: role,
+      password: hashedPassword,
+      notes: notes || null,
+      isActive: true,
+      mustChangePassword: true,
+    },
+  });
 
   await sendWelcomeEmail({
     toEmail: user.contactEmail,
@@ -231,113 +211,59 @@ export async function createUser(
     loginUrl: `${APP_URL}/`,
   }).catch(() => {});
 
+  const companyName = company?.organization ?? user.organization ?? "Unknown Company";
+
   await notifySlackNewUser({
     name: `${user.contactFirstName} ${user.contactLastName}`,
     email: user.contactEmail,
     role: user.userRole,
-    organization: user.organization,
+    companyName,
   });
 
-  revalidatePath(
-    "/admin/users"
-  );
-
+  revalidatePath("/admin/users");
   redirect("/admin/users");
 }
 
-export async function getUserById(
-  id: number
-) {
+export async function getUserById(id: number) {
   return prisma.user.findUnique({
-    where: {
-      id,
+    where: { id },
+    include: {
+      company: true,
     },
   });
 }
 
-//update user
-export async function updateUser(
-  id: number,
-  formData: FormData
-) {
-  const firstName =
-    formData.get(
-      "firstName"
-    ) as string;
-
-  const lastName =
-    formData.get(
-      "lastName"
-    ) as string;
-
-  const email =
-    formData.get(
-      "email"
-    ) as string;
-
-  const phone =
-    formData.get(
-      "phone"
-    ) as string;
-
-  const title =
-    formData.get(
-      "title"
-    ) as string;
-
-  const role =
-    formData.get(
-      "role"
-    ) as string;
-
-  const isActive =
-    formData.get(
-      "isActive"
-    ) === "true";
+// Update User
+export async function updateUser(id: number, formData: FormData) {
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const title = formData.get("title") as string;
+  const role = formData.get("role") as string;
+  const isActive = formData.get("isActive") === "true";
 
   await prisma.user.update({
-    where: {
-      id,
-    },
-
+    where: { id },
     data: {
-      contactFirstName:
-        firstName,
-
-      contactLastName:
-        lastName,
-
-      contactEmail:
-        email,
-
-      contactPhone:
-        phone,
-
-      contactTitle:
-        title,
-
-      userRole:
-        role,
-
+      contactFirstName: firstName,
+      contactLastName: lastName,
+      contactEmail: email,
+      contactPhone: phone,
+      contactTitle: title,
+      userRole: role,
       isActive,
     },
   });
 
-  revalidatePath(
-    "/admin/users"
-  );
-
-  redirect(
-    "/admin/users"
-  );
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
 }
 
-//get all user
+// Get All Users Count
 export async function getUsersCount() {
   return prisma.user.count();
 }
-
-import { getCurrentUser } from "@/lib/auth";
 
 export async function updateProfileName(formData: FormData) {
   const currentUser = await getCurrentUser();
@@ -356,7 +282,10 @@ export async function updateProfileName(formData: FormData) {
 
   await prisma.user.update({
     where: { id: currentUser.id },
-    data: { contactFirstName: firstName.trim(), contactLastName: lastName.trim() },
+    data: {
+      contactFirstName: firstName.trim(),
+      contactLastName: lastName.trim(),
+    },
   });
 
   revalidatePath("/admin/profile");
@@ -388,7 +317,10 @@ export async function resetUserPassword(userId: number) {
   revalidatePath("/admin/users");
 }
 
-export async function completeForcedPasswordChange(newPassword: string, confirmPassword: string) {
+export async function completeForcedPasswordChange(
+  newPassword: string,
+  confirmPassword: string
+) {
   const currentUser = await getCurrentUser();
   const { t } = await getServerTranslation();
   if (!currentUser) throw new Error(t("common.errors.unauthorized"));

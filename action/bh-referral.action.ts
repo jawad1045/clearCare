@@ -20,7 +20,6 @@ import {
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const SERVICE_TYPE = "Behavioral Health";
 
 const VALID_REFERRAL_TYPES = [
@@ -40,6 +39,7 @@ async function notifySubmission(opts: {
   userName: string;
   referralId: number;
   patientName: string;
+  companyName?: string;
   userViewPath: string;
   adminViewPath: string;
   submittedAt?: string;
@@ -59,7 +59,7 @@ async function notifySubmission(opts: {
       createNotification({
         userId: admin.id,
         title: "New Referral Received",
-        message: `${opts.userName} submitted a behavioral health referral for ${opts.patientName} (#${opts.referralId}) on ${formattedDateTime}.`,
+        message: `${opts.userName}${opts.companyName ? ` (${opts.companyName})` : ""} submitted a behavioral health referral for ${opts.patientName} (#${opts.referralId}) on ${formattedDateTime}.`,
         type: "referral_submitted",
         link: opts.adminViewPath,
       })
@@ -70,8 +70,8 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       serviceType: SERVICE_TYPE,
+      companyName: opts.companyName,
       submittedAt: formattedDateTime,
-      // viewUrl: `${APP_URL}${opts.userViewPath}`,
     }),
     ...admins.map((admin) =>
       sendReferralSubmittedToAdmin({
@@ -80,8 +80,8 @@ async function notifySubmission(opts: {
         submittedBy: opts.userName,
         referralId: opts.referralId,
         serviceType: SERVICE_TYPE,
+        companyName: opts.companyName,
         submittedAt: formattedDateTime,
-        // viewUrl: `${APP_URL}${opts.adminViewPath}`,
       })
     ),
     notifySlackNewReferral({
@@ -89,6 +89,7 @@ async function notifySubmission(opts: {
       patientName: opts.patientName,
       submittedBy: opts.userName,
       serviceType: SERVICE_TYPE,
+      companyName: opts.companyName ?? "",
     }),
   ]);
 }
@@ -102,11 +103,18 @@ async function notifyStatusChange(opts: {
 }) {
   const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id: opts.referralId },
-    include: { user: true },
+    include: { 
+      user: true, 
+      company: true 
+    },
   });
   if (!referral) return;
 
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  const companyName =
+    referral.company?.organization ??
+    referral.user.organization ??
+    "Unknown Company";
   const formattedDateTime = opts.updatedAt ?? formatDateTime(new Date());
 
   await Promise.allSettled([
@@ -123,13 +131,14 @@ async function notifyStatusChange(opts: {
       patientName: opts.patientName,
       referralId: opts.referralId,
       newStatus: opts.newStatus,
+      companyName,
       updatedAt: formattedDateTime,
-      // viewUrl: `${APP_URL}${opts.userViewPath}`, 
     }),
     notifySlackStatusChanged({
       referralId: opts.referralId,
       patientName: opts.patientName,
       newStatus: opts.newStatus,
+      companyName,
     }),
   ]);
 }
@@ -146,8 +155,12 @@ export async function createBHReferral(formData: FormData) {
     throw new Error(t("common.errors.unauthorized"));
   }
 
+  // Include company relation
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
+    include: {
+      company: true,
+    },
   });
 
   if (!user) {
@@ -196,6 +209,9 @@ export async function createBHReferral(formData: FormData) {
 
   const patientName = `${bhReferral.firstName} ${bhReferral.lastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
+  
+  // Resolve company name hierarchy
+  const companyName = user.company?.organization ?? user.organization ?? "Unknown Company";
   const nowFormatted = formatDateTime(new Date());
 
   await notifySubmission({
@@ -204,6 +220,7 @@ export async function createBHReferral(formData: FormData) {
     userName,
     referralId: bhReferral.id,
     patientName,
+    companyName,
     userViewPath: `/user/bhreferrals/${bhReferral.id}`,
     adminViewPath: `/admin/bhreferrals/${bhReferral.id}`,
     submittedAt: nowFormatted,
@@ -323,10 +340,22 @@ export async function getMyBHReferrals(params: GetBHReferralsParams = {}) {
 }
 
 export async function getBHReferralById(id: number) {
-  return prisma.mentalHealthReferral.findUnique({
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return null;
+
+  const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id },
     include: { user: true, company: true },
   });
+
+  if (!referral) return null;
+
+  // Security check: restrict non-admins to their own records
+  if (currentUser.role !== "Admin" && referral.userId !== currentUser.id) {
+    return null;
+  }
+
+  return referral;
 }
 
 export async function updateBHReferralStatus(referralId: number, status: string) {
@@ -401,14 +430,25 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
     throw new Error(t("referrals.errorOnlyAdminsUploadResults"));
   }
 
+  // Include company relation
   const referral = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { pdfReport: pdfUrl },
-    include: { user: true },
+    include: { 
+      user: true, 
+      company: true 
+    },
   });
 
   const patientName = `${referral.firstName} ${referral.lastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
+  
+  // Resolve company name hierarchy
+  const companyName =
+    referral.company?.organization ??
+    referral.user.organization ??
+    "Unknown Company";
+
   const userViewPath = `/user/bhreferrals/${referralId}`;
   const nowFormatted = formatDateTime(new Date());
 
@@ -425,12 +465,13 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
       toName: userName,
       patientName,
       referralId,
+      companyName,
       uploadedAt: nowFormatted,
-      // viewUrl: `${APP_URL}${userViewPath}`,
     }),
     notifySlackResultUploaded({
       referralId,
       patientName,
+      companyName,
     }),
   ]);
 

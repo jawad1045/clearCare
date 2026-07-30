@@ -73,6 +73,12 @@ function button(label: string, href: string) {
   return `<a href="${href}" style="display:inline-block;margin-top:20px;padding:12px 28px;background:#1C2D35;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:bold;">${label}</a>`;
 }
 
+function companyRow(companyName?: string) {
+  if (!companyName) return "";
+  return `<tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Company</td>
+      <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${companyName}</td></tr>`;
+}
+
 export async function sendWelcomeEmail(opts: {
   toEmail: string;
   toName: string;
@@ -187,6 +193,7 @@ export async function sendReferralSubmittedToUser(opts: {
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
         <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        ${companyRow(opts.companyName)}
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.serviceType}</td></tr>
         ${
@@ -228,6 +235,7 @@ export async function sendReferralSubmittedToAdmin(opts: {
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+        ${companyRow(opts.companyName)}
         <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Submitted By</td>
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.submittedBy}</td></tr>
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Service Type</td>
@@ -248,6 +256,7 @@ export async function sendResultUploadedToUser(opts: {
   toName: string;
   patientName: string;
   referralId: number;
+  companyName?: string;
   uploadedAt?: string;
 }) {
   await resend.emails.send({
@@ -266,6 +275,7 @@ export async function sendResultUploadedToUser(opts: {
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Patient</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">${opts.patientName}</td></tr>
+        ${companyRow(opts.companyName)}
         ${
           opts.uploadedAt
             ? `<tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Uploaded At</td>
@@ -312,6 +322,7 @@ export async function sendStatusChangedToUser(opts: {
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
         <tr><td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">Referral ID</td>
             <td style="padding:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:#111827;">#${opts.referralId}</td></tr>
+        ${companyRow(opts.companyName)}
         <tr><td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;color:#6b7280;">New Status</td>
             <td style="padding:8px;border:1px solid #e5e7eb;font-size:13px;font-weight:bold;color:${color};">${opts.newStatus}</td></tr>
         ${

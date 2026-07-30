@@ -273,6 +273,7 @@
     "errorEmailExists": "Email already exists"
   },
   "referrals": {
+    "errorInvalidDob": "Invalid date of birth",
     "myReferrals": "My Referrals",
     "searchPlaceholder": "Search referrals...",
     "testTypeAndPriorityRequiredForDrugTest": "Test type and priority are required for drug tests.",
