@@ -12,6 +12,7 @@ import { getStatusBadge, getStatusLabel } from "@/lib/referral-statuses";
 import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
 
 import { useTranslation } from "@/locale/use-translation";
+import { formatDateTime } from "@/lib/format-date";
 
 export function reportColumns(
   t: ReturnType<typeof useTranslation>["t"],
@@ -89,29 +90,25 @@ export function reportColumns(
       ),
     },
 
-    {
-      accessorKey: "dateOfReferral",
-      ...sortableHeader(t("common.date")),
-
-      sortingFn: (rowA, rowB) => {
-        return (
-          new Date(
-            rowA.original.dateOfReferral
-          ).getTime() -
-          new Date(
-            rowB.original.dateOfReferral
-          ).getTime()
-        );
-      },
-
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap text-muted-foreground">
-          {new Date(
-            row.original.dateOfReferral
-          ).toLocaleDateString()}
-        </span>
-      ),
-    },
+   {
+    accessorKey:"dateOfReferral",
+   
+    header:({column})=>(
+    <Button
+    variant="ghost"
+    className="px-0"
+    onClick={()=>column.toggleSorting(
+    column.getIsSorted()==="asc"
+    )}
+    >
+    {t("common.created")}
+    <ArrowUpDown className="ml-2 h-4 w-4"/>
+    </Button>
+    ),
+   
+    cell:({row})=>
+    formatDateTime(row.original.dateOfReferral)
+   },
   ];
 
   if (isAdmin) {
