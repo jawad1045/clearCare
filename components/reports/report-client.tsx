@@ -1,18 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
+import { CalendarIcon, Filter, Table } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { StatusBarChart } from "@/components/charts/status-bar-chart";
 import { ServiceTypeBarChart } from "@/components/charts/service-type-bar-chart";
-import { getStatusBadge, getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
-import { Filter, Table, BarChart3, Clock, CheckCircle2, FileCheck } from "lucide-react";
+import { getStatusLabel, REFERRAL_STATUSES } from "@/lib/referral-statuses";
 import type { ReportRow } from "@/action/report.action";
 import { useTranslation } from "@/locale/use-translation";
 import type { TranslationKey } from "@/locale/config";
+import { cn } from "@/lib/utils";
 import { ReportTable } from "./report-tabel";
 import { reportColumns } from "./report-column";
 
@@ -43,8 +48,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [serviceFilter, setServiceFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -52,8 +57,12 @@ export function ReportClient({ rows, isAdmin }: Props) {
       if (typeFilter !== "all" && r.type !== typeFilter) return false;
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (serviceFilter !== "all" && r.serviceType !== serviceFilter) return false;
-      if (dateFrom && new Date(r.dateOfReferral) < new Date(dateFrom)) return false;
-      if (dateTo && new Date(r.dateOfReferral) > new Date(dateTo + "T23:59:59")) return false;
+      if (dateFrom && new Date(r.dateOfReferral) < dateFrom) return false;
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        if (new Date(r.dateOfReferral) > end) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -68,10 +77,6 @@ export function ReportClient({ rows, isAdmin }: Props) {
   }, [rows, typeFilter, statusFilter, serviceFilter, dateFrom, dateTo, search]);
 
   const total = filtered.length;
-  const pending = filtered.filter((r) => r.status === "Pending").length;
-  const completed = filtered.filter((r) => ["Clear", "Confirmed", "Ready"].includes(r.status)).length;
-  const withResult = filtered.filter((r) => r.hasPdfResult).length;
-  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
   const referralRows = useMemo(() => filtered.filter((r) => r.type === "Referral"), [filtered]);
   const bhReferralRows = useMemo(() => filtered.filter((r) => r.type === "BH Referral"), [filtered]);
@@ -109,13 +114,13 @@ export function ReportClient({ rows, isAdmin }: Props) {
     setTypeFilter("all");
     setStatusFilter("all");
     setServiceFilter("all");
-    setDateFrom("");
-    setDateTo("");
+    setDateFrom(undefined);
+    setDateTo(undefined);
     setSearch("");
   }
 
   const hasActiveFilters =
-    typeFilter !== "all" || statusFilter !== "all" || serviceFilter !== "all" || dateFrom || dateTo || search;
+    typeFilter !== "all" || statusFilter !== "all" || serviceFilter !== "all" || !!dateFrom || !!dateTo || search;
 
   return (
     <div className="space-y-6 print:space-y-4">
@@ -201,83 +206,57 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
               <div className="flex flex-col gap-1.5">
                 <Label className="text-sm">{t("reports.fromLabel")}</Label>
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="h-8 w-36 text-sm"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "h-8 w-36 justify-start text-sm font-normal bg-white",
+                        !dateFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "MM/dd/yyyy") : "mm/dd/yyyy"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <Label className="text-sm">{t("reports.toLabel")}</Label>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="h-8 w-36 text-sm"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "h-8 w-36 justify-start text-sm font-normal bg-white",
+                        !dateTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "MM/dd/yyyy") : "mm/dd/yyyy"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Summary stat cards */}
-      {/* <div className="grid grid-cols-4 gap-4">
-        <Card className="border-t-4 border-t-brand">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Total Records</CardTitle>
-            <BarChart3 className="h-5 w-5 text-[#007A7D]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-[#007A7D]">{total}</div>
-            <p className="text-xs text-muted-foreground">Referrals + BH Referrals</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-4 border-t-brand">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Pending</CardTitle>
-            <Clock className="h-5 w-5 text-[#007A7D]" />
-          </CardHeader>
-          <CardContent className="flex items-end justify-between">
-            <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{pending}</div>
-              <p className="text-xs text-muted-foreground">Awaiting review</p>
-            </div>
-            <span className="text-sm font-semibold text-muted-foreground">{pct(pending)}%</span>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-4 border-t-brand">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">Completed</CardTitle>
-            <CheckCircle2 className="h-5 w-5 text-[#007A7D]" />
-          </CardHeader>
-          <CardContent className="flex items-end justify-between">
-            <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{completed}</div>
-              <p className="text-xs text-muted-foreground">Clear / Confirmed / Ready</p>
-            </div>
-            <span className="text-sm font-semibold text-muted-foreground">{pct(completed)}%</span>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-4 border-t-brand">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#007A7D]">With Results</CardTitle>
-            <FileCheck className="h-5 w-5 text-[#007A7D]" />
-          </CardHeader>
-          <CardContent className="flex items-end justify-between">
-            <div>
-              <div className="text-3xl font-bold text-[#007A7D]">{withResult}</div>
-              <p className="text-xs text-muted-foreground">PDF result uploaded</p>
-            </div>
-            <span className="text-sm font-semibold text-muted-foreground">{pct(withResult)}%</span>
-          </CardContent>
-        </Card>
-      </div> */}
 
       {/* Charts */}
       <div className="grid grid-cols-2 gap-4 print:grid-cols-2">
@@ -290,7 +269,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
           </CardContent>
         </Card>
 
-        <Card >
+        <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-brand">{t("reports.bhReferralStatusBreakdown")}</CardTitle>
           </CardHeader>

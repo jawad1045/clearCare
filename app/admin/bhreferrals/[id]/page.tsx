@@ -27,7 +27,7 @@ export default async function BHReferralDetailsPage({ params }: PageProps) {
   const { t, locale } = await getServerTranslation();
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-full bg-muted/30">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 
         <div className="mb-8">
