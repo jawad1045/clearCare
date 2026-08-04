@@ -188,7 +188,7 @@ export default function LoginPage() {
               />
             </svg>
             <p className="text-xs leading-relaxed text-gray-600">
-              If you do not have an ACTIVE business account, please?{" "}
+              If you do not have an ACTIVE business account, please{" "}
               <Link
                 href="https://form.typeform.com/to/wY7RUiTK"
                 target="_blank"
