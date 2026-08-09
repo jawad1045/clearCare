@@ -155,7 +155,6 @@ export async function createBHReferral(formData: FormData) {
     throw new Error(t("common.errors.unauthorized"));
   }
 
-  // Include company relation
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
     include: {
@@ -210,7 +209,6 @@ export async function createBHReferral(formData: FormData) {
   const patientName = `${bhReferral.firstName} ${bhReferral.lastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
   
-  // Resolve company name hierarchy
   const companyName = user.company?.organization ?? user.organization ?? "Unknown Company";
   const nowFormatted = formatDateTime(new Date());
 
@@ -345,7 +343,13 @@ export async function getBHReferralById(id: number) {
 
   const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id },
-    include: { user: true, company: true },
+    include: {
+      user: true,
+      company: true,
+      statusHistory: {
+        orderBy: { id: "desc" }, // Fixed: Orders by primary key ID instead of non-existent createdAt
+      },
+    },
   });
 
   if (!referral) return null;
@@ -365,12 +369,30 @@ export async function updateBHReferralStatus(referralId: number, status: string)
     throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
   }
 
-  const updated = await prisma.mentalHealthReferral.update({
-    where: { id: referralId },
-    data: { status },
+  const now = new Date();
+
+  // Execute referral update and status history logging atomically
+  const updated = await prisma.$transaction(async (tx) => {
+    const referral = await tx.mentalHealthReferral.update({
+      where: { id: referralId },
+      data: { 
+        status,
+        lastUpdated: now,
+      },
+    });
+
+    await tx.bHReferralStatusHistory.create({
+      data: {
+        referralId,
+        status,
+        changedBy: currentUser.id,
+      },
+    });
+
+    return referral;
   });
 
-  const nowFormatted = formatDateTime(new Date());
+  const nowFormatted = formatDateTime(now);
 
   await notifyStatusChange({
     referralId,
@@ -430,7 +452,6 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
     throw new Error(t("referrals.errorOnlyAdminsUploadResults"));
   }
 
-  // Include company relation
   const referral = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { pdfReport: pdfUrl },
@@ -443,7 +464,6 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
   const patientName = `${referral.firstName} ${referral.lastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
   
-  // Resolve company name hierarchy
   const companyName =
     referral.company?.organization ??
     referral.user.organization ??

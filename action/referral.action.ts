@@ -139,7 +139,7 @@ async function notifyStatusChange(opts: {
       referralId: opts.referralId,
       patientName: opts.patientName,
       newStatus: opts.newStatus,
-      companyName, // Fixed: Uses calculated local companyName
+      companyName,
     }),
   ]);
 }
@@ -152,7 +152,6 @@ export async function createReferral(formData: FormData) {
     throw new Error(t("common.errors.unauthorized"));
   }
 
-  // Fixed: Included company relation
   const user = await prisma.user.findUnique({
     where: { id: currentUser.id },
     include: {
@@ -221,9 +220,8 @@ export async function createReferral(formData: FormData) {
 
   const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
-  
-  // Fixed: Priority hierarchy for company name
-  const companyName = user.company?.organization ?? user.organization ?? "Unknown Company";
+  const companyName =
+    user.company?.organization ?? user.organization ?? "Unknown Company";
   const nowFormatted = formatDateTime(new Date());
 
   await notifySubmission({
@@ -413,6 +411,15 @@ export async function updateReferralStatus(
     data: { status },
   });
 
+  // Fixed: Corrected Prisma create syntax and added missing await
+  await prisma.referralStatusHistory.create({
+    data: {
+      referralId,
+      status,
+      changedBy: currentUser.id,
+    },
+  });
+
   const nowFormatted = formatDateTime(new Date());
 
   await notifyStatusChange({
@@ -437,6 +444,9 @@ export async function getReferralById(id: number) {
     include: {
       user: true,
       company: true,
+      statusHistory: {
+        orderBy: { id: "desc" }, // Fixed: Orders history by primary key ID
+      },
     },
   });
 
@@ -510,7 +520,6 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
     throw new Error(t("referrals.errorOnlyAdminsUploadResults"));
   }
 
-  // Fixed: Included company relation
   const referral = await prisma.referral.update({
     where: { id: referralId },
     data: { pdfResult: pdfUrl },
@@ -522,8 +531,7 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
 
   const patientName = `${referral.patientFirstName} ${referral.patientLastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
-  
-  // Fixed: Priority hierarchy for company name
+
   const companyName =
     referral.company?.organization ??
     referral.user.organization ??
