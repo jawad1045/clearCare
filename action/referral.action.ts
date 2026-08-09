@@ -413,6 +413,12 @@ export async function updateReferralStatus(
     data: { status },
   });
 
+  prisma.referralStatusHistory.create(
+    { data: { referralId,
+       status, 
+       changedBy: currentUser.id }
+   })
+
   const nowFormatted = formatDateTime(new Date());
 
   await notifyStatusChange({
@@ -437,6 +443,7 @@ export async function getReferralById(id: number) {
     include: {
       user: true,
       company: true,
+      statusHistory: true
     },
   });
 

@@ -88,7 +88,7 @@ model Referral {
   lastUpdated        DateTime  @updatedAt @map("Last_Updated")
   company            Company   @relation(fields: [companyAcctId], references: [id])
   user               User      @relation(fields: [userId], references: [id])
-
+  statusHistory  ReferralStatusHistory[]
   @@map("tbl_Referrals")
 }
 
@@ -115,7 +115,7 @@ model MentalHealthReferral {
   grade             String?   @db.VarChar(100)
   company           Company   @relation(fields: [companyAcctId], references: [id])
   user              User      @relation(fields: [userId], references: [id])
-
+  statusHistory     BHReferralStatusHistory[]
   @@map("tbl_MentalHealthReferrals")
 }
 
@@ -152,4 +152,29 @@ model UserTitle {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
+}
+
+model BHReferralStatusHistory {
+  id         Int      @id @default(autoincrement()) @map("History_ID")
+  referralId Int      @map("MH_ID")
+  status     String   @db.VarChar(50)
+  changedAt  DateTime @default(now()) @map("Changed_At")
+  changedBy  Int?     @map("Changed_By_User_ID")
+
+  referral MentalHealthReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  @@map("tbl_BHReferralStatusHistory")
+}
+
+model ReferralStatusHistory {
+  id         Int      @id @default(autoincrement()) @map("History_ID")
+  referralId Int      @map("Referral_ID")
+  status     String   @db.VarChar(50)
+  changedAt  DateTime @default(now()) @map("Changed_At")
+  changedBy  Int?     @map("Changed_By_User_ID")
+
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  @@index([referralId])
+  @@map("tbl_ReferralStatusHistory")
 }

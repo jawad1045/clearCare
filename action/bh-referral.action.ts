@@ -345,7 +345,7 @@ export async function getBHReferralById(id: number) {
 
   const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id },
-    include: { user: true, company: true },
+    include: { user: true, company: true ,statusHistory: true},
   });
 
   if (!referral) return null;
@@ -358,7 +358,7 @@ export async function getBHReferralById(id: number) {
   return referral;
 }
 
-export async function updateBHReferralStatus(referralId: number, status: string) {
+export async function updateBHReferralStatus(referralId: number, status: string ) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "Admin") {
     const { t } = await getServerTranslation();
@@ -368,6 +368,14 @@ export async function updateBHReferralStatus(referralId: number, status: string)
   const updated = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { status },
+  });
+
+  await prisma.bHReferralStatusHistory.create({
+    data: {
+      referralId,
+      status,
+      changedBy: currentUser.id,
+    },
   });
 
   const nowFormatted = formatDateTime(new Date());

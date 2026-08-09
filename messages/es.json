@@ -1,5 +1,6 @@
 {
   "common": {
+    "dob": "Fecha de Nacimiento",
     "activate": "Activar",
     "deactivate": "Desactivar",
     "emailAlreadyRegistered": "Este correo electrónico ya está registrado",
@@ -273,6 +274,11 @@
     "errorEmailExists": "El correo electrónico ya existe"
   },
   "referrals": {
+    "noStatusHistory": "Sin historial de estados",
+    "statusHistorySection": "Historial de Estados",
+    "statusHistoryHint": "El historial de estados solo está disponible para referencias completadas.",
+    "recordSection": "Registro",
+    "statusChangedOn": "Estado cambiado en",
     "errorInvalidDob": "Fecha de nacimiento inválida",
     "myReferrals": "Mis Referencias",
     "searchPlaceholder": "Buscar referencias",
