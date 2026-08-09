@@ -1,6 +1,5 @@
 {
   "common": {
-    "dob": "Date of Birth",
     "activate": "Activate",
     "deactivate": "Deactivate",
     "checkingEmail": "Checking email…",
@@ -274,11 +273,6 @@
     "errorEmailExists": "Email already exists"
   },
   "referrals": {
-    "noStatusHistory": "No status history available",
-    "statusHistorySection": "Status History",
-    "statusHistoryHint": "Status history is only available for completed referrals.",
-    "recordSection": "Record",
-    "statusChangedOn": "Status changed on",
     "errorInvalidDob": "Invalid date of birth",
     "myReferrals": "My Referrals",
     "searchPlaceholder": "Search referrals...",
