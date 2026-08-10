@@ -53,6 +53,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { getReferralStatusHistory } from "@/action/referral.action";
 
 
 
@@ -237,7 +238,8 @@ export function AdminReferralsTable({
         referralColumns(
           basePath,
           t,
-          locale as "en" | "es"
+          locale as "en" | "es",
+          getReferralStatusHistory,
         ),
 
       state:{

@@ -25,6 +25,8 @@ import {
   SERVICE_TYPES,
   SERVICE_TYPE_LABEL_KEYS,
 } from "@/lib/referral-filters";
+import { getBHReferralStatusHistory } from "@/action/bh-referral.action";
+import { getReferralStatusHistory } from "@/action/referral.action";
 
 const SERVICE_TYPE_LABEL_KEYS_ALL = {
   ...SERVICE_TYPE_LABEL_KEYS,
@@ -332,7 +334,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
             columns={reportColumns(
               t,
               locale as "en" | "es",
-              isAdmin
+              isAdmin,
+              getReferralStatusHistory
             )}
             emptyMessage={t(
               "reports.noReferralRecordsMatch"
@@ -357,7 +360,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
             columns={reportColumns(
               t,
               locale as "en" | "es",
-              isAdmin
+              isAdmin,
+              getBHReferralStatusHistory
             )}
             emptyMessage={t(
               "reports.noBhReferralRecordsMatch"

@@ -1,5 +1,9 @@
 {
   "common": {
+    "statusHistory": "Historial de Estado",
+    "loading": "Cargando…",
+    "errorLoadingHistory": "Error cargando el historial de estado",
+    "noHistoryFound": "No se encontraron historiales",
     "activate": "Activar",
     "deactivate": "Desactivar",
     "emailAlreadyRegistered": "Este correo electrónico ya está registrado",

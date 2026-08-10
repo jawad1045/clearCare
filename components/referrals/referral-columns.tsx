@@ -17,6 +17,9 @@ import {
   SERVICE_TYPE_LABEL_KEYS,
 } from "@/lib/referral-filters";
 
+import { StatusHistoryHoverCell } from "@/components/status-history-hover-cell";
+import type { StatusHistoryEntry } from "@/types/status-history";
+
 
 export type Referral = {
   id: number;
@@ -50,7 +53,8 @@ type TranslationFunction = (
 export const referralColumns = (
   basePath:string,
   t:TranslationFunction,
-  locale:"en"|"es"
+  locale:"en"|"es",
+  fetchStatusHistory: (referralId: number) => Promise<StatusHistoryEntry[]>
 ):ColumnDef<Referral>[] => [
 
 {
@@ -189,22 +193,31 @@ export const referralColumns = (
    </Button>
  ),
 
+ // Changed: badge is now the HoverCard trigger; history is fetched lazily on hover
  cell:({row})=>{
 
  const status=row.original.status;
  const color=getStatusColor(status);
 
  return (
- <Badge
- variant="outline"
- style={{
- backgroundColor:color+"22",
- color,
- borderColor:color+"55"
- }}
- >
- {getStatusLabel(status,locale)}
- </Badge>
+  <StatusHistoryHoverCell
+   referralId={row.original.id}
+   locale={locale}
+   t={t}
+   fetchStatusHistory={fetchStatusHistory}
+  >
+   <Badge
+    variant="outline"
+    className="cursor-default"
+    style={{
+     backgroundColor:color+"22",
+     color,
+     borderColor:color+"55"
+    }}
+   >
+    {getStatusLabel(status,locale)}
+   </Badge>
+  </StatusHistoryHoverCell>
  )
 
  }

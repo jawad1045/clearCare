@@ -571,3 +571,16 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
   revalidatePath(`/user/referrals/${referralId}`);
   revalidatePath(`/user/bhreferrals/${referralId}`);
 }
+
+export async function getReferralStatusHistory(referralId: number) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return [];
+
+  const history = await prisma.referralStatusHistory.findMany({
+    where: { referralId },
+    orderBy: { changedAt: "desc" },
+    select: { id: true, status: true, changedAt: true },
+  });
+
+  return history;
+}

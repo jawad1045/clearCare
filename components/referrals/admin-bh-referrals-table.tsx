@@ -48,6 +48,7 @@ import { columns, BHReferral } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { getBHReferralStatusHistory } from "@/action/bh-referral.action";
 
 
 
@@ -199,7 +200,8 @@ export function AdminBHReferralsTable({
       columns(
         basePath,
         t,
-        tableLocale
+        tableLocale,
+        getBHReferralStatusHistory
       ),
 
     state: {
@@ -585,7 +587,8 @@ export function AdminBHReferralsTable({
                     columns(
                       basePath,
                       t,
-                      tableLocale
+                      tableLocale,
+                      getBHReferralStatusHistory
                     ).length
                   }
 

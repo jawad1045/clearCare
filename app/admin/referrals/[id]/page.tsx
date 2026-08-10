@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getReferralById } from "@/action/referral.action";
+import { getReferralById, getReferralStatusHistory } from "@/action/referral.action";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,8 @@ export default async function ReferralDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        <ReferralDetailTabs referral={referral} isBH={false} />
+        <ReferralDetailTabs referral={referral} isBH={false} 
+          fetchStatusHistory={getReferralStatusHistory} />
 
       </div>
     </div>

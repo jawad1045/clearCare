@@ -1,5 +1,9 @@
 {
   "common": {
+    "statusHistory": "Status History",
+    "loading": "Loading…",
+    "errorLoadingHistory": "Error loading status history",
+    "noHistoryFound": "No history found",
     "activate": "Activate",
     "deactivate": "Deactivate",
     "checkingEmail": "Checking email…",

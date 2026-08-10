@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getBHReferralById } from "@/action/bh-referral.action";
+import { getBHReferralById, getBHReferralStatusHistory } from "@/action/bh-referral.action";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,8 @@ export default async function BHReferralDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        <MentalHealthReferralDetailTabs referral={referral} />
+        <MentalHealthReferralDetailTabs referral={referral} 
+          fetchStatusHistory={getBHReferralStatusHistory} />
 
       </div>
     </div>
