@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown, Eye, Loader2 } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { ReportRow } from "@/action/report.action";
@@ -9,10 +9,25 @@ import { ReportRow } from "@/action/report.action";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { getStatusBadge, getStatusLabel } from "@/lib/referral-statuses";
 import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
@@ -21,9 +36,25 @@ import { useTranslation } from "@/locale/use-translation";
 import { formatDateTime } from "@/lib/format-date";
 import type { StatusHistoryEntry } from "@/types/status-history";
 
-// New: small inline component so status cell can hold hook state (useState)
-// without turning the whole cell renderer into a component itself.
-function StatusHistoryHoverCell({
+// Assumes the standard shadcn mobile-detection hook exists at this path
+// (generated e.g. by `npx shadcn add sidebar`). Adjust the import if yours
+// lives elsewhere, or swap in your own `useMediaQuery("(max-width: 767px)")`.
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// New: date-only formatter (mm/dd/yyyy) for the status history table.
+// The main "Created" column still uses the full formatDateTime helper.
+function formatDateMMDDYYYY(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  return `${mm}/${dd}/${yyyy}`;
+}
+
+// New: status cell now shows a "View" button. Clicking it fetches (and
+// caches) status history, then displays it in a Dialog on desktop or a
+// Sheet on mobile, rendered as a color-coded table.
+function StatusHistoryCell({
   status,
   label,
   referralId,
@@ -38,12 +69,16 @@ function StatusHistoryHoverCell({
   t: ReturnType<typeof useTranslation>["t"];
   fetchStatusHistory: (referralId: number) => Promise<StatusHistoryEntry[]>;
 }) {
+  const isMobile = useIsMobile();
+
+  const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<StatusHistoryEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  async function handleOpenChange(open: boolean) {
-    if (!open || history !== null || loading) return;
+  async function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (!nextOpen || history !== null || loading) return;
     setLoading(true);
     setError(false);
     try {
@@ -56,55 +91,92 @@ function StatusHistoryHoverCell({
     }
   }
 
-  return (
-    <HoverCard openDelay={150} closeDelay={100} onOpenChange={handleOpenChange}>
-      <HoverCardTrigger asChild>
-        <Badge className={getStatusBadge(status)} variant="outline">
-          {label}
-        </Badge>
-      </HoverCardTrigger>
+  const historyContent = (
+    <>
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          {t("common.loading")}
+        </div>
+      )}
 
-      <HoverCardContent className="w-64" align="start">
-        <p className="mb-2 text-sm font-medium">{t("common.statusHistory")}</p>
+      {error && (
+        <p className="text-xs text-destructive">
+          {t("common.errorLoadingHistory")}
+        </p>
+      )}
 
-        {loading && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            {t("common.loading")}
-          </div>
-        )}
+      {!loading && !error && history?.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          {t("common.noHistoryFound")}
+        </p>
+      )}
 
-        {error && (
-          <p className="text-xs text-destructive">
-            {t("common.errorLoadingHistory")}
-          </p>
-        )}
-
-        {!loading && !error && history?.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            {t("common.noHistoryFound")}
-          </p>
-        )}
-
-        {!loading && !error && history && history.length > 0 && (
-          <ol className="space-y-1.5">
+      {!loading && !error && history && history.length > 0 && (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("common.status")}</TableHead>
+              <TableHead className="text-right">{t("common.date")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {history.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex items-center justify-between text-xs"
-              >
-                <span className="font-medium text-foreground">
-                  {getStatusLabel(entry.status, locale)}
-                </span>
-                <span className="text-muted-foreground">
-                  {formatDateTime(entry.changedAt)}
-                </span>
-              </li>
+              <TableRow key={entry.id}>
+                <TableCell>
+                  <Badge
+                    className={getStatusBadge(entry.status)}
+                    variant="outline"
+                  >
+                    {getStatusLabel(entry.status, locale)}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  {formatDateMMDDYYYY(entry.changedAt)}
+                </TableCell>
+              </TableRow>
             ))}
-          </ol>
-        )}
-      </HoverCardContent>
-    </HoverCard>
+          </TableBody>
+        </Table>
+      )}
+    </>
+  );
+
+  return (
+    <div className="flex items-center gap-2">
+      <Badge className={getStatusBadge(status)} variant="outline">
+        {label}
+      </Badge>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={() => handleOpenChange(true)}
+      >
+        <Eye className="h-3.5 w-3.5" />
+      </Button>
+
+      {isMobile ? (
+        <Sheet open={open} onOpenChange={handleOpenChange}>
+          <SheetContent side="bottom">
+            <SheetHeader>
+              <SheetTitle>{t("common.statusHistory")}</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">{historyContent}</div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t("common.statusHistory")}</DialogTitle>
+            </DialogHeader>
+            {historyContent}
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
   );
 }
 
@@ -112,7 +184,7 @@ export function reportColumns(
   t: ReturnType<typeof useTranslation>["t"],
   locale: "en" | "es",
   isAdmin: boolean,
-  fetchStatusHistory: (referralId: number) => Promise<StatusHistoryEntry[]> // 👈 new param
+  fetchStatusHistory: (referralId: number) => Promise<StatusHistoryEntry[]>
 ): ColumnDef<ReportRow>[] {
   const sortableHeader = (label: string) => ({
     header: ({ column }: any) => (
@@ -175,9 +247,10 @@ export function reportColumns(
     {
       accessorKey: "status",
       ...sortableHeader(t("common.status")),
-      // Changed: was a plain Badge, now wrapped with hover-triggered status history
+      // Changed: badge + "View" button that opens a Dialog (desktop) or
+      // Sheet (mobile) showing the status history as a color-coded table.
       cell: ({ row }) => (
-        <StatusHistoryHoverCell
+        <StatusHistoryCell
           status={row.original.status}
           label={getStatusLabel(row.original.status, locale)}
           referralId={row.original.id}
