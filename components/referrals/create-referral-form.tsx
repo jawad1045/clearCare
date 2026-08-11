@@ -209,8 +209,6 @@ export function CreateReferralForm({ referrerName }: Props) {
     if (v !== DRUG_TEST_SERVICE) {
       setValue("type", "", { shouldValidate: true });
       setValue("priority", "", { shouldValidate: true });
-      setValue("contactDate", "");
-      setValue("contactMethod", []);
     }
   }
 
@@ -303,7 +301,7 @@ export function CreateReferralForm({ referrerName }: Props) {
           </Select>
         </Field>
 
-        {/* ── Test Details (directly under Service Type; enabled only for Drug Test) ── */}
+        {/* ── Test Details (directly under Service Type; test type & priority enabled only for Drug Test) ── */}
         <div>
           <SectionLabel>{t("referrals.testDetails")}</SectionLabel>
           {!isDrugTest && (
@@ -354,21 +352,15 @@ export function CreateReferralForm({ referrerName }: Props) {
             <Field label={t("referrals.contactDateLabel")}>
               <DatePicker
                 name="contactDate_display"
-                disabled={!isDrugTest}
                 onDateChange={(iso) => setValue("contactDate", iso)}
-                className="border-border bg-background focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>
             <Field label={t("referrals.methodOfContactLabel")}>
-              <div
-                className={`flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3 ${
-                  !isDrugTest ? "cursor-not-allowed opacity-50" : ""
-                }`}
-              >
+              <div className="flex h-10 items-center gap-4 rounded-md border border-border bg-background px-3">
                 {CONTACT_METHODS.map((method) => (
                   <label key={method} className="flex cursor-pointer items-center gap-1.5 text-sm">
                     <Checkbox
-                      disabled={!isDrugTest}
                       checked={contactMethods.includes(method)}
                       onCheckedChange={() => toggleContact(method)}
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"

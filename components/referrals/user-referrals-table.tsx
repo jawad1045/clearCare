@@ -231,13 +231,13 @@ export function UserReferralsTable({ referrals, basePath }: Props) {
             className="max-w-xs"
           />
 
-          <ExportButton
+          {/* <ExportButton
             filename="my_referrals_export"
             title={t("referrals.myReferrals") ?? "My Referrals"}
             sheetName="Referrals"
             headers={REFERRAL_HEADERS}
             rows={exportRows}
-          />
+          /> */}
         </div>
       </div>
 
