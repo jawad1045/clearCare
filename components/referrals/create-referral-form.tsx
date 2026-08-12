@@ -81,7 +81,7 @@ const CONTACT_METHOD_LABEL_KEYS: Record<(typeof CONTACT_METHODS)[number], Transl
   Email: "common.contactMethodEmail",
 };
 
-const DRUG_TEST_SERVICE = "Drug Test";
+const DRUG_TEST_SERVICE = ["Drug Test" , "Drug Test (OM)"];
 
 function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(
@@ -106,7 +106,7 @@ function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           contactMethod: z.array(z.string()).optional(),
         })
         .superRefine((data, ctx) => {
-          if (data.serviceType === DRUG_TEST_SERVICE) {
+          if (data.serviceType === DRUG_TEST_SERVICE[0] || data.serviceType === DRUG_TEST_SERVICE[1] ) {
             if (!data.type) {
               ctx.addIssue({
                 path: ["type"],
@@ -202,11 +202,11 @@ export function CreateReferralForm({ referrerName }: Props) {
 
   const contactMethods = watch("contactMethod") ?? [];
   const serviceType = watch("serviceType");
-  const isDrugTest = serviceType === DRUG_TEST_SERVICE;
+  const isDrugTest = serviceType === DRUG_TEST_SERVICE[0] || serviceType === DRUG_TEST_SERVICE[1];
 
   function handleServiceTypeChange(v: string) {
     setValue("serviceType", v, { shouldValidate: true });
-    if (v !== DRUG_TEST_SERVICE) {
+    if (v !== DRUG_TEST_SERVICE[0] && v !== DRUG_TEST_SERVICE[1]) {
       setValue("type", "", { shouldValidate: true });
       setValue("priority", "", { shouldValidate: true });
     }

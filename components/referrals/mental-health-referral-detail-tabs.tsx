@@ -184,8 +184,134 @@ function ViewTab({
   fetchStatusHistory: (referralId: number) => Promise<StatusHistoryEntry[]>;
 }) {
   const { t, locale } = useTranslation();
-  const formatDate = (d: Date | null) =>
-    d ? new Date(d).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
+
+  return (
+    <div className="space-y-4">
+
+      <div className="grid gap-4 sm:grid-cols-2">
+
+        {/* Submitted By */}
+        <Card>
+          <CardHeader className="pb-3">
+            <SectionHeader icon={UserCheck} title={t("referrals.submittedBySection")} />
+            <CardDescription className="text-xs">{t("referrals.referringContact")}</CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 space-y-3">
+            <InfoRow label={t("common.name")} value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`} />
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium text-muted-foreground">{t("common.email")}</p>
+              <a href={`mailto:${referral.user.contactEmail}`} className="text-sm text-primary hover:underline">
+                {referral.user.contactEmail}
+              </a>
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium text-muted-foreground">{t("common.phone")}</p>
+              <a href={`tel:${referral.user.contactPhone}`} className="text-sm text-primary hover:underline">
+                {referral.user.contactPhone}
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Attachments */}
+        <Card>
+          <CardHeader className="pb-3">
+            <SectionHeader icon={Paperclip} title={t("referrals.attachmentsSection")} />
+            <CardDescription className="text-xs">
+              {t(referral.clientAttachments.length === 1 ? "referrals.attachmentsCountOne" : "referrals.attachmentsCountOther", { n: referral.clientAttachments.length })}
+            </CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4">
+            {referral.clientAttachments.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">{t("referrals.noAttachments")}</p>
+            ) : (
+              <ul className="space-y-2">
+                {referral.clientAttachments.map((stored, index) => {
+                  const { name, url } = parseAttachment(stored, index);
+                  return (
+                    <li key={stored}>
+                      <Button variant="outline" size="sm" asChild className="w-full justify-start gap-2 text-sm">
+                        <Link href={url} target="_blank" rel="noopener noreferrer">
+                          <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                          {name}
+                        </Link>
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Organization */}
+        <Card>
+          <CardHeader className="pb-3">
+            <SectionHeader icon={Building2} title={t("referrals.organizationSection")} />
+            <CardDescription className="text-xs">{t("referrals.associatedCompany")}</CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 pb-3">
+            <InfoRow label={t("common.organization")} value={referral.company.organization} />
+          </CardContent>
+        </Card>
+
+        {/* Record Info */}
+        <Card>
+          <CardHeader className="pb-3">
+            <SectionHeader icon={Hash} title={t("common.recordInfo")} />
+            <CardDescription className="text-xs">
+              <span className="font-medium">{t("referrals.referralId")}:</span>{" "}
+              <span>{referral.id}</span>
+            </CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 pb-3">
+            <div className="space-y-3">
+              <div>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  {t("common.status")}
+                </p>
+                <StatusHistoryTable
+                  referralId={referral.id}
+                  fetchStatusHistory={fetchStatusHistory}
+                  locale={locale as "en" | "es"}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+      </div>
+
+      {/* Notes */}
+      {referral.notes && (
+        <Card>
+          <CardHeader className="pb-3">
+            <SectionHeader icon={FileText} title={t("common.notes")} />
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4">
+            <p className="text-sm text-foreground whitespace-pre-wrap">{referral.notes}</p>
+          </CardContent>
+        </Card>
+      )}
+
+    </div>
+  );
+}
+
+function ManageTab({ referral }: { referral: MentalHealthReferral }) {
+  const { t, locale } = useTranslation();
+
+  const formatDate = (d: Date | null) => {
+    if (!d) return null;
+    const parsed = new Date(d);
+    if (isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+  };
 
   return (
     <div className="space-y-4">
@@ -222,151 +348,7 @@ function ViewTab({
           </CardContent>
         </Card>
 
-        {/* Submitted By, Organization, Attachments, Record Info */}
-        <div className="grid gap-4 sm:grid-cols-2 sm:col-span-2">
-
-          {/* Submitted By */}
-          <Card>
-            <CardHeader className="pb-3">
-              <SectionHeader icon={UserCheck} title={t("referrals.submittedBySection")} />
-              <CardDescription className="text-xs">{t("referrals.referringContact")}</CardDescription>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4 space-y-3">
-              <InfoRow label={t("common.name")} value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`} />
-              <div className="space-y-0.5">
-                <p className="text-xs font-medium text-muted-foreground">{t("common.email")}</p>
-                <a href={`mailto:${referral.user.contactEmail}`} className="text-sm text-primary hover:underline">
-                  {referral.user.contactEmail}
-                </a>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-xs font-medium text-muted-foreground">{t("common.phone")}</p>
-                <a href={`tel:${referral.user.contactPhone}`} className="text-sm text-primary hover:underline">
-                  {referral.user.contactPhone}
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Attachments (Restored to original layout) */}
-          <Card>
-            <CardHeader className="pb-3">
-              <SectionHeader icon={Paperclip} title={t("referrals.attachmentsSection")} />
-              <CardDescription className="text-xs">
-                {t(referral.clientAttachments.length === 1 ? "referrals.attachmentsCountOne" : "referrals.attachmentsCountOther", { n: referral.clientAttachments.length })}
-              </CardDescription>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-              {referral.clientAttachments.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">{t("referrals.noAttachments")}</p>
-              ) : (
-                <ul className="space-y-2">
-                  {referral.clientAttachments.map((stored, index) => {
-                    const { name, url } = parseAttachment(stored, index);
-                    return (
-                      <li key={stored}>
-                        <Button variant="outline" size="sm" asChild className="w-full justify-start gap-2 text-sm">
-                          <Link href={url} target="_blank" rel="noopener noreferrer">
-                            <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                            {name}
-                          </Link>
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Organization */}
-          <Card>
-            <CardHeader className="pb-3">
-              <SectionHeader
-                icon={Building2}
-                title={t("referrals.organizationSection")}
-              />
-              <CardDescription className="text-xs">
-                {t("referrals.associatedCompany")}
-              </CardDescription>
-            </CardHeader>
-
-            <Separator />
-
-            <CardContent className="pt-4 pb-3">
-              <InfoRow
-                label={t("common.organization")}
-                value={referral.company.organization}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Record Info */}
-          <Card>
-            <CardHeader className="pb-3">
-              <SectionHeader
-                icon={Hash}
-                title={t("common.recordInfo")}
-              />
-              <CardDescription className="text-xs">
-                {/* {t("referrals.referralId")} */}
-                <span className="font-medium">
-                    {t("referrals.referralId")}:
-                  </span>{" "}
-                  <span>{referral.id}</span>
-              </CardDescription>
-            </CardHeader>
-
-            <Separator />
-
-            <CardContent className="pt-4 pb-3">
-              <div className="space-y-3">
-                <div className="text-sm">
-                  
-                </div>
-
-                <div>
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">
-                    {t("common.status")}
-                  </p>
-
-                  <StatusHistoryTable
-                    referralId={referral.id}
-                    fetchStatusHistory={fetchStatusHistory}
-                    locale={locale as "en" | "es"}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
       </div>
-
-      {/* Notes */}
-      {referral.notes && (
-        <Card>
-          <CardHeader className="pb-3">
-            <SectionHeader icon={FileText} title={t("common.notes")} />
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4">
-            <p className="text-sm text-foreground whitespace-pre-wrap">{referral.notes}</p>
-          </CardContent>
-        </Card>
-      )}
-
-    </div>
-  );
-}
-
-function ManageTab({ referral }: { referral: MentalHealthReferral }) {
-  const { t, locale } = useTranslation();
-
-  return (
-    <div className="space-y-4">
 
       {/* Status */}
       <Card>
