@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 
-import { getCompanies } from "@/action/company.action";
+import { getCompanies, toggleCompanyStatus } from "@/action/company.action";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +57,16 @@ export function CompaniesClient({ initialData }: Props) {
     };
   }, [debouncedSearch, page, limit, status]); // status now included
 
+  const handleToggleCompanyActive = async (companyId: number, nextActive: boolean) => {
+  await toggleCompanyStatus(companyId, nextActive);
+  const result = await getCompanies({
+    search: debouncedSearch,
+    page,
+    limit,
+    status, // whatever your status filter state is called here
+  });
+  setData(result);
+};
   const handleExportCSV = async () => {
     try {
       const companies = await getCompaniesForExport({ search: debouncedSearch, status });
@@ -181,7 +191,9 @@ export function CompaniesClient({ initialData }: Props) {
 
       {isPending && <p className="text-sm text-muted-foreground">Loading companies...</p>}
 
-      <CompaniesTable companies={data.companies} />
+      <CompaniesTable 
+      companies={data.companies}
+      onToggleCompanyActive={handleToggleCompanyActive} />
 
       {data.totalPages > 1 && (
         <div className="flex justify-center gap-2">

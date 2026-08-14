@@ -6,7 +6,14 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "../ui/switch";
 
+declare module "@tanstack/react-table" {
+  interface TableMeta<TData> {
+    onToggleActive: (companyId: number, nextActive: boolean) => void;
+    pendingIds: Set<number>;
+  }
+}
 export type Company = {
   id: number;
   organization: string;
@@ -47,7 +54,7 @@ export const columns: ColumnDef<Company>[] = [
     accessorKey: "contactPhone",
     header: "Phone",
   },
-  {
+{
     accessorKey: "isActive",
     header: ({ column }) => (
       <Button
@@ -58,11 +65,26 @@ export const columns: ColumnDef<Company>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => (
-      <Badge variant={row.original.isActive ? "default" : "destructive"}>
-        {row.original.isActive ? "Active" : "Inactive"}
-      </Badge>
-    ),
+    cell: ({ row, table }) => {
+      const company = row.original;
+      const isPending = table.options.meta?.pendingIds.has(company.id);
+
+      return (
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={company.isActive}
+            disabled={isPending}
+            onCheckedChange={(checked) =>
+              table.options.meta?.onToggleActive(company.id, checked)
+            }
+            aria-label={company.isActive ? "Active" : "Inactive"}
+          />
+          <Badge variant={company.isActive ? "default" : "destructive"}>
+            {company.isActive ? "Active" : "Inactive"}
+          </Badge>
+        </div>
+      );
+    },
   },
   {
     id: "location",
