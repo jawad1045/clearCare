@@ -277,6 +277,10 @@
     "errorEmailExists": "El correo electrónico ya existe"
   },
   "referrals": {
+    "summarySection": "Summary",
+    "summaryHint": "Key details at a glance",
+    "submittedByLabel": "Submitted By",
+    "statusReportSection": "Status History",
     "errorInvalidDob": "Fecha de nacimiento inválida",
     "myReferrals": "Mis Referencias",
     "searchPlaceholder": "Buscar referencias",

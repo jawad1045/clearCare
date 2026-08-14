@@ -277,6 +277,10 @@
     "errorEmailExists": "Email already exists"
   },
   "referrals": {
+    "summarySection": "Summary",
+    "summaryHint": "Key details at a glance",
+    "submittedByLabel": "Submitted By",
+    "statusReportSection": "Status History",
     "errorInvalidDob": "Invalid date of birth",
     "myReferrals": "My Referrals",
     "searchPlaceholder": "Search referrals...",
