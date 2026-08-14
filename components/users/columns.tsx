@@ -8,7 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ResetPasswordDialog } from "@/components/users/reset-password-dialog";
 import { useTranslation } from "@/locale/use-translation";
+import { Switch } from "../ui/switch";
 
+
+declare module "@tanstack/react-table" {
+  interface TableMeta<TData> {
+    onToggleActive: (userId: number, nextActive: boolean) => void;
+    pendingIds: Set<number>;
+  }
+}
 export type User = {
   id: number;
   organization: string;
@@ -120,7 +128,7 @@ export const columns: ColumnDef<User>[] = [
       );
     },
   },
-  {
+ {
     accessorKey: "isActive",
     header: ({ column }) => {
       const { t } = useTranslation();
@@ -137,19 +145,27 @@ export const columns: ColumnDef<User>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const { t } = useTranslation();
+      const user = row.original;
+      const isPending = table.options.meta?.pendingIds.has(user.id);
 
       return (
-        <Badge
-          variant={
-            row.original.isActive ? "default" : "destructive"
-          }
-        >
-          {row.original.isActive
-            ? t("common.active")
-            : t("common.inactive")}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={user.isActive}
+            disabled={isPending}
+            onCheckedChange={(checked) =>
+              table.options.meta?.onToggleActive(user.id, checked)
+            }
+            aria-label={
+              user.isActive ? t("common.active") : t("common.inactive")
+            }
+          />
+          <Badge variant={user.isActive ? "default" : "destructive"}>
+            {user.isActive ? t("common.active") : t("common.inactive")}
+          </Badge>
+        </div>
       );
     },
   },

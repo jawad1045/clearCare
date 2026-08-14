@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 
-import { getUsers, getCompanies } from "@/action/user.action";
+import { getUsers, getCompanies, updateUserStatus } from "@/action/user.action";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -68,6 +68,20 @@ export function UsersClient({ initialData }: Props) {
       setData(result);
     });
   }, [debouncedSearch, role, page, limit, acctId , status]);
+
+  const handleToggleUserActive = async (userId: number, nextActive: boolean) => {
+  await updateUserStatus(userId, nextActive);
+  // Refresh the current page of results so the list/status filter stays accurate
+  const result = await getUsers({
+    search: debouncedSearch,
+    role,
+    page,
+    limit,
+    acctId: acctId ?? undefined,
+    isActive: status === "all" ? undefined : status === "active",
+  });
+  setData(result);
+};
 
   const handleExportCSV = async () => {
     try {
@@ -276,6 +290,7 @@ export function UsersClient({ initialData }: Props) {
           setAcctId(id);
           setPage(1);
         }}
+        onToggleUserActive={handleToggleUserActive}
       />
 
       {/* Pagination */}

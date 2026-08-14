@@ -7,7 +7,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Table,
@@ -17,13 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { useTranslation } from "@/locale/use-translation";
 import { columns, User } from "./columns";
@@ -38,25 +31,59 @@ type UsersTableProps = {
   companies: Company[];
   activeAcctId: number | null;
   onCompanyChange: (acctId: number | null) => void;
+  // Optional: wire this up to your API call. If omitted, toggling
+  // only updates local state (useful for now / storybook / demos).
+  onToggleUserActive?: (userId: number, nextActive: boolean) => Promise<void> | void;
 };
 
-export function UsersTable({
-  users,
-  companies,
-  activeAcctId,
-  onCompanyChange,
-}: UsersTableProps) {
+export function UsersTable({ users, onToggleUserActive }: UsersTableProps) {
   const { t } = useTranslation();
 
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [localUsers, setLocalUsers] = useState<User[]>(users);
+  const [pendingIds, setPendingIds] = useState<Set<number>>(new Set());
+
+  // Keep local copy in sync if the parent's users list changes
+  // (e.g. refetch, pagination, filters).
+  useEffect(() => {
+    setLocalUsers(users);
+  }, [users]);
+
+  const handleToggleActive = async (userId: number, nextActive: boolean) => {
+    const previous = localUsers;
+
+    // Optimistic update
+    setLocalUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, active: nextActive } : u))
+    );
+    setPendingIds((prev) => new Set(prev).add(userId));
+
+    try {
+      await onToggleUserActive?.(userId, nextActive);
+    } catch (err) {
+      // Revert on failure
+      setLocalUsers(previous);
+      console.error("Failed to update user status", err);
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
 
   const table = useReactTable({
-    data: users,
+    data: localUsers,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    meta: {
+      onToggleActive: handleToggleActive,
+      pendingIds,
+    },
   });
 
   return (

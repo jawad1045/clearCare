@@ -15,6 +15,13 @@ import { getCurrentUser } from "@/lib/auth";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+export async function updateUserStatus(userId: number, isActive: boolean) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { isActive },
+  });
+}
+
 export async function checkEmailExists(email: string) {
   if (!email) return false;
 
