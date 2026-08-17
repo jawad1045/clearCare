@@ -23,7 +23,7 @@ export default async function UserDashboardPage() {
     getUserReportData(),
   ]);
 
-  const bh = reportRows.filter((r) => r.type === "Medical Referral").length;
+  const bh = reportRows.filter((r) => r.type === "Behavioral Health Referral").length;
 
   const { t } = await getServerTranslation();
 
