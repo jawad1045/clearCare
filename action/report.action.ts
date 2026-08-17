@@ -37,7 +37,7 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
   const rows: ReportRow[] = [
     ...referrals.map((r) => ({
       id: r.id,
-      type: "Behavioral Health Referral" as const,
+      type: "Medical Referral" as const,
       patientName: `${r.patientFirstName} ${r.patientLastName}`,
       companyName: r.company.organization,
       serviceType: r.serviceType,
@@ -48,7 +48,7 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
     })),
     ...bhReferrals.map((r) => ({
       id: r.id,
-      type: "Medical Referral" as const,
+      type: "Behavioral Health Referral" as const,
       patientName: `${r.firstName} ${r.lastName}`,
       companyName: r.company.organization,
       serviceType: "Medical",
@@ -86,7 +86,7 @@ export async function getUserReportData(): Promise<ReportRow[]> {
   const rows: ReportRow[] = [
     ...referrals.map((r) => ({
       id: r.id,
-      type: "Behavioral Health Referral" as const,
+      type: "Medical Referral" as const,
       patientName: `${r.patientFirstName} ${r.patientLastName}`,
       companyName: r.company.organization,
       serviceType: r.serviceType,
@@ -97,7 +97,7 @@ export async function getUserReportData(): Promise<ReportRow[]> {
     })),
     ...bhReferrals.map((r) => ({
       id: r.id,
-      type: "Medical Referral" as const,
+      type: "Behavioral Health Referral" as const,
       patientName: `${r.firstName} ${r.lastName}`,
       companyName: r.company.organization,
       serviceType: "Medical",

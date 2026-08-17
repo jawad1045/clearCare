@@ -80,8 +80,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
   const total = filtered.length;
 
-  const referralRows = useMemo(() => filtered.filter((r) => r.type === "Behavioral Health Referral"), [filtered]);
-  const bhReferralRows = useMemo(() => filtered.filter((r) => r.type === "Medical Referral"), [filtered]);
+  const referralRows = useMemo(() => filtered.filter((r) => r.type === "Medical Referral"), [filtered]);
+  const bhReferralRows = useMemo(() => filtered.filter((r) => r.type === "Behavioral Health Referral"), [filtered]);
 
   // Chart data
   function countByStatus(rows: ReportRow[]) {
@@ -194,8 +194,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
                   <SelectTrigger className="h-10 w-40 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("reports.allTypes")}</SelectItem>
-                    <SelectItem value="Behavioral Health Referral">{t("reports.typeReferral")}</SelectItem>
-                    <SelectItem value="Medical Referral">{t("reports.typeBhReferral")}</SelectItem>
+                    <SelectItem value="Medical Referral">{t("reports.typeReferral")}</SelectItem>
+                    <SelectItem value="Behavioral Health Referral">{t("reports.typeBhReferral")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
