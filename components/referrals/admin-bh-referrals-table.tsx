@@ -321,7 +321,7 @@ export function AdminBHReferralsTable({
         new Date(r.dateOfReferral).toLocaleDateString()
       ]);
 
-      await exportToPDF("bh_referrals_export.pdf", "Behavioral Health Referrals", headers, rows);
+      await exportToPDF("bh_referrals_export.pdf", "Medical Referrals", headers, rows);
     } catch (error) {
       console.error("Export PDF failed", error);
     }

@@ -21,7 +21,7 @@ import {
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 
-const DRUG_TEST_SERVICE = "Drug Test";
+const DRUG_TEST_SERVICES = ["Drug Test (IOP)", "Drug Test (OP)"];
 
 async function getAdmins() {
   return prisma.user.findMany({ where: { userRole: "Admin" } });
@@ -181,7 +181,7 @@ export async function createReferral(formData: FormData) {
   const rawPriority = ((formData.get("priority") as string) || "").trim();
   const rawGrade = ((formData.get("grade") as string) || "").trim();
 
-  if (serviceType === DRUG_TEST_SERVICE) {
+  if (DRUG_TEST_SERVICES.includes(serviceType)) {
     if (!rawType || !rawPriority) {
       throw new Error(t("referrals.testTypeAndPriorityRequiredForDrugTest"));
     }
@@ -287,7 +287,7 @@ export async function getReferrals(params: GetReferralsParams = {}) {
   const limit = Math.max(1, params.limit ?? 20);
 
   const where = buildReferralWhere(
-    { serviceType: { not: "Behavioral Health" } },
+    { serviceType: { not: "Medical" } },
     { search, status }
   );
 
@@ -331,7 +331,7 @@ export async function getMyReferrals(params: GetReferralsParams = {}) {
   const where = buildReferralWhere(
     {
       userId: currentUser.id,
-      serviceType: { not: "Behavioral Health" },
+      serviceType: { not: "Medical" },
     },
     { search, status }
   );
@@ -362,7 +362,7 @@ export async function getMyReferrals(params: GetReferralsParams = {}) {
 
 export async function getReferralsCount() {
   return prisma.referral.count({
-    where: { serviceType: { not: "Behavioral Health" } },
+    where: { serviceType: { not: "Medical" } },
   });
 }
 
@@ -371,7 +371,7 @@ export async function getRecentReferrals(take = 6) {
     take,
     orderBy: { dateOfReferral: "desc" },
     include: { company: true },
-    where: { serviceType: { not: "Behavioral Health" } },
+    where: { serviceType: { not: "Medical" } },
   });
 }
 
@@ -468,11 +468,11 @@ export async function getMyReferralCounts() {
   }
 
   const total = await prisma.referral.count({
-    where: { userId: currentUser.id, serviceType: { not: "Behavioral Health" } },
+    where: { userId: currentUser.id, serviceType: { not: "Medical" } },
   });
 
   const bh = await prisma.referral.count({
-    where: { userId: currentUser.id, serviceType: "Behavioral Health" },
+    where: { userId: currentUser.id, serviceType: "Medical" },
   });
 
   return { total, bh };
@@ -489,7 +489,7 @@ export async function getReferralStatusCounts(month?: string) {
   const rows = await prisma.referral.groupBy({
     by: ["status"],
     where: {
-      serviceType: { not: "Behavioral Health" },
+      serviceType: { not: "Medical" },
       ...(month ? { dateOfReferral: dateFilter } : {}),
     },
     _count: { status: true },
@@ -507,7 +507,7 @@ export async function getMyReferralStatusCounts() {
 
   const rows = await prisma.referral.groupBy({
     by: ["status"],
-    where: { userId: currentUser.id, serviceType: { not: "Behavioral Health" } },
+    where: { userId: currentUser.id, serviceType: { not: "Medical" } },
     _count: { status: true },
   });
   return rows.map((r) => ({ status: r.status, count: r._count.status }));
@@ -537,7 +537,7 @@ export async function updateReferralResult(referralId: number, pdfUrl: string) {
     referral.user.organization ??
     "Unknown Company";
 
-  const isBH = referral.serviceType === "Behavioral Health";
+  const isBH = referral.serviceType === "Medical";
   const userViewPath = isBH
     ? `/user/bhreferrals/${referralId}`
     : `/user/referrals/${referralId}`;

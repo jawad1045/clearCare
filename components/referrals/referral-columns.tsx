@@ -148,12 +148,10 @@ export const referralColumns = (
    </Button>
  ),
 
- cell:({row})=>
- t(
- SERVICE_TYPE_LABEL_KEYS[
- row.original.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS
- ]
- )
+ cell:({row})=>{
+   const key = SERVICE_TYPE_LABEL_KEYS[row.original.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS];
+   return key ? t(key) : row.original.serviceType;
+ }
 },
 
 

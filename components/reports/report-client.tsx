@@ -30,14 +30,14 @@ import { getReferralStatusHistory } from "@/action/referral.action";
 
 const SERVICE_TYPE_LABEL_KEYS_ALL = {
   ...SERVICE_TYPE_LABEL_KEYS,
-  "Behavioral Health": "reports.serviceBehavioralHealth",
+  "Medical": "reports.serviceBehavioralHealth",
 } satisfies Record<
-  (typeof SERVICE_TYPES)[number] | "Behavioral Health",
+  (typeof SERVICE_TYPES)[number] | "Medical",
   TranslationKey
 >;
 const REPORT_SERVICE_TYPES = [
   ...SERVICE_TYPES,
-  "Behavioral Health",
+  "Medical",
 ] as const;
 
 interface Props {
@@ -80,8 +80,8 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
   const total = filtered.length;
 
-  const referralRows = useMemo(() => filtered.filter((r) => r.type === "Referral"), [filtered]);
-  const bhReferralRows = useMemo(() => filtered.filter((r) => r.type === "BH Referral"), [filtered]);
+  const referralRows = useMemo(() => filtered.filter((r) => r.type === "Behavioral Health Referral"), [filtered]);
+  const bhReferralRows = useMemo(() => filtered.filter((r) => r.type === "Medical Referral"), [filtered]);
 
   // Chart data
   function countByStatus(rows: ReportRow[]) {
@@ -96,7 +96,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
   const serviceTypeCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const r of referralRows) map.set(r.serviceType, (map.get(r.serviceType) ?? 0) + 1);
-    if (bhReferralRows.length > 0) map.set("Behavioral Health", bhReferralRows.length);
+    if (bhReferralRows.length > 0) map.set("Medical", bhReferralRows.length);
     return [...map.entries()].map(([rawLabel, count]) => {
       const labelKey = SERVICE_TYPE_LABEL_KEYS_ALL[rawLabel as keyof typeof SERVICE_TYPE_LABEL_KEYS_ALL];
       return { label: labelKey ? t(labelKey) : rawLabel, count };
@@ -173,7 +173,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                   <SelectContent>
                     <SelectItem value="all">{t("reports.allTypes")}</SelectItem>
                     <SelectItem value="Referral">{t("reports.typeReferral")}</SelectItem>
-                    <SelectItem value="BH Referral">{t("reports.typeBhReferral")}</SelectItem>
+                    <SelectItem value="Medical Referral">{t("reports.typeBhReferral")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

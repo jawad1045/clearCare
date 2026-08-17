@@ -20,13 +20,21 @@ import {
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 
-const SERVICE_TYPE = "Behavioral Health";
+const SERVICE_TYPE = "Medical";
 
+// Updated per Isaiah House feedback — matches BH_REFERRAL_TYPES in create-bh-referral-form.tsx
 const VALID_REFERRAL_TYPES = [
-  "Psych Evaluation (Youth)",
-  "Psych Evaluation (Adult)",
-  "Neuro-developmental Evaluation",
-  "Neurological",
+  "New IOP (Battery)",
+  "Psych. Evaluation (Youth)",
+  "Psych. Evaluation (Adult)",
+  "Individual IOP Therapy",
+  "General Therapy",
+  "Couples Therapy",
+  "Medication Management (MAT)",
+  "EAP",
+  "Elder Care NOW®",
+  "Neuro-Development Eval.",
+  "Neurological Eval.",
 ] as const;
 
 async function getAdmins() {
@@ -181,10 +189,22 @@ export async function createBHReferral(formData: FormData) {
     throw new Error(t("referrals.errorLast4SsnOnly"));
   }
 
-  const referralType = (formData.get("referralType") as string) ?? "";
-  if (!VALID_REFERRAL_TYPES.includes(referralType as (typeof VALID_REFERRAL_TYPES)[number])) {
+  // Form now submits one or more "referralTypes" entries (checkbox multi-select)
+  // instead of a single "referralType" value.
+  const referralTypes = formData.getAll("referralTypes") as string[];
+  if (
+    referralTypes.length === 0 ||
+    !referralTypes.every((rt) => VALID_REFERRAL_TYPES.includes(rt as (typeof VALID_REFERRAL_TYPES)[number]))
+  ) {
     throw new Error(t("referrals.errorInvalidReferralType"));
   }
+
+  // NOTE: the `referralType` column is a single String, so the selections are
+  // stored as a comma-separated string to avoid a schema migration. If you'd
+  // rather store these as a true array (e.g. a Postgres String[] column),
+  // change this to `referralTypes` and update the Prisma schema + this create
+  // call's field name accordingly.
+  const referralType = referralTypes.join(", ");
 
   const grade = ((formData.get("grade") as string) || "").trim();
 

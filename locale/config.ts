@@ -25,6 +25,7 @@ type DotPath<T> = T extends string
 export type TranslationKey = DotPath<Messages>;
 
 export function resolveMessage(dict: unknown, path: string): string | undefined {
+  if (!path || typeof path !== "string") return undefined;
   return path.split(".").reduce<any>((acc, key) => acc?.[key], dict);
 }
 
@@ -33,6 +34,7 @@ export function translate(
   key: TranslationKey,
   vars?: Record<string, string | number>
 ) {
+  if (!key || typeof key !== "string") return String(key);
   const raw = resolveMessage(messages[locale], key) ?? resolveMessage(messages.en, key) ?? key;
   if (!vars) return raw;
   return Object.entries(vars).reduce(

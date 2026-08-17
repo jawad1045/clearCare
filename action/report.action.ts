@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export type ReportRow = {
   id: number;
-  type: "Referral" | "BH Referral";
+  type: "Behavioral Health Referral" | "Medical Referral";
   patientName: string;
   companyName: string;
   serviceType: string;
@@ -23,7 +23,7 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
 
   const [referrals, bhReferrals] = await Promise.all([
     prisma.referral.findMany({
-      where: { serviceType: { not: "Behavioral Health" } },
+      where: { serviceType: { not: "Medical" } },
       include: { company: true },
       orderBy: { dateOfReferral: "desc" },
     }),
@@ -36,7 +36,7 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
   const rows: ReportRow[] = [
     ...referrals.map((r) => ({
       id: r.id,
-      type: "Referral" as const,
+      type: "Behavioral Health Referral" as const,
       patientName: `${r.patientFirstName} ${r.patientLastName}`,
       companyName: r.company.organization,
       serviceType: r.serviceType,
@@ -47,10 +47,10 @@ export async function getAdminReportData(): Promise<ReportRow[]> {
     })),
     ...bhReferrals.map((r) => ({
       id: r.id,
-      type: "BH Referral" as const,
+      type: "Medical Referral" as const,
       patientName: `${r.firstName} ${r.lastName}`,
       companyName: r.company.organization,
-      serviceType: "Behavioral Health",
+      serviceType: "Medical",
       status: r.status,
       dateOfReferral: r.dateOfReferral.toISOString(),
       referName: r.referName,
@@ -70,7 +70,7 @@ export async function getUserReportData(): Promise<ReportRow[]> {
 
   const [referrals, bhReferrals] = await Promise.all([
     prisma.referral.findMany({
-      where: { userId: session.id, serviceType: { not: "Behavioral Health" } },
+      where: { userId: session.id, serviceType: { not: "Medical" } },
       include: { company: true },
       orderBy: { dateOfReferral: "desc" },
     }),
@@ -84,7 +84,7 @@ export async function getUserReportData(): Promise<ReportRow[]> {
   const rows: ReportRow[] = [
     ...referrals.map((r) => ({
       id: r.id,
-      type: "Referral" as const,
+      type: "Behavioral Health Referral" as const,
       patientName: `${r.patientFirstName} ${r.patientLastName}`,
       companyName: r.company.organization,
       serviceType: r.serviceType,
@@ -95,10 +95,10 @@ export async function getUserReportData(): Promise<ReportRow[]> {
     })),
     ...bhReferrals.map((r) => ({
       id: r.id,
-      type: "BH Referral" as const,
+      type: "Medical Referral" as const,
       patientName: `${r.firstName} ${r.lastName}`,
       companyName: r.company.organization,
-      serviceType: "Behavioral Health",
+      serviceType: "Medical",
       status: r.status,
       dateOfReferral: r.dateOfReferral.toISOString(),
       referName: r.referName,

@@ -81,7 +81,7 @@ const CONTACT_METHOD_LABEL_KEYS: Record<(typeof CONTACT_METHODS)[number], Transl
   Email: "common.contactMethodEmail",
 };
 
-const DRUG_TEST_SERVICE = ["Drug Test" , "Drug Test (OM)"];
+const DRUG_TEST_SERVICE = ["Drug Test (IOP)" , "Drug Test (OP)"];
 
 function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(
@@ -104,6 +104,7 @@ function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           referrerName: z.string().min(1, t("referrals.referrerNameRequired")),
           contactDate: z.string().optional(),
           contactMethod: z.array(z.string()).optional(),
+          notes: z.string().optional(),
         })
         .superRefine((data, ctx) => {
           if (data.serviceType === DRUG_TEST_SERVICE[0] || data.serviceType === DRUG_TEST_SERVICE[1] ) {
@@ -197,6 +198,7 @@ export function CreateReferralForm({ referrerName }: Props) {
       referrerName,
       contactDate: "",
       contactMethod: [],
+      notes: "",
     },
   });
 
@@ -230,6 +232,7 @@ export function CreateReferralForm({ referrerName }: Props) {
     formData.set("status", "Pending");
     formData.set("referrerName", values.referrerName);
     formData.set("contactDate", values.contactDate ?? "");
+    formData.set("notes", values.notes ?? "");
     (values.contactMethod ?? []).forEach((m) => formData.append("contactMethod", m));
     attachments.forEach((url) => formData.append("attachments", url));
 
@@ -370,6 +373,17 @@ export function CreateReferralForm({ referrerName }: Props) {
                 ))}
               </div>
             </Field>
+            {/* ── Notes (added to match Behavioral Health form) ── */}
+            <div className="sm:col-span-2">
+              <Field label={t("common.notes")}>
+                <textarea
+                  {...register("notes")}
+                  placeholder={t("referrals.notesPlaceholder")}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  rows={3}
+                />
+              </Field>
+            </div>
           </div>
         </div>
 

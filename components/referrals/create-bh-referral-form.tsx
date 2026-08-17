@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, ChevronDown, Lock, X } from "lucide-react";
 
 import { createBHReferral } from "@/action/bh-referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -12,6 +12,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -37,23 +38,50 @@ const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
 
 const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
 
-const REFERRAL_TYPES = [
-  "Psych Evaluation (Youth)",
-  "Psych Evaluation (Adult)",
-  "Neuro-developmental Evaluation",
-  "Neurological",
+// ── Referral Type: now a multi-select checkbox group (per Isaiah House feedback) ──
+const BH_REFERRAL_TYPES = [
+  "New IOP (Battery)",
+  "Psych. Evaluation (Youth)",
+  "Psych. Evaluation (Adult)",
+  "Individual IOP Therapy",
+  "General Therapy",
+  "Couples Therapy",
+  "Medication Management (MAT)",
+  "EAP",
+  "Elder Care NOW®",
+  "Neuro-Development Eval.",
+  "Neurological Eval.",
 ] as const;
-const REFERRAL_TYPE_LABEL_KEYS: Record<(typeof REFERRAL_TYPES)[number], TranslationKey> = {
-  "Psych Evaluation (Youth)": "referrals.referralTypePsychYouth",
-  "Psych Evaluation (Adult)": "referrals.referralTypePsychAdult",
-  "Neuro-developmental Evaluation": "referrals.referralTypeNeuroDevelopmental",
-  Neurological: "referrals.referralTypeNeurological",
+
+// NOTE: reused existing keys where a matching one already existed
+// (Psych Youth/Adult, Neuro-Developmental, Neurological). The remaining keys
+// are new — they'll need entries added to your locale/translation files:
+//   referrals.referralTypeNewIopBattery
+//   referrals.referralTypeIndividualIopTherapy
+//   referrals.referralTypeGeneralTherapy
+//   referrals.referralTypeCouplesTherapy
+//   referrals.referralTypeMedicationManagement
+//   referrals.referralTypeEap
+//   referrals.referralTypeElderCareNow
+const BH_REFERRAL_TYPE_LABEL_KEYS: Record<(typeof BH_REFERRAL_TYPES)[number], TranslationKey> = {
+  "New IOP (Battery)": "referrals.referralTypeNewIopBattery",
+  "Psych. Evaluation (Youth)": "referrals.referralTypePsychYouth",
+  "Psych. Evaluation (Adult)": "referrals.referralTypePsychAdult",
+  "Individual IOP Therapy": "referrals.referralTypeIndividualIopTherapy",
+  "General Therapy": "referrals.referralTypeGeneralTherapy",
+  "Couples Therapy": "referrals.referralTypeCouplesTherapy",
+  "Medication Management (MAT)": "referrals.referralTypeMedicationManagement",
+  "EAP": "referrals.referralTypeEap",
+  "Elder Care NOW®": "referrals.referralTypeElderCareNow",
+  "Neuro-Development Eval.": "referrals.referralTypeNeuroDevelopmental",
+  "Neurological Eval.": "referrals.referralTypeNeurological",
 };
 
 function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(
     () =>
       z.object({
+        referralTypes: z.array(z.string()).min(1, t("referrals.referralTypeRequired")),
         firstName: z.string().min(1, t("common.validation.firstNameRequired")),
         lastName: z.string().min(1, t("common.validation.lastNameRequired")),
         phone: z
@@ -68,7 +96,6 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
         email: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
         gender: z.string().min(1, t("referrals.genderRequired")),
         grade: z.string().optional(),
-        referralType: z.string().min(1, t("referrals.referralTypeRequired")),
         referrerName: z.string().optional(),
         notes: z.string().optional(),
       }),
@@ -115,10 +142,12 @@ export function CreateBHReferralForm({ referrerName }: Props) {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<BHReferralFormValues>({
     resolver: zodResolver(bhReferralSchema),
     defaultValues: {
+      referralTypes: [],
       firstName: "",
       lastName: "",
       phone: "",
@@ -126,14 +155,35 @@ export function CreateBHReferralForm({ referrerName }: Props) {
       email: "",
       gender: "",
       grade: "",
-      referralType: "",
       referrerName,
       notes: "",
     },
   });
 
+  const referralTypes = watch("referralTypes") ?? [];
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+  const typeMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (typeMenuRef.current && !typeMenuRef.current.contains(e.target as Node)) {
+        setTypeMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function toggleReferralType(value: string) {
+    const next = referralTypes.includes(value)
+      ? referralTypes.filter((v) => v !== value)
+      : [...referralTypes, value];
+    setValue("referralTypes", next, { shouldValidate: true });
+  }
+
   async function submitReferral(values: BHReferralFormValues) {
     const formData = new FormData();
+    (values.referralTypes ?? []).forEach((rt) => formData.append("referralTypes", rt));
     formData.set("firstName", values.firstName);
     formData.set("lastName", values.lastName);
     formData.set("phone", values.phone);
@@ -141,7 +191,6 @@ export function CreateBHReferralForm({ referrerName }: Props) {
     formData.set("email", values.email ?? "");
     formData.set("gender", values.gender);
     formData.set("grade", values.grade ?? "");
-    formData.set("referralType", values.referralType);
     formData.set("referrerName", values.referrerName ?? "");
     formData.set("notes", values.notes ?? "");
     attachments.forEach((url) => formData.append("attachments", url));
@@ -198,6 +247,72 @@ export function CreateBHReferralForm({ referrerName }: Props) {
       onSubmit={handleSubmit(onFormSubmit)}
       className="pl-6 pr-10 py-6 space-y-6"
     >
+      {/* ── Referral Type (moved to first position; self-contained dropdown so clicks always register, with removable chips below) ── */}
+      <Field
+        label={t("referrals.referralTypeLabel")}
+        required
+        error={errors.referralTypes?.message}
+      >
+        <div className="relative" ref={typeMenuRef}>
+          <button
+            type="button"
+            onClick={() => setTypeMenuOpen((o) => !o)}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <span className={referralTypes.length === 0 ? "text-muted-foreground" : ""}>
+              {referralTypes.length > 0
+                ? `${referralTypes.length} selected`
+                : t("referrals.selectPlaceholder")}
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform ${typeMenuOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {typeMenuOpen && (
+            <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md">
+              {BH_REFERRAL_TYPES.map((rt) => {
+                const checked = referralTypes.includes(rt);
+                return (
+                  <label
+                    key={rt}
+                    className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/60"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() => toggleReferralType(rt)}
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span>{t(BH_REFERRAL_TYPE_LABEL_KEYS[rt])}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {referralTypes.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {referralTypes.map((rt) => (
+              <span
+                key={rt}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground/80"
+              >
+                {t(BH_REFERRAL_TYPE_LABEL_KEYS[rt as (typeof BH_REFERRAL_TYPES)[number]])}
+                <button
+                  type="button"
+                  onClick={() => toggleReferralType(rt)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Remove"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </Field>
+
       {/* ── Client Information ── */}
       <div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -295,33 +410,6 @@ export function CreateBHReferralForm({ referrerName }: Props) {
                 {GENDERS.map((g) => (
                   <SelectItem key={g} value={g}>
                     {t(GENDER_LABEL_KEYS[g])}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <Field
-            label={t("referrals.referralTypeLabel")}
-            required
-            error={errors.referralType?.message}
-          >
-            <Select
-              onValueChange={(v) =>
-                setValue("referralType", v, {
-                  shouldValidate: true,
-                })
-              }
-            >
-              <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
-                <SelectValue
-                  placeholder={t("referrals.selectPlaceholder")}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {REFERRAL_TYPES.map((rt) => (
-                  <SelectItem key={rt} value={rt}>
-                    {t(REFERRAL_TYPE_LABEL_KEYS[rt])}
                   </SelectItem>
                 ))}
               </SelectContent>

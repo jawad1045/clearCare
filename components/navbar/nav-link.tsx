@@ -40,7 +40,7 @@ export function NavLinks({ menu, role, name }: any) {
           item.children ? (
             <DropdownMenu key={item.labelKey}>
               <DropdownMenuTrigger
-                className={`flex items-center gap-1 rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus:outline-none ${
+                className={`flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus:outline-none ${
                   item.children.some((child: any) => isActive(child.href))
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : ""
@@ -69,7 +69,7 @@ export function NavLinks({ menu, role, name }: any) {
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground ${
+              className={`whitespace-nowrap rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground ${
                 isActive(item.href)
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   : ""
