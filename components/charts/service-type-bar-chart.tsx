@@ -17,25 +17,38 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ChartD
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4"];
 
 interface Props {
-  data: { label: string; count: number }[];
+  data: { label: string; bhCount: number; medCount: number }[];
+  bhLabel: string;
+  medLabel: string;
 }
 
-export function ServiceTypeBarChart({ data }: Props) {
+export function ServiceTypeBarChart({ data, bhLabel, medLabel }: Props) {
   const { t } = useTranslation();
   const labels = data.map((d) => d.label);
-  const counts = data.map((d) => d.count);
-  const colors = data.map((_, i) => COLORS[i % COLORS.length]);
+  const bhCounts = data.map((d) => d.bhCount);
+  const medCounts = data.map((d) => d.medCount);
+
+  const bhColor = "#007A7D"; 
+  const medColor = "#8b5cf6"; 
 
   const chartData = {
     labels,
     datasets: [
       {
-        label: t("charts.datasetLabelReferrals"),
-        data: counts,
-        backgroundColor: colors.map((c) => c + "cc"),
-        borderColor: colors,
+        label: bhLabel,
+        data: bhCounts,
+        backgroundColor: bhColor + "cc",
+        borderColor: bhColor,
         borderWidth: 2,
-        borderRadius: 6,
+        borderRadius: 4,
+      },
+      {
+        label: medLabel,
+        data: medCounts,
+        backgroundColor: medColor + "cc",
+        borderColor: medColor,
+        borderWidth: 2,
+        borderRadius: 4,
       },
     ],
   };
@@ -46,14 +59,23 @@ export function ServiceTypeBarChart({ data }: Props) {
       padding: { top: 24 },
     },
     plugins: {
-      legend: { display: false },
+      legend: { 
+        display: true,
+        position: 'bottom' as const,
+        labels: {
+          usePointStyle: true,
+          boxWidth: 8,
+          padding: 20,
+          color: "#64748b"
+        }
+      },
       datalabels: {
         anchor: "end" as const,
         align: "top" as const,
-        offset: 4,
+        offset: 2,
         clamp: true,
-        color: "#007A7D",
-        font: { weight: "bold" as const, size: 12 },
+        color: "#64748b",
+        font: { weight: "bold" as const, size: 10 },
         formatter: (value: number) => (value === 0 ? "" : value),
       },
     },

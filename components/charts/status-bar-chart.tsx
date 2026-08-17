@@ -23,9 +23,10 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 
 interface Props {
   data: { status: string; count: number }[];
+  datasetLabel?: string;
 }
 
-export function StatusBarChart({ data }: Props) {
+export function StatusBarChart({ data, datasetLabel }: Props) {
   const { t, locale } = useTranslation();
   const sorted = [...data].sort((a, b) => statusOrder(a.status) - statusOrder(b.status));
   const labels = sorted.map((d) => getStatusLabel(d.status, locale));
@@ -37,7 +38,7 @@ export function StatusBarChart({ data }: Props) {
     labels,
     datasets: [
       {
-        label: t("charts.datasetLabelReferrals"),
+        label: datasetLabel || t("charts.datasetLabelReferrals"),
         data: counts,
         backgroundColor: colors.map((c) => c + "cc"),
         borderColor: colors,
@@ -73,7 +74,8 @@ export function StatusBarChart({ data }: Props) {
           label: (ctx: import("chart.js").TooltipItem<"bar">) => {
             const value = ctx.parsed.y ?? 0;
             const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-            return ` ${t("charts.tooltipReferrals", { value, pct })}`;
+            const labelStr = datasetLabel || t("charts.datasetLabelReferrals");
+            return ` ${value} ${labelStr} — ${pct}%`;
           },
         },
       },

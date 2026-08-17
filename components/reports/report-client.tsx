@@ -94,12 +94,34 @@ export function ReportClient({ rows, isAdmin }: Props) {
   const bhStatusCounts = useMemo(() => countByStatus(bhReferralRows), [bhReferralRows]);
 
   const serviceTypeCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const r of referralRows) map.set(r.serviceType, (map.get(r.serviceType) ?? 0) + 1);
-    if (bhReferralRows.length > 0) map.set("Medical", bhReferralRows.length);
-    return [...map.entries()].map(([rawLabel, count]) => {
+    const map = new Map<string, { bhCount: number; medCount: number }>();
+    
+    for (const r of referralRows) {
+      const current = map.get(r.serviceType) ?? { bhCount: 0, medCount: 0 };
+      current.bhCount += 1;
+      map.set(r.serviceType, current);
+    }
+    
+    for (const r of bhReferralRows) {
+      if (r.medicalReferralTypes) {
+        const types = r.medicalReferralTypes.split(",").map(t => t.trim());
+        for (const t of types) {
+          if (t) {
+            const current = map.get(t) ?? { bhCount: 0, medCount: 0 };
+            current.medCount += 1;
+            map.set(t, current);
+          }
+        }
+      } else {
+        const current = map.get("Medical") ?? { bhCount: 0, medCount: 0 };
+        current.medCount += 1;
+        map.set("Medical", current);
+      }
+    }
+    
+    return [...map.entries()].map(([rawLabel, counts]) => {
       const labelKey = SERVICE_TYPE_LABEL_KEYS_ALL[rawLabel as keyof typeof SERVICE_TYPE_LABEL_KEYS_ALL];
-      return { label: labelKey ? t(labelKey) : rawLabel, count };
+      return { label: labelKey ? t(labelKey) : rawLabel, ...counts };
     });
   }, [referralRows, bhReferralRows, t]);
 
@@ -172,7 +194,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                   <SelectTrigger className="h-10 w-40 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("reports.allTypes")}</SelectItem>
-                    <SelectItem value="Referral">{t("reports.typeReferral")}</SelectItem>
+                    <SelectItem value="Behavioral Health Referral">{t("reports.typeReferral")}</SelectItem>
                     <SelectItem value="Medical Referral">{t("reports.typeBhReferral")}</SelectItem>
                   </SelectContent>
                 </Select>
@@ -267,7 +289,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <CardTitle className="text-sm font-medium text-brand">{t("reports.referralStatusBreakdown")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <StatusBarChart data={statusCounts} />
+            <StatusBarChart data={statusCounts} datasetLabel={t("reports.typeReferral")} />
           </CardContent>
         </Card>
 
@@ -276,7 +298,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <CardTitle className="text-sm font-medium text-brand">{t("reports.bhReferralStatusBreakdown")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <StatusBarChart data={bhStatusCounts} />
+            <StatusBarChart data={bhStatusCounts} datasetLabel={t("reports.typeBhReferral")} />
           </CardContent>
         </Card>
 
@@ -285,7 +307,11 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <CardTitle className="text-sm font-medium text-brand">{t("reports.referralsByServiceType")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <ServiceTypeBarChart data={serviceTypeCounts} />
+            <ServiceTypeBarChart 
+              data={serviceTypeCounts} 
+              bhLabel={t("reports.typeReferral")} 
+              medLabel={t("reports.typeBhReferral")} 
+            />
           </CardContent>
         </Card>
 
