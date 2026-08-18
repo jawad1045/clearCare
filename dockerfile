@@ -34,7 +34,7 @@ ENV SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL
 ENV RESEND_FROM_EMAIL=$RESEND_FROM_EMAIL
 ENV RESEND_API_KEY=$RESEND_API_KEY
 
-RUN npx prisma db push
+RUN npx prisma db push --accept-data-loss
 RUN npx prisma generate
 
 RUN npm run build
