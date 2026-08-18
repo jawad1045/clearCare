@@ -25,7 +25,7 @@ type MentalHealthReferral = {
   email: string | null;
   gender: string;
   status: string;
-  referralType: string | null;
+  referralType: string[];
   appointmentDate: Date | null;
   pdfReport: string | null;
   clientAttachments: string[];
@@ -263,7 +263,7 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            <InfoRow label={t("referrals.referralTypeLabel")} value={referral.referralType} />
+            <InfoRow label={t("referrals.referralTypeLabel")} value={referral.referralType?.join(", ")} />
             <InfoRow label={t("referrals.appointmentDate")} value={formatDate(referral.appointmentDate)} />
           </CardContent>
         </Card>

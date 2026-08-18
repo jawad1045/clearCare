@@ -111,7 +111,7 @@ model MentalHealthReferral {
   dateOfReferral    DateTime  @default(now()) @map("Date_of_Referral")
   notes             String?
   lastUpdated       DateTime  @updatedAt @map("Last_Updated")
-  referralType      String?   @map("Referral_Type") @db.VarChar(100)
+  referralType      String[]  @map("Referral_Type")
   grade             String?   @db.VarChar(100)
   company           Company   @relation(fields: [companyAcctId], references: [id])
   user              User      @relation(fields: [userId], references: [id])

@@ -49,7 +49,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
   const { t, locale } = useTranslation();
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [serviceFilter, setServiceFilter] = useState("all");
+  // const [serviceFilter, setServiceFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [search, setSearch] = useState("");
@@ -58,7 +58,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
     return rows.filter((r) => {
       if (typeFilter !== "all" && r.type !== typeFilter) return false;
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
-      if (serviceFilter !== "all" && r.serviceType !== serviceFilter) return false;
+      // Service filter removed
       if (dateFrom && new Date(r.dateOfReferral) < dateFrom) return false;
       if (dateTo) {
         const end = new Date(dateTo);
@@ -76,7 +76,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       }
       return true;
     });
-  }, [rows, typeFilter, statusFilter, serviceFilter, dateFrom, dateTo, search]);
+  }, [rows, typeFilter, statusFilter, dateFrom, dateTo, search]);
 
   const total = filtered.length;
 
@@ -95,30 +95,32 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
   const serviceTypeCounts = useMemo(() => {
     const map = new Map<string, { bhCount: number; medCount: number }>();
-    
+
+    // Medical referrals → count under medCount (shown as Medical Referral bar)
     for (const r of referralRows) {
-      const current = map.get(r.serviceType) ?? { bhCount: 0, medCount: 0 };
-      current.bhCount += 1;
-      map.set(r.serviceType, current);
+      const entry = map.get(r.serviceType) ?? { bhCount: 0, medCount: 0 };
+      entry.medCount += 1;
+      map.set(r.serviceType, entry);
     }
-    
+
+    // BH referrals → each selected type counts under bhCount (shown as BH Referral bar)
     for (const r of bhReferralRows) {
-      if (r.medicalReferralTypes) {
-        const types = r.medicalReferralTypes.split(",").map(t => t.trim());
-        for (const t of types) {
-          if (t) {
-            const current = map.get(t) ?? { bhCount: 0, medCount: 0 };
-            current.medCount += 1;
-            map.set(t, current);
+      if (r.medicalReferralTypes && Array.isArray(r.medicalReferralTypes) && r.medicalReferralTypes.length > 0) {
+        for (const type of r.medicalReferralTypes) {
+          const key = type?.trim();
+          if (key) {
+            const entry = map.get(key) ?? { bhCount: 0, medCount: 0 };
+            entry.bhCount += 1;
+            map.set(key, entry);
           }
         }
       } else {
-        const current = map.get("Medical") ?? { bhCount: 0, medCount: 0 };
-        current.medCount += 1;
-        map.set("Medical", current);
+        const entry = map.get("Behavioral Health") ?? { bhCount: 0, medCount: 0 };
+        entry.bhCount += 1;
+        map.set("Behavioral Health", entry);
       }
     }
-    
+
     return [...map.entries()].map(([rawLabel, counts]) => {
       const labelKey = SERVICE_TYPE_LABEL_KEYS_ALL[rawLabel as keyof typeof SERVICE_TYPE_LABEL_KEYS_ALL];
       return { label: labelKey ? t(labelKey) : rawLabel, ...counts };
@@ -137,14 +139,14 @@ export function ReportClient({ rows, isAdmin }: Props) {
   function clearFilters() {
     setTypeFilter("all");
     setStatusFilter("all");
-    setServiceFilter("all");
+    // setServiceFilter("all");
     setDateFrom(undefined);
     setDateTo(undefined);
     setSearch("");
   }
 
   const hasActiveFilters =
-    typeFilter !== "all" || statusFilter !== "all" || serviceFilter !== "all" || !!dateFrom || !!dateTo || search;
+    typeFilter !== "all" || statusFilter !== "all" || !!dateFrom || !!dateTo || search;
 
   return (
     <div className="space-y-6 print:space-y-4">
@@ -163,7 +165,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
 
       {/* Filters */}
       <Card>
-        <CardHeader className="flex flex-row items-center gap-2 pb-3">
+        <CardHeader className="flex flex-row items-center gap-9 pb-4">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-sm">{t("reports.filtersTitle")}</CardTitle>
           {hasActiveFilters && (
@@ -187,7 +189,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
             </div>
 
             {/* Other filters — tight row */}
-            <div className="flex flex-1 gap-2">
+            <div className="flex flex-2 gap-9 pl-10">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-sm">{t("reports.typeLabel")}</Label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -213,7 +215,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                 </Select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              {/* <div className="flex flex-col gap-1.5">
                 <Label className="text-sm">{t("common.serviceType")}</Label>
                 <Select value={serviceFilter} onValueChange={setServiceFilter}>
                   <SelectTrigger className="h-10 w-48 text-sm"><SelectValue /></SelectTrigger>
@@ -226,7 +228,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               <div className="flex flex-col gap-1.5">
                 <Label className="text-sm">{t("reports.fromLabel")}</Label>
@@ -307,10 +309,10 @@ export function ReportClient({ rows, isAdmin }: Props) {
             <CardTitle className="text-sm font-medium text-brand">{t("reports.referralsByServiceType")}</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <ServiceTypeBarChart 
-              data={serviceTypeCounts} 
-              bhLabel={t("reports.typeReferral")} 
-              medLabel={t("reports.typeBhReferral")} 
+            <ServiceTypeBarChart
+              data={serviceTypeCounts}
+              bhLabel={t("reports.typeBhReferral")}
+              medLabel={t("reports.typeReferral")}
             />
           </CardContent>
         </Card>

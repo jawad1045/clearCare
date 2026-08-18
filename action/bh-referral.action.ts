@@ -204,7 +204,7 @@ export async function createBHReferral(formData: FormData) {
   // rather store these as a true array (e.g. a Postgres String[] column),
   // change this to `referralTypes` and update the Prisma schema + this create
   // call's field name accordingly.
-  const referralType = referralTypes.join(", ");
+  const referralType = referralTypes;
 
   const grade = ((formData.get("grade") as string) || "").trim();
 
@@ -246,6 +246,8 @@ export async function createBHReferral(formData: FormData) {
 
   revalidatePath("/admin/bhreferrals");
   revalidatePath("/user/bhreferrals");
+  revalidatePath("/admin/reports");
+  revalidatePath("/user/reports");
 
   if (currentUser.role === "Admin") {
     redirect("/admin/bhreferrals");

@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: "Reports",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function UserReportsPage() {
   const session = await getCurrentUser();
   if (!session) redirect("/");

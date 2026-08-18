@@ -13,7 +13,7 @@ export type ReportRow = {
   dateOfReferral: string;
   referName: string;
   hasPdfResult: boolean;
-  medicalReferralTypes?: string | null;
+  medicalReferralTypes?: string[];
 };
 
 export async function getAdminReportData(): Promise<ReportRow[]> {

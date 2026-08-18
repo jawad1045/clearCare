@@ -239,6 +239,8 @@ export async function createReferral(formData: FormData) {
 
   revalidatePath("/admin/referrals");
   revalidatePath("/user/referrals");
+  revalidatePath("/admin/reports");
+  revalidatePath("/user/reports");
 
   if (currentUser.role === "Admin") {
     redirect("/admin/referrals");
