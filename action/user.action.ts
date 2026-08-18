@@ -228,7 +228,8 @@ export async function createUser(formData: FormData) {
   });
 
   revalidatePath("/admin/users");
-  redirect("/admin/users");
+  // Return temporary password for admin UI
+  return temporaryPassword;
 }
 
 export async function getUserById(id: number) {
@@ -322,6 +323,9 @@ export async function resetUserPassword(userId: number) {
   });
 
   revalidatePath("/admin/users");
+
+  // Return the temporary password for UI display
+  return temporaryPassword;
 }
 
 export async function completeForcedPasswordChange(

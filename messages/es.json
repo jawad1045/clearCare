@@ -273,7 +273,9 @@
     "userNotFound": "Usuario no encontrado",
     "errorCompanyRequired": "La organización es obligatoria",
     "errorCompanyNotFound": "La organización seleccionada no fue encontrada",
-    "errorEmailExists": "El correo electrónico ya existe"
+    "errorEmailExists": "El correo electrónico ya existe",
+    "temporaryPasswordLabel": "Contraseña Temporal",
+    "createUserSuccessWithPassword": "Usuario creado exitosamente. Contraseña temporal: {password}"
   },
   "referrals": {
     "referralTypeNewIopBattery": "Nueva Batería IOP",

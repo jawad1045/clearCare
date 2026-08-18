@@ -129,6 +129,8 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
   const [pendingValues, setPendingValues] = useState<UserFormValues | null>(null);
   const [emailExists, setEmailExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  // Store temporary password after creation to display at top
+  const [createdTempPassword, setCreatedTempPassword] = useState<string | null>(null);
   // Custom title state (DB-backed, shared with CreateCompanyForm)
   const [customTitles, setCustomTitles] = useState<CustomTitle[]>(initialCustomTitles);
   const [isAddingTitle, setIsAddingTitle] = useState(false);
@@ -259,9 +261,15 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
 
     startTransition(async () => {
       try {
-        await createUser(formData);
-        router.push("/admin/users");
-        router.refresh();
+        const temporaryPassword = await createUser(formData);
+        // Show temporary password in UI
+        setCreatedTempPassword(temporaryPassword);
+        toast.success(t("users.createUserSuccessWithPassword", { password: temporaryPassword }));
+        // Optionally navigate back to list after short delay
+        setTimeout(() => {
+          router.push("/admin/users");
+          router.refresh();
+        }, 2000);
       } catch (error) {
         if (isRedirectError(error)) throw error;
         toast.error(error instanceof Error ? error.message : t("users.createUserFailed"));
@@ -287,6 +295,13 @@ export function CreateUserForm({ companies, initialCustomTitles = [] }: CreateUs
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <div className="h-1 w-full bg-primary" />
+
+      {/* Show temporary password after creation */}
+      {createdTempPassword && (
+        <div className="p-4 bg-muted/30 border-b border-border text-sm text-muted-foreground">
+          {t("users.temporaryPasswordLabel")}: <span className="font-mono bg-muted rounded px-1 py-0.5">{createdTempPassword}</span>
+        </div>
+      )}
 
       <CardHeader className="pb-4 pt-6">
         <div className="flex items-center gap-3">

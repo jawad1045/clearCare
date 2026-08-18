@@ -273,7 +273,9 @@
     "userNotFound": "User not found",
     "errorCompanyRequired": "Company is required",
     "errorCompanyNotFound": "Selected company not found",
-    "errorEmailExists": "Email already exists"
+    "errorEmailExists": "Email already exists",
+    "createUserSuccessWithPassword": "User created successfully. Temporary password: {password}",
+    "temporaryPasswordLabel": "Temporary Password"
   },
   "referrals": {
     "referralTypeNewIopBattery": "New IOP Battery",

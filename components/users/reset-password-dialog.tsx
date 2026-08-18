@@ -17,13 +17,15 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
 
   async function doReset() {
     setConfirmOpen(false);
     setPending(true);
     try {
-      await resetUserPassword(userId);
-      toast.success(t("users.resetPasswordSuccess", { name: userName }));
+      const tempPwd = await resetUserPassword(userId);
+      setTemporaryPassword(tempPwd);
+      toast.success(t("users.resetPasswordSuccess", { name: userName, password: tempPwd }));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t("users.resetPasswordGenericError"));
     } finally {
@@ -51,6 +53,11 @@ export function ResetPasswordDialog({ userId, userName }: Props) {
         {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
         {t("users.resetPasswordButton")}
       </Button>
+      {temporaryPassword && (
+        <div className="mt-2 text-sm text-muted-foreground">
+          {t("users.temporaryPasswordLabel")}: <span className="font-mono bg-muted rounded px-1 py-0.5">{temporaryPassword}</span>
+        </div>
+      )}
     </>
   );
 }
