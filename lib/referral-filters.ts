@@ -24,6 +24,7 @@ export const MONTH_LABEL_KEYS: Record<MonthKey, TranslationKey> = {
 export const SERVICE_TYPES = [
   "Drug Test (IOP)",
   "Drug Test (OP)",
+  "Elder Care NOW®",
   "New Employment (OPE)",
   "Physical",
   "Primary Care",
@@ -35,6 +36,7 @@ export type ServiceType = (typeof SERVICE_TYPES)[number];
 export const SERVICE_TYPE_LABEL_KEYS: Record<ServiceType, TranslationKey> = {
   "Drug Test (IOP)": "common.serviceDrugTestIOP",
   "Drug Test (OP)": "common.serviceDrugTestOP",
+  "Elder Care NOW®": "referrals.referralTypeElderCareNow",
   "New Employment (OPE)": "common.serviceNewEmploymentOPE",
   "Physical": "common.servicePhysical",
   "Primary Care": "common.servicePrimaryCare",

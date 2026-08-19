@@ -48,7 +48,6 @@ const BH_REFERRAL_TYPES = [
   "Couples Therapy",
   "Medication Management (MAT)",
   "EAP",
-  "Elder Care NOW®",
   "Neuro-Development Eval.",
   "Neurological Eval.",
 ] as const;
@@ -72,7 +71,6 @@ const BH_REFERRAL_TYPE_LABEL_KEYS: Record<(typeof BH_REFERRAL_TYPES)[number], Tr
   "Couples Therapy": "referrals.referralTypeCouplesTherapy",
   "Medication Management (MAT)": "referrals.referralTypeMedicationManagement",
   "EAP": "referrals.referralTypeEap",
-  "Elder Care NOW®": "referrals.referralTypeElderCareNow",
   "Neuro-Development Eval.": "referrals.referralTypeNeuroDevelopmental",
   "Neurological Eval.": "referrals.referralTypeNeurological",
 };
