@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "../ui/switch";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 
 declare module "@tanstack/react-table" {
   interface TableMeta<TData> {
@@ -102,8 +103,10 @@ export const columns: ColumnDef<Company>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) =>
-      new Date(row.original.createdDate).toLocaleDateString(),
+    cell: ({ row }) => {
+      const { formatDate } = useLocalFormatDate();
+      return formatDate(row.original.createdDate);
+    },
   },
   {
     id: "actions",

@@ -4,20 +4,7 @@ import type {
   Referral,
   MentalHealthReferral,
 } from "@/lib/generated/prisma/client";
-
-/* ------------------------------- Helpers --------------------------------- */
-
-function fmtDate(value?: Date | string | null): string {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return isNaN(d.getTime()) ? "" : d.toLocaleDateString();
-}
-
-function fmtDateTime(value?: Date | string | null): string {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return isNaN(d.getTime()) ? "" : d.toLocaleString();
-}
+import { formatDate as fmtDate, formatDateTime as fmtDateTime } from "@/lib/format-date";
 
 function fmtBool(value?: boolean | null): string {
   return value ? "Yes" : "No";

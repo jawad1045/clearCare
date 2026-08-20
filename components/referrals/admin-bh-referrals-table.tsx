@@ -49,6 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 import { getBHReferralStatusHistory } from "@/action/bh-referral.action";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 
 
 
@@ -64,6 +65,7 @@ export function AdminBHReferralsTable({
 }: Props) {
 
   const { t, locale } = useTranslation();
+  const { formatDate, getMonth } = useLocalFormatDate();
 
   const tableLocale = locale as "en" | "es";
 
@@ -170,8 +172,7 @@ export function AdminBHReferralsTable({
       result =
         result.filter(
           (r) =>
-            new Date(r.dateOfReferral)
-              .getMonth() === monthIndex
+            getMonth(r.dateOfReferral) === monthIndex
         );
     }
 
@@ -281,8 +282,8 @@ export function AdminBHReferralsTable({
         Array.isArray(r.referralType) ? r.referralType.join(", ") : (r.referralType || ""),
         r.referName || "",
         r.status,
-        new Date(r.dateOfReferral).toLocaleDateString(),
-        r.appointmentDate ? new Date(r.appointmentDate).toLocaleDateString() : "",
+        formatDate(r.dateOfReferral),
+        r.appointmentDate ? formatDate(r.appointmentDate) : "",
         r.notes || "",
         r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
         r.user?.contactEmail || "",
@@ -318,7 +319,7 @@ export function AdminBHReferralsTable({
         r.referName || "",
         r.status,
         r.company?.organization || "",
-        new Date(r.dateOfReferral).toLocaleDateString()
+        formatDate(r.dateOfReferral)
       ]);
 
       await exportToPDF("bh_referrals_export.pdf", "Medical Referrals", headers, rows);

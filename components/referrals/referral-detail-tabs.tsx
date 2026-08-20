@@ -15,6 +15,7 @@ import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filters";
 import { useTranslation } from "@/locale/use-translation";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import type { StatusHistoryEntry } from "@/types/status-history";
 
 type Referral = {
@@ -81,16 +82,12 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
   );
 }
 
-function formatDate(d: Date | null | undefined) {
-  if (!d) return null;
-  const parsed = new Date(d);
-  if (isNaN(parsed.getTime())) return null;
-  return parsed.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
-}
+
 
 // Top-of-page summary card: patient name, submitted by, and key at-a-glance fields
 function ReferralSummaryCard({ referral }: { referral: Referral }) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalFormatDate();
 
   return (
     <Card>
@@ -128,6 +125,7 @@ function StatusHistoryTable({
   locale: "en" | "es";
 }) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalFormatDate();
   const [history, setHistory] = useState<StatusHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
@@ -154,17 +152,8 @@ function StatusHistoryTable({
     };
   }, [referralId, fetchStatusHistory]);
 
-  const formatDateOnly = (dateVal: string | Date | undefined | null) => {
-    if (!dateVal) return "—";
-    const d = new Date(dateVal);
-    if (isNaN(d.getTime())) return "—";
-
-    return d.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
+  const formatDateOnly = (dateVal: string | Date | undefined | null): string =>
+    formatDate(dateVal) || "—";
 
   if (isLoading) {
     return (
@@ -225,6 +214,7 @@ function StatusHistoryTable({
 
 function ViewTab({ referral }: { referral: Referral }) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalFormatDate();
   const serviceTypeLabel = SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS]
     ? t(SERVICE_TYPE_LABEL_KEYS[referral.serviceType as keyof typeof SERVICE_TYPE_LABEL_KEYS])
     : referral.serviceType;

@@ -20,6 +20,7 @@ import type { TranslationKey } from "@/locale/config";
 import { cn } from "@/lib/utils";
 import { ReportTable } from "./report-tabel";
 import { reportColumns } from "./report-column";
+import { formatDateTime } from "@/lib/format-date";
 
 import {
   SERVICE_TYPES,
@@ -160,7 +161,7 @@ export function ReportClient({ rows, isAdmin }: Props) {
       {/* Print header (only visible when printing) */}
       <div className="hidden print:block">
         <h1 className="text-xl font-bold">{t("reports.printTitle")}</h1>
-        <p className="text-sm text-gray-500" suppressHydrationWarning>{t("reports.generatedPrefix")} {new Date().toLocaleString()}</p>
+        <p className="text-sm text-gray-500" suppressHydrationWarning>{t("reports.generatedPrefix")} {formatDateTime(new Date())}</p>
       </div>
 
       {/* Filters */}

@@ -7,7 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { formatDateTime } from "@/lib/format-date";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import {
   getStatusColor,
   getStatusLabel,
@@ -230,13 +230,14 @@ export const columns = (
       </Button>
     ),
 
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap">
-        {formatDateTime(
-          row.original.dateOfReferral
-        )}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { formatDateTime } = useLocalFormatDate();
+      return (
+        <span className="whitespace-nowrap">
+          {formatDateTime(row.original.dateOfReferral)}
+        </span>
+      );
+    },
   },
 
 
@@ -257,13 +258,14 @@ export const columns = (
       </Button>
     ),
 
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap">
-        {formatDateTime(
-          row.original.lastUpdated
-        )}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { formatDateTime } = useLocalFormatDate();
+      return (
+        <span className="whitespace-nowrap">
+          {formatDateTime(row.original.lastUpdated)}
+        </span>
+      );
+    },
   },
 
 

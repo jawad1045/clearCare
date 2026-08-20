@@ -46,14 +46,12 @@ import {
   SERVICE_TYPE_LABEL_KEYS,
 } from "@/lib/referral-filters";
 
-import {
-  referralColumns,
-  Referral,
-} from "./referral-columns";
+import { referralColumns, Referral } from "./referral-columns";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 import { getReferralStatusHistory } from "@/action/referral.action";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 
 
 
@@ -69,6 +67,7 @@ export function AdminReferralsTable({
 }: Props) {
 
   const { t, locale } = useTranslation();
+  const { formatDate, getMonth } = useLocalFormatDate();
 
 
   const [sorting, setSorting] =
@@ -207,9 +206,7 @@ export function AdminReferralsTable({
       result =
         result.filter(
           r =>
-            new Date(
-              r.dateOfReferral
-            ).getMonth() === index
+            getMonth(r.dateOfReferral) === index
         );
 
     }
@@ -317,11 +314,11 @@ export function AdminReferralsTable({
         r.id,
         r.patientFirstName,
         r.patientLastName,
-        r.dob ? new Date(r.dob).toLocaleDateString() : "",
+        r.dob ? formatDate(r.dob) : "",
         r.serviceType,
         r.priority || "",
         r.status,
-        new Date(r.dateOfReferral).toLocaleDateString(),
+        formatDate(r.dateOfReferral),
         r.parentFirstName || "",
         r.parentLastName || "",
         r.parentEmail || "",
@@ -331,7 +328,7 @@ export function AdminReferralsTable({
         r.ssn || "",
         r.type || "",
         r.referName || "",
-        r.datePatientContact ? new Date(r.datePatientContact).toLocaleDateString() : "",
+        r.datePatientContact ? formatDate(r.datePatientContact) : "",
         r.methodOfContact || "",
         r.notes || "",
         r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
@@ -368,7 +365,7 @@ export function AdminReferralsTable({
         r.status,
         r.referName || "",
         r.company?.organization || "",
-        new Date(r.dateOfReferral).toLocaleDateString()
+        formatDate(r.dateOfReferral)
       ]);
 
       await exportToPDF("referrals_export.pdf", "Referrals List", headers, rows);

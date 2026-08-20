@@ -7,7 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { formatDateTime } from "@/lib/format-date";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import {
   getStatusColor,
   getStatusLabel,
@@ -239,8 +239,10 @@ export const referralColumns = (
  </Button>
  ),
 
- cell:({row})=>
- formatDateTime(row.original.dateOfReferral)
+ cell:({row})=>{
+  const { formatDateTime } = useLocalFormatDate();
+  return formatDateTime(row.original.dateOfReferral);
+ },
 },
 
 
@@ -261,8 +263,10 @@ export const referralColumns = (
  </Button>
  ),
 
- cell:({row})=>
- formatDateTime(row.original.lastUpdated)
+ cell:({row})=>{
+  const { formatDateTime } = useLocalFormatDate();
+  return formatDateTime(row.original.lastUpdated);
+ },
 },
 
 

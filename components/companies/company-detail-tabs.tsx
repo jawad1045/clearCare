@@ -7,6 +7,7 @@ import { EditCompanyForm } from "@/components/companies/edit-company-form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/locale/use-translation";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 
 type Company = {
   id: number;
@@ -58,6 +59,7 @@ function Section({ icon: Icon, title, children }: {
 
 function ViewTab({ company }: { company: Company }) {
   const { t, locale } = useTranslation();
+  const { formatDate } = useLocalFormatDate();
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
@@ -125,9 +127,7 @@ function ViewTab({ company }: { company: Company }) {
           <InfoRow label={t("companies.companyId")} value={String(company.id)} />
           <InfoRow
             label={t("common.created")}
-            value={new Date(company.createdDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
-              year: "numeric", month: "long", day: "numeric",
-            })}
+            value={formatDate(company.createdDate)}
           />
         </Section>
 

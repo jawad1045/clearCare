@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { formatDateTime } from "@/lib/format-date";
 
 /* ----------------------------- CSV EXPORT ----------------------------- */
 export function exportToCSV(filename: string, headers: string[], rows: any[][]) {
@@ -107,7 +108,7 @@ export async function exportToPDF(
   // Subtitle/Date (Muted grey-teal)
   doc.setFontSize(9);
   doc.setTextColor(115, 125, 130);
-  doc.text(`Exported on: ${new Date().toLocaleString()}`, 14, 21);
+  doc.text(`Exported on: ${formatDateTime(new Date())}`, 14, 21);
 
   // Generate table
   autoTable(doc, {

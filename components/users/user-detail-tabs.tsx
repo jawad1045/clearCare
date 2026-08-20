@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/locale/use-translation";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 
 type Company = {
   id: number;
@@ -75,6 +76,7 @@ const ROLE_LABEL_KEYS: Record<string, "common.roleAdmin" | "common.roleUser"> = 
 
 function ViewTab({ user }: { user: User }) {
   const { t, locale } = useTranslation();
+  const { formatDate } = useLocalFormatDate();
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
@@ -157,9 +159,7 @@ function ViewTab({ user }: { user: User }) {
           <div className="sm:col-span-2">
             <InfoRow
               label={t("common.created")}
-              value={new Date(user.createdDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
-                year: "numeric", month: "long", day: "numeric",
-              })}
+              value={formatDate(user.createdDate)}
             />
           </div>
         </Section>

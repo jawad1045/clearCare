@@ -33,7 +33,7 @@ import { getStatusBadge, getStatusLabel } from "@/lib/referral-statuses";
 import { SERVICE_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
 
 import { useTranslation } from "@/locale/use-translation";
-import { formatDateTime } from "@/lib/format-date";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import type { StatusHistoryEntry } from "@/types/status-history";
 
 // Assumes the standard shadcn mobile-detection hook exists at this path
@@ -41,15 +41,7 @@ import type { StatusHistoryEntry } from "@/types/status-history";
 // lives elsewhere, or swap in your own `useMediaQuery("(max-width: 767px)")`.
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// New: date-only formatter (mm/dd/yyyy) for the status history table.
-// The main "Created" column still uses the full formatDateTime helper.
-function formatDateMMDDYYYY(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : value;
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  return `${mm}/${dd}/${yyyy}`;
-}
+
 
 // New: status cell now shows a "View" button. Clicking it fetches (and
 // caches) status history, then displays it in a Dialog on desktop or a
@@ -70,6 +62,7 @@ function StatusHistoryCell({
   fetchStatusHistory: (referralId: number) => Promise<StatusHistoryEntry[]>;
 }) {
   const isMobile = useIsMobile();
+  const { formatDate } = useLocalFormatDate();
 
   const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<StatusHistoryEntry[] | null>(null);
@@ -132,7 +125,7 @@ function StatusHistoryCell({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {formatDateMMDDYYYY(entry.changedAt)}
+                  {formatDate(entry.changedAt)}
                 </TableCell>
               </TableRow>
             ))}
@@ -273,7 +266,10 @@ export function reportColumns(
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => formatDateTime(row.original.dateOfReferral),
+      cell: ({ row }) => {
+        const { formatDateTime } = useLocalFormatDate();
+        return <span className="whitespace-nowrap">{formatDateTime(row.original.dateOfReferral)}</span>;
+      },
     },
   ];
 

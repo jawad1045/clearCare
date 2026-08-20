@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ResetPasswordDialog } from "@/components/users/reset-password-dialog";
 import { useTranslation } from "@/locale/use-translation";
 import { Switch } from "../ui/switch";
+import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 
 
 declare module "@tanstack/react-table" {
@@ -186,8 +187,10 @@ export const columns: ColumnDef<User>[] = [
         </Button>
       );
     },
-    cell: ({ row }) =>
-      new Date(row.original.createdDate).toLocaleDateString(),
+    cell: ({ row }) => {
+      const { formatDate } = useLocalFormatDate();
+      return formatDate(row.original.createdDate);
+    },
   },
   {
     id: "actions",
