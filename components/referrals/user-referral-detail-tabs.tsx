@@ -90,15 +90,23 @@ function ViewTab({ referral }: { referral: Referral }) {
   const statusHistory =
     rawHistory.length > 0
       ? rawHistory.map((entry: any) => ({
+          ...entry,
           status: entry.status,
           date: entry.createdAt ?? entry.changedAt ?? entry.date ?? referral.dateOfReferral ?? null,
+          changedByName: entry.changedByName || "System",
+          changes: entry.changes || "Status Updated",
         }))
       : [
           {
             status: referral.status,
             date: referral.dateOfReferral ?? null,
+            changedByName: "System",
+            changes: "Status Updated",
           },
         ];
+
+  const statusUpdates = statusHistory.filter((e: any) => !e.changes || e.changes === "Status Updated" || !e.changes.includes("->"));
+  const fieldEdits = statusHistory.filter((e: any) => e.changes && e.changes !== "Status Updated" && e.changes.includes("->"));
 
   return (
     <div className="space-y-4">
@@ -204,7 +212,6 @@ function ViewTab({ referral }: { referral: Referral }) {
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
         {/* Attachments */}
         <Card>
           <CardHeader className="pb-3">
@@ -237,6 +244,7 @@ function ViewTab({ referral }: { referral: Referral }) {
           </CardContent>
         </Card>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Status History */}
         <Card>
           <CardHeader className="pb-3">
@@ -244,40 +252,81 @@ function ViewTab({ referral }: { referral: Referral }) {
             <CardDescription className="text-xs">{t("referrals.currentStateHint")}</CardDescription>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("common.status")}</TableHead>
-                  <TableHead>{t("common.date")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {statusHistory.map((entry: any, index: number) => {
-                  const entryColor = getStatusColor(entry.status);
-                  return (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          style={{
-                            backgroundColor: `${entryColor}22`,
-                            color: entryColor,
-                            borderColor: `${entryColor}55`,
-                          }}
-                          className="capitalize"
-                        >
-                          {getStatusLabel(entry.status, locale)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(entry.date)}
-                      </TableCell>
+          <CardContent className="pt-4 pb-3">
+            {statusUpdates.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic py-2 text-center">No status changes recorded yet.</p>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-35 text-xs">{t("common.status")}</TableHead>
+                      <TableHead className="text-xs">{t("common.date")}</TableHead>
+                      <TableHead className="text-xs">Changed By</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {statusUpdates.map((entry: any, index: number) => {
+                      const entryColor = getStatusColor(entry.status);
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="py-2">
+                            <Badge
+                              variant="outline"
+                              style={{
+                                backgroundColor: `${entryColor}22`,
+                                color: entryColor,
+                                borderColor: `${entryColor}55`,
+                              }}
+                              className="rounded-md capitalize text-xs px-2 py-0.5 whitespace-nowrap"
+                            >
+                              {getStatusLabel(entry.status, locale)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs whitespace-nowrap py-2">{formatDate(entry.date)}</TableCell>
+                          <TableCell className="text-xs py-2 whitespace-nowrap">{entry.changedByName || "System"}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit History Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <SectionHeader icon={Edit} title="Edit History" />
+            <CardDescription className="text-xs">Audit log of field edits</CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-4 pb-3">
+            {fieldEdits.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic py-2 text-center">No edits recorded yet.</p>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">{t("common.date")}</TableHead>
+                      <TableHead className="text-xs">Edited By</TableHead>
+                      <TableHead className="text-xs">Changes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldEdits.map((entry: any, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-xs whitespace-nowrap py-2">{formatDate(entry.date)}</TableCell>
+                        <TableCell className="text-xs py-2 whitespace-nowrap">{entry.changedByName || "System"}</TableCell>
+                        <TableCell className="text-xs py-2 text-muted-foreground">{entry.changes}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

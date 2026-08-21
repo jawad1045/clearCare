@@ -458,7 +458,22 @@ export async function getReferralById(id: number) {
     return null;
   }
 
-  return referral;
+  const userIds = Array.from(new Set(referral.statusHistory.map(h => h.changedBy).filter(Boolean))) as number[];
+  let userMap = new Map<number, string>();
+  if (userIds.length > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, contactFirstName: true, contactLastName: true }
+    });
+    userMap = new Map(users.map(u => [u.id, `${u.contactFirstName} ${u.contactLastName}`]));
+  }
+
+  const mappedHistory = referral.statusHistory.map(h => ({
+    ...h,
+    changedByName: h.changedBy ? userMap.get(h.changedBy) || "Unknown" : "System",
+  }));
+
+  return { ...referral, statusHistory: mappedHistory };
 }
 
 export async function getMyReferralCounts() {
@@ -581,10 +596,24 @@ export async function getReferralStatusHistory(referralId: number) {
   const history = await prisma.referralStatusHistory.findMany({
     where: { referralId },
     orderBy: { changedAt: "desc" },
-    select: { id: true, status: true, changedAt: true, changes: true },
+    select: { id: true, status: true, changedAt: true, changes: true, changedBy: true },
   });
 
-  return history;
+  const userIds = Array.from(new Set(history.map(h => h.changedBy).filter(Boolean))) as number[];
+  let userMap = new Map<number, string>();
+  if (userIds.length > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, contactFirstName: true, contactLastName: true }
+    });
+    userMap = new Map(users.map(u => [u.id, `${u.contactFirstName} ${u.contactLastName}`]));
+  }
+
+  return history.map(h => ({
+    ...h,
+    changedByName: h.changedBy ? userMap.get(h.changedBy) || "Unknown" : "System",
+    changes: h.changes || "Status Updated",
+  }));
 }
 
 export async function updateReferralDetails(referralId: number, formData: FormData) {
@@ -638,7 +667,7 @@ export async function updateReferralDetails(referralId: number, formData: FormDa
     dob: parsedDob,
     race: formData.get("race") as string,
     gender: formData.get("gender") as string,
-    notes: formData.get("notes") as string,
+
     methodOfContact: formData.getAll("contactMethod").join(",") || null,
     datePatientContact: parsedContactDate,
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
@@ -649,7 +678,16 @@ export async function updateReferralDetails(referralId: number, formData: FormDa
   addChange("Type", existingReferral.type, newData.type);
   addChange("Patient First Name", existingReferral.patientFirstName, newData.patientFirstName);
   addChange("Patient Last Name", existingReferral.patientLastName, newData.patientLastName);
-  addChange("Notes", existingReferral.notes, newData.notes);
+  addChange("DOB", existingReferral.dob ? existingReferral.dob.toISOString().split('T')[0] : null, newData.dob ? newData.dob.toISOString().split('T')[0] : null);
+  addChange("Race", existingReferral.race, newData.race);
+  addChange("Gender", existingReferral.gender, newData.gender);
+  addChange("Parent First Name", existingReferral.parentFirstName, newData.parentFirstName);
+  addChange("Parent Last Name", existingReferral.parentLastName, newData.parentLastName);
+  addChange("Parent Email", existingReferral.parentEmail, newData.parentEmail);
+  addChange("Parent Phone", existingReferral.parentPhone, newData.parentPhone);
+  addChange("Contact Method", existingReferral.methodOfContact, newData.methodOfContact);
+  addChange("Contact Date", existingReferral.datePatientContact ? existingReferral.datePatientContact.toISOString().split('T')[0] : null, newData.datePatientContact ? newData.datePatientContact.toISOString().split('T')[0] : null);
+
 
   const updated = await prisma.referral.update({
     where: { id: referralId },
@@ -745,6 +783,15 @@ export async function userUpdateReferralDetails(referralId: number, formData: Fo
   addChange("Type", existingReferral.type, newData.type);
   addChange("Patient First Name", existingReferral.patientFirstName, newData.patientFirstName);
   addChange("Patient Last Name", existingReferral.patientLastName, newData.patientLastName);
+  addChange("DOB", existingReferral.dob ? existingReferral.dob.toISOString().split('T')[0] : null, newData.dob ? newData.dob.toISOString().split('T')[0] : null);
+  addChange("Race", existingReferral.race, newData.race);
+  addChange("Gender", existingReferral.gender, newData.gender);
+  addChange("Parent First Name", existingReferral.parentFirstName, newData.parentFirstName);
+  addChange("Parent Last Name", existingReferral.parentLastName, newData.parentLastName);
+  addChange("Parent Email", existingReferral.parentEmail, newData.parentEmail);
+  addChange("Parent Phone", existingReferral.parentPhone, newData.parentPhone);
+  addChange("Contact Method", existingReferral.methodOfContact, newData.methodOfContact);
+  addChange("Contact Date", existingReferral.datePatientContact ? existingReferral.datePatientContact.toISOString().split('T')[0] : null, newData.datePatientContact ? newData.datePatientContact.toISOString().split('T')[0] : null);
   addChange("Notes", existingReferral.notes, newData.notes);
 
   await prisma.referral.update({

@@ -381,7 +381,22 @@ export async function getBHReferralById(id: number) {
     return null;
   }
 
-  return referral;
+  const userIds = Array.from(new Set(referral.statusHistory.map(h => h.changedBy).filter(Boolean))) as number[];
+  let userMap = new Map<number, string>();
+  if (userIds.length > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, contactFirstName: true, contactLastName: true }
+    });
+    userMap = new Map(users.map(u => [u.id, `${u.contactFirstName} ${u.contactLastName}`]));
+  }
+
+  const mappedHistory = referral.statusHistory.map(h => ({
+    ...h,
+    changedByName: h.changedBy ? userMap.get(h.changedBy) || "Unknown" : "System",
+  }));
+
+  return { ...referral, statusHistory: mappedHistory };
 }
 
 export async function updateBHReferralStatus(referralId: number, status: string) {
@@ -529,10 +544,24 @@ export async function getBHReferralStatusHistory(referralId: number) {
   const history = await prisma.bHReferralStatusHistory.findMany({
     where: { referralId },
     orderBy: { changedAt: "desc" },
-    select: { id: true, status: true, changedAt: true, changes: true },
+    select: { id: true, status: true, changedAt: true, changes: true, changedBy: true },
   });
 
-  return history;
+  const userIds = Array.from(new Set(history.map(h => h.changedBy).filter(Boolean))) as number[];
+  let userMap = new Map<number, string>();
+  if (userIds.length > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, contactFirstName: true, contactLastName: true }
+    });
+    userMap = new Map(users.map(u => [u.id, `${u.contactFirstName} ${u.contactLastName}`]));
+  }
+
+  return history.map(h => ({
+    ...h,
+    changedByName: h.changedBy ? userMap.get(h.changedBy) || "Unknown" : "System",
+    changes: h.changes || "Status Updated",
+  }));
 }
 
 export async function updateBHReferralDetails(referralId: number, formData: FormData) {
@@ -568,7 +597,7 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
     gender: formData.get("gender") as string,
     grade: (formData.get("grade") as string) || null,
     referralType: referralTypes,
-    notes: (formData.get("notes") as string) || null,
+
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
   };
   
@@ -584,7 +613,9 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
   addChange("Phone", existingReferral.phone, newData.phone);
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
-  addChange("Notes", existingReferral.notes, newData.notes);
+  addChange("Last 4 SSN", existingReferral.last4SSN, newData.last4SSN);
+  addChange("Grade", existingReferral.grade, newData.grade);
+
   
   const oldReferralTypes = existingReferral.referralType.join(",");
   const newReferralTypes = newData.referralType.join(",");
@@ -673,6 +704,8 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
   addChange("Phone", existingReferral.phone, newData.phone);
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
+  addChange("Last 4 SSN", existingReferral.last4SSN, newData.last4SSN);
+  addChange("Grade", existingReferral.grade, newData.grade);
   addChange("Notes", existingReferral.notes, newData.notes);
 
   const oldReferralTypes = existingReferral.referralType.join(",");

@@ -15,7 +15,7 @@ import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
-
+import { EditBHReferralForm } from "./admin-edit-bh-referral-form";
 import type { StatusHistoryEntry } from "@/types/status-history";
 
 type MentalHealthReferral = {
@@ -158,48 +158,99 @@ function StatusHistoryTable({
     return <p className="text-xs text-destructive py-2 text-center">Failed to load status history.</p>;
   }
 
-  if (history.length === 0) {
-    return <p className="text-xs text-muted-foreground italic py-2 text-center">No history recorded yet.</p>;
-  }
+  const statusUpdates = history.filter((e: any) => !e.changes || e.changes === "Status Updated" || !e.changes.includes("->"));
+  const fieldEdits = history.filter((e: any) => e.changes && e.changes !== "Status Updated" && e.changes.includes("->"));
 
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-35 text-xs">{t("common.status")}</TableHead>
-            <TableHead className="text-xs">{t("common.date")}</TableHead>
-            <TableHead className="text-xs">Changes</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {history.map((entry, index) => {
-            const e = entry as Record<string, any>;
-            const color = getStatusColor(entry.status);
-            const dateStr = e.createdAt || e.changedAt || e.timestamp || e.date;
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Status History Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <SectionHeader icon={Hash} title={t("referrals.statusReportSection")} />
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-4 pb-3">
+          {statusUpdates.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic py-2 text-center">No status changes recorded yet.</p>
+          ) : (
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-35 text-xs">{t("common.status")}</TableHead>
+                    <TableHead className="text-xs">{t("common.date")}</TableHead>
+                    <TableHead className="text-xs">Changed By</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {statusUpdates.map((entry, index) => {
+                    const e = entry as Record<string, any>;
+                    const color = getStatusColor(entry.status);
+                    const dateStr = e.createdAt || e.changedAt || e.timestamp || e.date;
+                    return (
+                      <TableRow key={entry.id ?? index}>
+                        <TableCell className="py-2">
+                          <Badge
+                            variant="outline"
+                            style={{
+                              backgroundColor: color + "22",
+                              color,
+                              borderColor: color + "55",
+                            }}
+                            className="rounded-md capitalize text-xs px-2 py-0.5 whitespace-nowrap"
+                          >
+                            {getStatusLabel(entry.status, locale)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs whitespace-nowrap py-2">{formatDateOnly(dateStr)}</TableCell>
+                        <TableCell className="text-xs py-2 whitespace-nowrap">{e.changedByName || "System"}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-            return (
-              <TableRow key={entry.id ?? index}>
-                <TableCell className="py-2">
-                  <Badge
-                    variant="outline"
-                    style={{
-                      backgroundColor: color + "22",
-                      color,
-                      borderColor: color + "55",
-                    }}
-                    className="rounded-md capitalize text-xs px-2 py-0.5 whitespace-nowrap"
-                  >
-                    {getStatusLabel(entry.status, locale)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-xs whitespace-nowrap py-2">{formatDateOnly(dateStr)}</TableCell>
-                <TableCell className="text-xs py-2 text-muted-foreground">{e.changes || "—"}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+      {/* Edit History Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <SectionHeader icon={Edit} title="Edit History" />
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-4 pb-3">
+          {fieldEdits.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic py-2 text-center">No edits recorded yet.</p>
+          ) : (
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">{t("common.date")}</TableHead>
+                    <TableHead className="text-xs">Edited By</TableHead>
+                    <TableHead className="text-xs">Changes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fieldEdits.map((entry, index) => {
+                    const e = entry as Record<string, any>;
+                    const dateStr = e.createdAt || e.changedAt || e.timestamp || e.date;
+                    return (
+                      <TableRow key={entry.id ?? index}>
+                        <TableCell className="text-xs whitespace-nowrap py-2">{formatDateOnly(dateStr)}</TableCell>
+                        <TableCell className="text-xs py-2 whitespace-nowrap">{e.changedByName || "System"}</TableCell>
+                        <TableCell className="text-xs py-2 text-muted-foreground">{e.changes}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -352,25 +403,13 @@ function ManageTab({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Status History Table */}
-        <Card>
-          <CardHeader className="pb-3">
-            <SectionHeader icon={Hash} title={t("referrals.statusReportSection")} />
-            <CardDescription className="text-xs">
-              <span className="font-medium">{t("referrals.referralId")}:</span>{" "}
-              <span>{referral.id}</span>
-            </CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4 pb-3">
-            <StatusHistoryTable
-              referralId={referral.id}
-              fetchStatusHistory={fetchStatusHistory}
-              locale={locale as "en" | "es"}
-            />
-          </CardContent>
-        </Card>
+      <div className="flex flex-col gap-4">
+        {/* History Tables */}
+        <StatusHistoryTable
+          referralId={referral.id}
+          fetchStatusHistory={fetchStatusHistory}
+          locale={locale as "en" | "es"}
+        />
 
         {/* Result Management (Upload PDF) */}
         <Card>
@@ -390,7 +429,7 @@ function ManageTab({
 
 export function MentalHealthReferralDetailTabs({ referral, fetchStatusHistory }: Props) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<"view" | "manage">("view");
+  const [tab, setTab] = useState<"view" | "manage" | "edit">("view");
 
   return (
     <div className="space-y-4">
@@ -419,12 +458,27 @@ export function MentalHealthReferralDetailTabs({ referral, fetchStatusHistory }:
           <Settings className="h-4 w-4" />
           {t("common.manage")}
         </button>
+        <button
+          onClick={() => setTab("edit")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            tab === "edit"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Edit className="h-4 w-4" />
+          {t("common.edit")}
+        </button>
 
       </div>
 
       {tab === "view" && <ViewTab referral={referral} />}
       {tab === "manage" && <ManageTab referral={referral} fetchStatusHistory={fetchStatusHistory} />}
-
+      {tab === "edit" && (
+        <div className="flex justify-center py-4">
+          <EditBHReferralForm referralId={referral.id} initialData={referral as any} onSuccess={() => setTab("view")} />
+        </div>
+      )}
     </div>
   );
 }
