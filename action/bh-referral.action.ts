@@ -529,8 +529,178 @@ export async function getBHReferralStatusHistory(referralId: number) {
   const history = await prisma.bHReferralStatusHistory.findMany({
     where: { referralId },
     orderBy: { changedAt: "desc" },
-    select: { id: true, status: true, changedAt: true },
+    select: { id: true, status: true, changedAt: true, changes: true },
   });
 
   return history;
+}
+
+export async function updateBHReferralDetails(referralId: number, formData: FormData) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
+  }
+
+  const existingReferral = await prisma.mentalHealthReferral.findUnique({
+    where: { id: referralId },
+  });
+
+  if (!existingReferral) {
+    throw new Error("Referral not found");
+  }
+
+  const uploadedFiles = formData.getAll("attachments") as string[];
+
+  if (uploadedFiles.length > 5) {
+    throw new Error(t("referrals.errorMaxFilesAllowed"));
+  }
+
+  const referralTypes = formData.getAll("referralTypes") as string[];
+
+  const newData = {
+    firstName: formData.get("firstName") as string,
+    lastName: formData.get("lastName") as string,
+    phone: formData.get("phone") as string,
+    last4SSN: formData.get("last4SSN") as string,
+    email: (formData.get("email") as string) || null,
+    gender: formData.get("gender") as string,
+    grade: (formData.get("grade") as string) || null,
+    referralType: referralTypes,
+    notes: (formData.get("notes") as string) || null,
+    clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
+  };
+  
+  let changes: string[] = [];
+  const addChange = (field: string, oldVal: any, newVal: any) => {
+    if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
+      changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
+    }
+  };
+  
+  addChange("First Name", existingReferral.firstName, newData.firstName);
+  addChange("Last Name", existingReferral.lastName, newData.lastName);
+  addChange("Phone", existingReferral.phone, newData.phone);
+  addChange("Email", existingReferral.email, newData.email);
+  addChange("Gender", existingReferral.gender, newData.gender);
+  addChange("Notes", existingReferral.notes, newData.notes);
+  
+  const oldReferralTypes = existingReferral.referralType.join(",");
+  const newReferralTypes = newData.referralType.join(",");
+  if (oldReferralTypes !== newReferralTypes) {
+    changes.push(`Referral Type: ${oldReferralTypes} -> ${newReferralTypes}`);
+  }
+
+  const updated = await prisma.mentalHealthReferral.update({
+    where: { id: referralId },
+    data: newData,
+  });
+
+  if (changes.length > 0) {
+    await prisma.bHReferralStatusHistory.create({
+      data: {
+        referralId,
+        status: existingReferral.status,
+        changedBy: currentUser.id,
+        changes: changes.join(" | "),
+      },
+    });
+  }
+
+  revalidatePath("/admin/bhreferrals");
+  revalidatePath(`/admin/bhreferrals/${referralId}`);
+  
+  return true;
+}
+
+export async function userUpdateBHReferralDetails(referralId: number, formData: FormData) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser) {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  const existingReferral = await prisma.mentalHealthReferral.findUnique({
+    where: { id: referralId },
+  });
+
+  if (!existingReferral) {
+    throw new Error("Referral not found");
+  }
+
+  // Users can only edit their own referrals
+  if (existingReferral.userId !== currentUser.id) {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  // Users can only edit referrals that are still Pending
+  if (existingReferral.status !== "Pending") {
+    throw new Error(t("referrals.errorCannotEditNonPending"));
+  }
+
+  const uploadedFiles = formData.getAll("attachments") as string[];
+
+  if (uploadedFiles.length > 5) {
+    throw new Error(t("referrals.errorMaxFilesAllowed"));
+  }
+
+  const referralTypes = formData.getAll("referralTypes") as string[];
+
+  const newData = {
+    firstName: formData.get("firstName") as string,
+    lastName: formData.get("lastName") as string,
+    phone: formData.get("phone") as string,
+    last4SSN: formData.get("last4SSN") as string,
+    email: (formData.get("email") as string) || null,
+    gender: formData.get("gender") as string,
+    grade: (formData.get("grade") as string) || null,
+    referralType: referralTypes,
+    notes: (formData.get("notes") as string) || null,
+    clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
+  };
+
+  let changes: string[] = [];
+  const addChange = (field: string, oldVal: any, newVal: any) => {
+    if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
+      changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
+    }
+  };
+
+  addChange("First Name", existingReferral.firstName, newData.firstName);
+  addChange("Last Name", existingReferral.lastName, newData.lastName);
+  addChange("Phone", existingReferral.phone, newData.phone);
+  addChange("Email", existingReferral.email, newData.email);
+  addChange("Gender", existingReferral.gender, newData.gender);
+  addChange("Notes", existingReferral.notes, newData.notes);
+
+  const oldReferralTypes = existingReferral.referralType.join(",");
+  const newReferralTypes = newData.referralType.join(",");
+  if (oldReferralTypes !== newReferralTypes) {
+    changes.push(`Referral Type: ${oldReferralTypes} -> ${newReferralTypes}`);
+  }
+
+  await prisma.mentalHealthReferral.update({
+    where: { id: referralId },
+    data: newData,
+  });
+
+  if (changes.length > 0) {
+    await prisma.bHReferralStatusHistory.create({
+      data: {
+        referralId,
+        status: existingReferral.status,
+        changedBy: currentUser.id,
+        changes: changes.join(" | "),
+      },
+    });
+  }
+
+  revalidatePath("/user/bhreferrals");
+  revalidatePath(`/user/bhreferrals/${referralId}`);
+  revalidatePath("/admin/bhreferrals");
+  revalidatePath(`/admin/bhreferrals/${referralId}`);
+
+  return true;
 }

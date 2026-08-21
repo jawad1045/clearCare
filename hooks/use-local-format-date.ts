@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { formatDate, formatDateTime, getMonthInTZ, APP_TIMEZONE } from "@/lib/format-date";
 
 /**
@@ -39,7 +39,11 @@ function getBrowserTimezone(): string {
  * - Works safely during SSR (falls back to APP_TIMEZONE, re-hydrates on client).
  */
 export function useLocalFormatDate() {
-  const timeZone = useMemo(() => getBrowserTimezone(), []);
+  const [timeZone, setTimeZone] = useState<string>(APP_TIMEZONE);
+
+  useEffect(() => {
+    setTimeZone(getBrowserTimezone());
+  }, []);
 
   return useMemo(
     () => ({

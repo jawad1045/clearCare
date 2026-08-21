@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 
-import { createReferral } from "@/action/referral.action";
+import { userUpdateReferralDetails } from "@/action/referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { Button } from "@/components/ui/button";
@@ -98,7 +98,7 @@ function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           dob: z.string().min(1, t("referrals.dobRequired")),
           race: z.string().min(1, t("referrals.raceRequired")),
           gender: z.string().min(1, t("referrals.genderRequired")),
-          ssn: z.string().min(1, t("referrals.ssnRequired")),
+          ssn: z.string().optional(),
           type: z.string().optional(),
           priority: z.string().optional(),
           referrerName: z.string().min(1, t("referrals.referrerNameRequired")),
@@ -161,17 +161,21 @@ function Field({
   );
 }
 
-type Props = { referrerName: string };
+type Props = { 
+  referralId: number;
+  initialData: any;
+  onSuccess?: () => void;
+};
 
-export function CreateReferralForm({ referrerName }: Props) {
+export function UserEditReferralForm({ referralId, initialData, onSuccess }: Props) {
   const { t } = useTranslation();
   const referralSchema = useReferralSchema(t);
   const [isPending, startTransition] = useTransition();
-  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<string[]>(initialData?.clientAttachments || []);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<ReferralFormValues | null>(null);
   const [showSSN, setShowSSN] = useState(false);
-  const [age, setAge] = useState("");
+  const [age, setAge] = useState(initialData?.dob ? calcAge(new Date(initialData.dob).toISOString()) : "");
 
   const {
     register,
@@ -182,23 +186,23 @@ export function CreateReferralForm({ referrerName }: Props) {
   } = useForm<ReferralFormValues>({
     resolver: zodResolver(referralSchema),
     defaultValues: {
-      serviceType: "",
-      parentFirstName: "",
-      parentLastName: "",
-      parentEmail: "",
-      parentPhone: "",
-      patientFirstName: "",
-      patientLastName: "",
-      dob: "",
-      race: "",
-      gender: "",
-      ssn: "",
-      type: "",
-      priority: "",
-      referrerName,
-      contactDate: "",
-      contactMethod: [],
-      notes: "",
+      serviceType: initialData?.serviceType || "",
+      parentFirstName: initialData?.parentFirstName || "",
+      parentLastName: initialData?.parentLastName || "",
+      parentEmail: initialData?.parentEmail || "",
+      parentPhone: initialData?.parentPhone || "",
+      patientFirstName: initialData?.patientFirstName || "",
+      patientLastName: initialData?.patientLastName || "",
+      dob: initialData?.dob ? new Date(initialData.dob).toISOString().split('T')[0] : "",
+      race: initialData?.race || "",
+      gender: initialData?.gender || "",
+      ssn: initialData?.ssn || "",
+      type: initialData?.type || "",
+      priority: initialData?.priority || "",
+      referrerName: initialData?.referName || "",
+      contactDate: initialData?.datePatientContact ? new Date(initialData.datePatientContact).toISOString().split('T')[0] : "",
+      contactMethod: initialData?.methodOfContact ? initialData.methodOfContact.split(",") : [],
+      notes: initialData?.notes || "",
     },
   });
 
@@ -226,11 +230,9 @@ export function CreateReferralForm({ referrerName }: Props) {
     formData.set("dob", values.dob);
     formData.set("race", values.race);
     formData.set("gender", values.gender);
-    formData.set("ssn", values.ssn);
+    if (values.ssn) formData.set("ssn", values.ssn);
     formData.set("type", values.type ?? "");
     formData.set("priority", values.priority ?? "");
-    formData.set("status", "Pending");
-    formData.set("referrerName", values.referrerName);
     formData.set("contactDate", values.contactDate ?? "");
     formData.set("notes", values.notes ?? "");
     (values.contactMethod ?? []).forEach((m) => formData.append("contactMethod", m));
@@ -238,10 +240,12 @@ export function CreateReferralForm({ referrerName }: Props) {
 
     startTransition(async () => {
       try {
-        await createReferral(formData);
+        await userUpdateReferralDetails(referralId, formData);
+        toast.success(t("referrals.referralUpdatedSuccess"));
+        if (onSuccess) onSuccess();
       } catch (error) {
         if (isRedirectError(error)) throw error;
-        toast.error(t("referrals.createReferralFailed"));
+        toast.error(error instanceof Error ? error.message : t("referrals.createReferralFailed"));
       }
     });
   }
@@ -265,12 +269,12 @@ export function CreateReferralForm({ referrerName }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card w-full sm:w-3/5">
+    <div className="overflow-hidden rounded-xl border border-border shadow-md bg-card w-full">
 
       {/* ── Header ── */}
       <div className="bg-foreground px-6 py-4">
         <h2 className="text-base font-bold text-primary-foreground">
-          {t("referrals.referralFormTitle")}
+          {t("common.edit")}
         </h2>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
           <span>{t("referrals.requiredFieldsNote")}</span>
@@ -284,9 +288,9 @@ export function CreateReferralForm({ referrerName }: Props) {
         open={confirmOpen}
         onConfirm={onConfirm}
         onCancel={() => { setConfirmOpen(false); setPendingValues(null); }}
-        title={t("referrals.submitReferral")}
-        description={t("referrals.submitReferralConfirmDescription")}
-        confirmLabel={t("referrals.submitReferral")}
+        title={t("common.edit")}
+        description={t("common.confirmAction")}
+        confirmLabel={t("common.save")}
       />
       <form onSubmit={handleSubmit(onFormSubmit)} className="pl-6 pr-10 py-6 space-y-6">
 
@@ -304,7 +308,7 @@ export function CreateReferralForm({ referrerName }: Props) {
           </Select>
         </Field>
 
-        {/* ── Test Details (directly under Service Type; test type & priority enabled only for Drug Test) ── */}
+        {/* ── Test Details ── */}
         <div>
           <SectionLabel>{t("referrals.testDetails")}</SectionLabel>
           {!isDrugTest && (
@@ -356,6 +360,7 @@ export function CreateReferralForm({ referrerName }: Props) {
               <DatePicker
                 name="contactDate_display"
                 allowFutureDates
+                initialDate={initialData?.datePatientContact ? new Date(initialData.datePatientContact).toISOString().split('T')[0] : ""}
                 onDateChange={(iso) => setValue("contactDate", iso)}
                 className="border-border bg-background focus-visible:ring-primary"
               />
@@ -423,6 +428,7 @@ export function CreateReferralForm({ referrerName }: Props) {
               <DatePicker
                 name="dob_display"
                 required
+                initialDate={initialData?.dob}
                 onDateChange={(iso) => {
                   setValue("dob", iso, { shouldValidate: true });
                   setAge(iso ? calcAge(iso) : "");
@@ -439,7 +445,7 @@ export function CreateReferralForm({ referrerName }: Props) {
               />
             </Field>
             <Field label={t("referrals.raceLabel")} required error={errors.race?.message}>
-              <Select onValueChange={(v) => setValue("race", v, { shouldValidate: true })}>
+              <Select value={watch("race")} onValueChange={(v) => setValue("race", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
@@ -451,7 +457,7 @@ export function CreateReferralForm({ referrerName }: Props) {
               </Select>
             </Field>
             <Field label={t("referrals.genderLabel")} required error={errors.gender?.message}>
-              <Select onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
+              <Select value={watch("gender")} onValueChange={(v) => setValue("gender", v, { shouldValidate: true })}>
                 <SelectTrigger className="w-full border-border bg-background focus:ring-primary">
                   <SelectValue placeholder={t("referrals.selectPlaceholder")} />
                 </SelectTrigger>
@@ -462,7 +468,7 @@ export function CreateReferralForm({ referrerName }: Props) {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label={t("referrals.ssnLabel")} required error={errors.ssn?.message}>
+            <Field label={t("referrals.ssnLabel")} error={errors.ssn?.message}>
               <div className="relative">
                 <Input
                   type={showSSN ? "text" : "password"}
@@ -488,7 +494,7 @@ export function CreateReferralForm({ referrerName }: Props) {
         {/* ── Attachments ── */}
         <AttachmentUploader value={attachments} onChange={setAttachments} />
 
-        {/* ── Notes (moved to bottom) ── */}
+        {/* ── Notes ── */}
         <div className="sm:col-span-2">
           <Field label={t("common.notes")}> 
             <textarea
@@ -513,7 +519,7 @@ export function CreateReferralForm({ referrerName }: Props) {
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              {t("referrals.submitReferral")}
+              {t("common.save")}
               <ArrowRight className="h-4 w-4" />
             </span>
           )}

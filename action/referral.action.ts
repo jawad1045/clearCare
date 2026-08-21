@@ -581,8 +581,192 @@ export async function getReferralStatusHistory(referralId: number) {
   const history = await prisma.referralStatusHistory.findMany({
     where: { referralId },
     orderBy: { changedAt: "desc" },
-    select: { id: true, status: true, changedAt: true },
+    select: { id: true, status: true, changedAt: true, changes: true },
   });
 
   return history;
+}
+
+export async function updateReferralDetails(referralId: number, formData: FormData) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("referrals.errorOnlyAdminsChangeStatus"));
+  }
+
+  const existingReferral = await prisma.referral.findUnique({
+    where: { id: referralId },
+  });
+
+  if (!existingReferral) {
+    throw new Error("Referral not found");
+  }
+
+  const uploadedFiles = formData.getAll("attachments") as string[];
+
+  if (uploadedFiles.length > 5) {
+    throw new Error(t("referrals.errorMaxFilesAllowed"));
+  }
+
+  const rawDob = formData.get("dob") as string;
+  const parsedDob = rawDob ? new Date(rawDob) : null;
+  if (!parsedDob || isNaN(parsedDob.getTime())) {
+    throw new Error(t("referrals.errorInvalidDob"));
+  }
+  
+  const contactDateRaw = formData.get("contactDate") as string;
+  const parsedContactDate = contactDateRaw ? new Date(contactDateRaw) : null;
+  
+  let changes: string[] = [];
+  const addChange = (field: string, oldVal: any, newVal: any) => {
+    if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
+      changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
+    }
+  };
+
+  const newData = {
+    serviceType: formData.get("serviceType") as string,
+    type: (formData.get("type") as string) || null,
+    priority: (formData.get("priority") as string) || null,
+    parentFirstName: formData.get("parentFirstName") as string,
+    parentLastName: formData.get("parentLastName") as string,
+    parentEmail: formData.get("parentEmail") as string,
+    parentPhone: formData.get("parentPhone") as string,
+    patientFirstName: formData.get("patientFirstName") as string,
+    patientLastName: formData.get("patientLastName") as string,
+    dob: parsedDob,
+    race: formData.get("race") as string,
+    gender: formData.get("gender") as string,
+    notes: formData.get("notes") as string,
+    methodOfContact: formData.getAll("contactMethod").join(",") || null,
+    datePatientContact: parsedContactDate,
+    clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
+  };
+
+  addChange("Service Type", existingReferral.serviceType, newData.serviceType);
+  addChange("Priority", existingReferral.priority, newData.priority);
+  addChange("Type", existingReferral.type, newData.type);
+  addChange("Patient First Name", existingReferral.patientFirstName, newData.patientFirstName);
+  addChange("Patient Last Name", existingReferral.patientLastName, newData.patientLastName);
+  addChange("Notes", existingReferral.notes, newData.notes);
+
+  const updated = await prisma.referral.update({
+    where: { id: referralId },
+    data: newData,
+  });
+
+  if (changes.length > 0) {
+    await prisma.referralStatusHistory.create({
+      data: {
+        referralId,
+        status: existingReferral.status,
+        changedBy: currentUser.id,
+        changes: changes.join(" | "),
+      },
+    });
+  }
+
+  revalidatePath("/admin/referrals");
+  revalidatePath(`/admin/referrals/${referralId}`);
+  
+  return true;
+}
+
+export async function userUpdateReferralDetails(referralId: number, formData: FormData) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser) {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  const existingReferral = await prisma.referral.findUnique({
+    where: { id: referralId },
+  });
+
+  if (!existingReferral) {
+    throw new Error("Referral not found");
+  }
+
+  // Users can only edit their own referrals
+  if (existingReferral.userId !== currentUser.id) {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  // Users can only edit referrals that are still Pending
+  if (existingReferral.status !== "Pending") {
+    throw new Error(t("referrals.errorCannotEditNonPending"));
+  }
+
+  const uploadedFiles = formData.getAll("attachments") as string[];
+
+  if (uploadedFiles.length > 5) {
+    throw new Error(t("referrals.errorMaxFilesAllowed"));
+  }
+
+  const rawDob = formData.get("dob") as string;
+  const parsedDob = rawDob ? new Date(rawDob) : null;
+  if (!parsedDob || isNaN(parsedDob.getTime())) {
+    throw new Error(t("referrals.errorInvalidDob"));
+  }
+
+  const contactDateRaw = formData.get("contactDate") as string;
+  const parsedContactDate = contactDateRaw ? new Date(contactDateRaw) : null;
+
+  let changes: string[] = [];
+  const addChange = (field: string, oldVal: any, newVal: any) => {
+    if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
+      changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
+    }
+  };
+
+  const newData = {
+    serviceType: formData.get("serviceType") as string,
+    type: (formData.get("type") as string) || null,
+    priority: (formData.get("priority") as string) || null,
+    parentFirstName: formData.get("parentFirstName") as string,
+    parentLastName: formData.get("parentLastName") as string,
+    parentEmail: formData.get("parentEmail") as string,
+    parentPhone: formData.get("parentPhone") as string,
+    patientFirstName: formData.get("patientFirstName") as string,
+    patientLastName: formData.get("patientLastName") as string,
+    dob: parsedDob,
+    race: formData.get("race") as string,
+    gender: formData.get("gender") as string,
+    notes: formData.get("notes") as string,
+    methodOfContact: formData.getAll("contactMethod").join(",") || null,
+    datePatientContact: parsedContactDate,
+    clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
+  };
+
+  addChange("Service Type", existingReferral.serviceType, newData.serviceType);
+  addChange("Priority", existingReferral.priority, newData.priority);
+  addChange("Type", existingReferral.type, newData.type);
+  addChange("Patient First Name", existingReferral.patientFirstName, newData.patientFirstName);
+  addChange("Patient Last Name", existingReferral.patientLastName, newData.patientLastName);
+  addChange("Notes", existingReferral.notes, newData.notes);
+
+  await prisma.referral.update({
+    where: { id: referralId },
+    data: newData,
+  });
+
+  if (changes.length > 0) {
+    await prisma.referralStatusHistory.create({
+      data: {
+        referralId,
+        status: existingReferral.status,
+        changedBy: currentUser.id,
+        changes: changes.join(" | "),
+      },
+    });
+  }
+
+  revalidatePath("/user/referrals");
+  revalidatePath(`/user/referrals/${referralId}`);
+  revalidatePath("/admin/referrals");
+  revalidatePath(`/admin/referrals/${referralId}`);
+
+  return true;
 }

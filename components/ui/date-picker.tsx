@@ -14,6 +14,8 @@ interface DatePickerProps {
   onDateChange?: (iso: string) => void
   className?: string
   disabled?: boolean
+  initialDate?: string
+  allowFutureDates?: boolean
 }
 
 export function DatePicker({
@@ -22,10 +24,33 @@ export function DatePicker({
   onDateChange,
   className,
   disabled,
+  initialDate,
+  allowFutureDates,
 }: DatePickerProps) {
-  const [selected, setSelected] = React.useState<Date | undefined>()
-  const [display, setDisplay] = React.useState("")
-  const [iso, setIso] = React.useState("")
+  const [selected, setSelected] = React.useState<Date | undefined>(() => {
+    if (!initialDate) return undefined;
+    const d = new Date(initialDate);
+    return isNaN(d.getTime()) ? undefined : d;
+  });
+  
+  const [display, setDisplay] = React.useState(() => {
+    if (!initialDate) return "";
+    const d = new Date(initialDate);
+    if (isNaN(d.getTime())) return "";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${mm}/${dd}/${d.getFullYear()}`;
+  });
+  
+  const [iso, setIso] = React.useState(() => {
+    if (!initialDate) return "";
+    const d = new Date(initialDate);
+    if (isNaN(d.getTime())) return "";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  });
+  
   const [open, setOpen] = React.useState(false)
 
   function applyDate(date: Date) {
@@ -104,8 +129,8 @@ export function DatePicker({
             onSelect={handleCalendarSelect}
             captionLayout="dropdown"
             startMonth={new Date(1920, 0)}
-            endMonth={new Date()}
-            disabled={(d) => d > new Date()}
+            endMonth={allowFutureDates ? undefined : new Date()}
+            disabled={allowFutureDates ? undefined : (d) => d > new Date()}
             defaultMonth={selected ?? new Date()}
           />
         </PopoverContent>

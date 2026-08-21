@@ -162,6 +162,7 @@ model BHReferralStatusHistory {
   changedBy  Int?     @map("Changed_By_User_ID")
 
   referral MentalHealthReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  changes    String?  @db.Text
 
   @@map("tbl_BHReferralStatusHistory")
 }
@@ -174,6 +175,7 @@ model ReferralStatusHistory {
   changedBy  Int?     @map("Changed_By_User_ID")
 
   referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  changes    String?  @db.Text
 
   @@index([referralId])
   @@map("tbl_ReferralStatusHistory")

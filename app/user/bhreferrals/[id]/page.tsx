@@ -1,38 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import {
-  Activity,
-  ArrowLeft,
-  Download,
-  FileText,
-  Paperclip,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { getBHReferralById } from "@/action/bh-referral.action";
 import { getCurrentUser } from "@/lib/auth";
-import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { getServerTranslation } from "@/locale/server";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { UserBHReferralDetailTabs } from "@/components/referrals/user-bh-referral-detail-tabs";
 
 type PageProps = {
   params: Promise<{
@@ -60,33 +38,6 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
   }
 
   const { t, locale } = await getServerTranslation();
-
-  // Strict MM/DD/YYYY formatting
-  const formatDate = (d: Date | string | null) => {
-    if (!d) return "—";
-    const date = new Date(d);
-    if (isNaN(date.getTime())) return "—";
-
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const rawHistory = referral.statusHistory ?? [];
-  const statusHistory =
-    rawHistory.length > 0
-      ? rawHistory.map((entry: any) => ({
-          status: entry.status,
-          date: entry.createdAt ?? entry.date ?? referral.lastUpdated ?? null,
-        }))
-      : [
-          {
-            status: referral.status,
-            date: referral.lastUpdated ?? null,
-          },
-        ];
 
   const currentStatusColor = getStatusColor(referral.status);
 
@@ -138,209 +89,7 @@ export default async function UserBHReferralDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Summary Details Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">
-              {t("referrals.referralHeading")}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {t("referrals.personalDetails")}
-            </CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="overflow-x-auto pt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("referrals.referralId")}</TableHead>
-                  <TableHead>{t("common.fullName")}</TableHead>
-                  <TableHead>{t("common.gender")}</TableHead>
-                  <TableHead>{t("referrals.last4SsnLabel")}</TableHead>
-                  <TableHead>{t("referrals.appointmentDate")}</TableHead>
-                  <TableHead>{t("referrals.submittedBySection")}</TableHead>
-                  <TableHead>{t("referrals.resultReportSection")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">{referral.id}</TableCell>
-                  <TableCell>
-                    {referral.firstName} {referral.lastName}
-                  </TableCell>
-                  <TableCell className="capitalize">
-                    {referral.gender?.toLowerCase() ?? "—"}
-                  </TableCell>
-                  <TableCell>••{referral.last4SSN}</TableCell>
-                  <TableCell>{formatDate(referral.appointmentDate)}</TableCell>
-                  <TableCell>
-                    {referral.user?.contactFirstName ?? "—"}{" "}
-                    {referral.user?.contactLastName ?? ""}
-                  </TableCell>
-                  <TableCell>
-                    {referral.pdfReport ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="gap-2"
-                      >
-                        <Link
-                          href={referral.pdfReport}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          {t("referrals.downloadResultPdf")}
-                        </Link>
-                      </Button>
-                    ) : (
-                      <span className="text-xs italic text-muted-foreground">
-                        {t("referrals.noResultAvailable")}
-                      </span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Notes Card */}
-        {referral.notes && (
-          <Card className="mt-4">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-                  <FileText className="h-4 w-4 text-primary" />
-                </div>
-                <CardTitle className="text-base">{t("common.notes")}</CardTitle>
-              </div>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {referral.notes}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Side-By-Side Attachments & Status History */}
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Client Attachments */}
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-                  <Paperclip className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">
-                    {t("referrals.attachmentsSection")}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {t(
-                      referral.clientAttachments?.length === 1
-                        ? "referrals.attachmentsCountOne"
-                        : "referrals.attachmentsCountOther",
-                      { n: referral.clientAttachments?.length ?? 0 }
-                    )}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-              {!referral.clientAttachments?.length ? (
-                <p className="text-sm italic text-muted-foreground">
-                  {t("referrals.noAttachments")}
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {referral.clientAttachments.map((stored, index) => {
-                    const { name, url } = parseAttachment(stored, index);
-                    return (
-                      <li key={stored}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          className="w-full justify-start gap-2 text-sm"
-                        >
-                          <Link
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                            {name}
-                          </Link>
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Status Iteration History Table */}
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-                  <Activity className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">
-                    {t("referrals.referralStatusSection")}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {t("referrals.currentStateHint")}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("common.status")}</TableHead>
-                    <TableHead>{t("common.date")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {statusHistory.map((entry, index) => {
-                    const entryColor = getStatusColor(entry.status);
-                    return (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            style={{
-                              backgroundColor: `${entryColor}22`,
-                              color: entryColor,
-                              borderColor: `${entryColor}55`,
-                            }}
-                            className="capitalize"
-                          >
-                            {getStatusLabel(entry.status, locale)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(entry.date as Date | string | null)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
+        <UserBHReferralDetailTabs referral={referral as any} />
 
       </div>
     </div>

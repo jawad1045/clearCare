@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, Settings, User, Paperclip, UserCheck, Activity, FileOutput, Calendar, Hash, FileText, Loader2 } from "lucide-react";
+import { Eye, Settings, User, Paperclip, UserCheck, Activity, FileOutput, Calendar, Hash, FileText, Loader2, Edit } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
+
 import type { StatusHistoryEntry } from "@/types/status-history";
 
 type MentalHealthReferral = {
@@ -168,6 +169,7 @@ function StatusHistoryTable({
           <TableRow>
             <TableHead className="w-35 text-xs">{t("common.status")}</TableHead>
             <TableHead className="text-xs">{t("common.date")}</TableHead>
+            <TableHead className="text-xs">Changes</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -192,6 +194,7 @@ function StatusHistoryTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs whitespace-nowrap py-2">{formatDateOnly(dateStr)}</TableCell>
+                <TableCell className="text-xs py-2 text-muted-foreground">{e.changes || "—"}</TableCell>
               </TableRow>
             );
           })}
@@ -416,13 +419,12 @@ export function MentalHealthReferralDetailTabs({ referral, fetchStatusHistory }:
           <Settings className="h-4 w-4" />
           {t("common.manage")}
         </button>
+
       </div>
 
-      {tab === "view" ? (
-        <ViewTab referral={referral} />
-      ) : (
-        <ManageTab referral={referral} fetchStatusHistory={fetchStatusHistory} />
-      )}
+      {tab === "view" && <ViewTab referral={referral} />}
+      {tab === "manage" && <ManageTab referral={referral} fetchStatusHistory={fetchStatusHistory} />}
+
     </div>
   );
 }
