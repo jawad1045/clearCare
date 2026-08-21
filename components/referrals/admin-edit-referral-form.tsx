@@ -81,7 +81,7 @@ const CONTACT_METHOD_LABEL_KEYS: Record<(typeof CONTACT_METHODS)[number], Transl
   Email: "common.contactMethodEmail",
 };
 
-const DRUG_TEST_SERVICE = ["Drug Test (IOP)" , "Drug Test (OM)"];
+const DRUG_TEST_SERVICE = ["Drug Test (IOP)", "Drug Test (OM)"];
 
 function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(
@@ -107,7 +107,7 @@ function useReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
 
         })
         .superRefine((data, ctx) => {
-          if (data.serviceType === DRUG_TEST_SERVICE[0] || data.serviceType === DRUG_TEST_SERVICE[1] ) {
+          if (data.serviceType === DRUG_TEST_SERVICE[0] || data.serviceType === DRUG_TEST_SERVICE[1]) {
             if (!data.type) {
               ctx.addIssue({
                 path: ["type"],
@@ -161,7 +161,7 @@ function Field({
   );
 }
 
-type Props = { 
+type Props = {
   referralId: number;
   initialData: any;
   onSuccess?: () => void;
@@ -276,7 +276,7 @@ export function EditReferralForm({ referralId, initialData, onSuccess }: Props) 
         <h2 className="text-base font-bold text-primary-foreground">
           {t("common.edit")}
         </h2>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary-foreground">
           <span>{t("referrals.requiredFieldsNote")}</span>
           <span className="text-primary/50">·</span>
           <Lock className="h-3 w-3" />

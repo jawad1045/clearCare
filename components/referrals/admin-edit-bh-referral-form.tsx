@@ -75,7 +75,7 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           .string()
           .min(1, t("common.validation.phoneRequired"))
           .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
-          last4SSN: z
+        last4SSN: z
           .string()
           .max(4, t("referrals.last4SsnMax"))
           .optional(),
@@ -114,7 +114,7 @@ function Field({
   );
 }
 
-type Props = { 
+type Props = {
   referralId: number;
   initialData: any;
   onSuccess?: () => void;
@@ -214,7 +214,7 @@ export function EditBHReferralForm({ referralId, initialData, onSuccess }: Props
         <h2 className="text-base font-bold text-primary-foreground">
           {t("common.edit")}
         </h2>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary">
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-primary-foreground">
           <span>{t("referrals.requiredFieldsNote")}</span>
           <span className="text-primary/50">·</span>
           <Lock className="h-3 w-3" />
