@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpDown, Download, Upload } from "lucide-react";
+import { ArrowUpDown, Download, Upload, Trash } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
+import { useState, useTransition } from "react";
+
+import { deleteReferral } from "@/action/referral.action";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -275,18 +279,19 @@ export const referralColumns = (
 
  enableSorting: false,
 
- header: () => t("common.actions"),
+ header: () => <div className="text-right">{t("common.actions")}</div>,
 
  cell: ({ row }) => {
   const referral = row.original;
 
   return (
-   <div className="flex items-center gap-2">
+   <div className="flex items-center justify-end gap-2">
 
     <Button
      asChild
      size="sm"
      variant="outline"
+     className="w-[80px]"
     >
      <Link href={`${basePath}/${referral.id}`}>
       {t("common.view")}
@@ -300,7 +305,7 @@ export const referralColumns = (
       asChild
       size="sm"
       variant="outline"
-      className="gap-1.5"
+      className="gap-1.5 w-[140px]"
      >
       <Link
        href={referral.pdfResult}
@@ -317,7 +322,7 @@ export const referralColumns = (
       asChild
       size="sm"
       variant="outline"
-      className="gap-1.5 text-muted-foreground"
+      className="gap-1.5 text-muted-foreground w-[140px]"
      >
       <Link href={`${basePath}/${referral.id}`}>
        <Upload className="h-3.5 w-3.5" />
@@ -326,9 +331,47 @@ export const referralColumns = (
      </Button>
     }
 
+    <DeleteReferralButton referralId={referral.id} t={t} />
    </div>
   );
  },
 },
 
 ];
+
+function DeleteReferralButton({ referralId, t }: { referralId: number, t: TranslationFunction }) {
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="destructive"
+        className="gap-1.5 w-[90px]"
+        onClick={() => setOpen(true)}
+        disabled={isPending}
+      >
+        <Trash className="h-3.5 w-3.5" />
+        {t("common.delete") === "common.delete" ? "Delete" : t("common.delete")}
+      </Button>
+      <ConfirmDialog
+        open={open}
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          setOpen(false);
+          startTransition(async () => {
+            try {
+              await deleteReferral(referralId);
+            } catch (err) {
+              console.error(err);
+            }
+          });
+        }}
+        title="Delete Referral"
+        description="Are you sure you want to delete this referral? This action cannot be undone."
+        confirmLabel="Delete"
+      />
+    </>
+  );
+}

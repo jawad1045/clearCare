@@ -817,3 +817,23 @@ export async function userUpdateReferralDetails(referralId: number, formData: Fo
 
   return true;
 }
+
+export async function deleteReferral(referralId: number) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  await prisma.referralStatusHistory.deleteMany({
+    where: { referralId },
+  });
+
+  await prisma.referral.delete({
+    where: { id: referralId },
+  });
+
+  revalidatePath("/admin/referrals");
+  revalidatePath("/admin/reports");
+}

@@ -737,3 +737,23 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
 
   return true;
 }
+
+export async function deleteBHReferral(referralId: number) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  await prisma.bHReferralStatusHistory.deleteMany({
+    where: { referralId },
+  });
+
+  await prisma.mentalHealthReferral.delete({
+    where: { id: referralId },
+  });
+
+  revalidatePath("/admin/bhreferrals");
+  revalidatePath("/admin/reports");
+}
