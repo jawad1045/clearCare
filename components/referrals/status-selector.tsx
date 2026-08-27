@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import { updateReferralStatus } from "@/action/referral.action";
-import { updateBHReferralStatus } from "@/action/bh-referral.action";
+import { updateReferralStatus, addReferralNote } from "@/action/referral.action";
+import { updateBHReferralStatus, addBHReferralNote } from "@/action/bh-referral.action";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 import {
   Select,
@@ -35,6 +36,7 @@ export function UpdateStatusForm({
     (REFERRAL_STATUSES as readonly string[]).includes(currentStatus) ? currentStatus : "Pending"
   );
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState("");
 
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -42,16 +44,22 @@ export function UpdateStatusForm({
   const handleSelect = (value: string) => {
     if (value === status) return;
     setPendingStatus(value);
+    setNoteContent("");
   };
 
   const handleConfirm = () => {
     if (!pendingStatus) return;
     const newStatus = pendingStatus;
+    const currentNote = noteContent.trim();
     setPendingStatus(null);
+    setNoteContent("");
 
     startTransition(async () => {
       try {
         if (isBH) {
+          if (currentNote) {
+            await addBHReferralNote(referralId, currentNote, newStatus);
+          }
           const redirectTo = await updateBHReferralStatus(referralId, newStatus);
 
           setStatus(newStatus);
@@ -64,6 +72,9 @@ export function UpdateStatusForm({
 
           router.refresh();
         } else {
+          if (currentNote) {
+            await addReferralNote(referralId, currentNote, newStatus);
+          }
           await updateReferralStatus(referralId, newStatus);
 
           setStatus(newStatus);
@@ -83,11 +94,23 @@ export function UpdateStatusForm({
       <ConfirmDialog
         open={pendingStatus !== null}
         onConfirm={handleConfirm}
-        onCancel={() => setPendingStatus(null)}
+        onCancel={() => {
+          setPendingStatus(null);
+          setNoteContent("");
+        }}
         title={t("referrals.updateStatusTitle")}
         description={t("referrals.updateStatusDescription", { status: pendingStatus ? getStatusLabel(pendingStatus, locale) : "" })}
         confirmLabel={t("referrals.updateStatusConfirm")}
-      />
+      >
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Would you like to add an admin note? (Optional)</p>
+          <Textarea 
+            placeholder="Type a note here..." 
+            value={noteContent}
+            onChange={(e) => setNoteContent(e.target.value)}
+          />
+        </div>
+      </ConfirmDialog>
 
       <div>
         <Select

@@ -837,3 +837,89 @@ export async function deleteReferral(referralId: number) {
   revalidatePath("/admin/referrals");
   revalidatePath("/admin/reports");
 }
+
+export async function getReferralNotes(referralId: number) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return [];
+
+  // Both Admin and User can view notes, but User can only view if it's their referral
+  if (currentUser.role !== "Admin") {
+    const referral = await prisma.referral.findUnique({
+      where: { id: referralId },
+      select: { companyAcctId: true },
+    });
+    const userRecord = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { acctId: true },
+    });
+    if (!referral || !userRecord || referral.companyAcctId !== userRecord.acctId) {
+      return [];
+    }
+  }
+
+  const notes = await prisma.referralNote.findMany({
+    where: { referralId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          contactFirstName: true,
+          contactLastName: true,
+        },
+      },
+    },
+  });
+
+  return notes;
+}
+
+export async function addReferralNote(referralId: number, noteText: string, status?: string) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  const newNote = await prisma.referralNote.create({
+    data: {
+      referralId,
+      note: noteText,
+      status,
+      createdBy: currentUser.id,
+    },
+  });
+
+  revalidatePath(`/admin/referrals/${referralId}`);
+  revalidatePath(`/user/referrals/${referralId}`);
+  return newNote;
+}
+
+export async function editReferralNote(noteId: number, noteText: string) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  const existingNote = await prisma.referralNote.findUnique({
+    where: { id: noteId },
+  });
+
+  if (!existingNote) {
+    throw new Error("Note not found");
+  }
+
+  // Optionally ensure only the creator can edit, or any admin can edit. We assume any admin.
+  const updatedNote = await prisma.referralNote.update({
+    where: { id: noteId },
+    data: {
+      note: noteText,
+    },
+  });
+
+  revalidatePath(`/admin/referrals/${existingNote.referralId}`);
+  revalidatePath(`/user/referrals/${existingNote.referralId}`);
+  return updatedNote;
+}

@@ -15,6 +15,7 @@ import { SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filter
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import { UserEditReferralForm } from "./user-edit-referral-form";
+import { NotesTab } from "./notes-tab";
 
 type Referral = {
   id: number;
@@ -349,7 +350,7 @@ function ViewTab({ referral }: { referral: Referral }) {
 
 export function UserReferralDetailTabs({ referral }: Props) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<"view" | "edit">("view");
+  const [tab, setTab] = useState<"view" | "edit" | "notes">("view");
 
   const canEdit = referral.status?.trim().toLowerCase() === "pending";
 
@@ -380,6 +381,17 @@ export function UserReferralDetailTabs({ referral }: Props) {
             {t("common.edit")}
           </button>
         )}
+        <button
+          onClick={() => setTab("notes")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            tab === "notes"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          Admin Notes
+        </button>
       </div>
 
       {tab === "view" && <ViewTab referral={referral} />}
@@ -388,6 +400,7 @@ export function UserReferralDetailTabs({ referral }: Props) {
           <UserEditReferralForm referralId={referral.id} initialData={referral} onSuccess={() => setTab("view")} />
         </div>
       )}
+      {tab === "notes" && <NotesTab referralId={referral.id} currentStatus={referral.status} isBH={false} isAdmin={false} />}
     </div>
   );
 }

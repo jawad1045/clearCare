@@ -111,9 +111,9 @@ async function notifyStatusChange(opts: {
 }) {
   const referral = await prisma.mentalHealthReferral.findUnique({
     where: { id: opts.referralId },
-    include: { 
-      user: true, 
-      company: true 
+    include: {
+      user: true,
+      company: true
     },
   });
   if (!referral) return;
@@ -228,7 +228,7 @@ export async function createBHReferral(formData: FormData) {
 
   const patientName = `${bhReferral.firstName} ${bhReferral.lastName}`;
   const userName = `${user.contactFirstName} ${user.contactLastName}`;
-  
+
   const companyName = user.company?.organization ?? user.organization ?? "Unknown Company";
   const nowFormatted = formatDateTime(new Date());
 
@@ -242,7 +242,7 @@ export async function createBHReferral(formData: FormData) {
     userViewPath: `/user/bhreferrals/${bhReferral.id}`,
     adminViewPath: `/admin/bhreferrals/${bhReferral.id}`,
     submittedAt: nowFormatted,
-  }).catch(() => {});
+  }).catch(() => { });
 
   revalidatePath("/admin/bhreferrals");
   revalidatePath("/user/bhreferrals");
@@ -412,7 +412,7 @@ export async function updateBHReferralStatus(referralId: number, status: string)
   const updated = await prisma.$transaction(async (tx) => {
     const referral = await tx.mentalHealthReferral.update({
       where: { id: referralId },
-      data: { 
+      data: {
         status,
         lastUpdated: now,
       },
@@ -437,7 +437,7 @@ export async function updateBHReferralStatus(referralId: number, status: string)
     patientName: `${updated.firstName} ${updated.lastName}`,
     userViewPath: `/user/bhreferrals/${referralId}`,
     updatedAt: nowFormatted,
-  }).catch(() => {});
+  }).catch(() => { });
 
   revalidatePath("/admin/bhreferrals");
   revalidatePath(`/admin/bhreferrals/${referralId}`);
@@ -492,15 +492,15 @@ export async function updateBHReferralResult(referralId: number, pdfUrl: string)
   const referral = await prisma.mentalHealthReferral.update({
     where: { id: referralId },
     data: { pdfReport: pdfUrl },
-    include: { 
-      user: true, 
-      company: true 
+    include: {
+      user: true,
+      company: true
     },
   });
 
   const patientName = `${referral.firstName} ${referral.lastName}`;
   const userName = `${referral.user.contactFirstName} ${referral.user.contactLastName}`;
-  
+
   const companyName =
     referral.company?.organization ??
     referral.user.organization ??
@@ -600,14 +600,14 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
 
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
   };
-  
+
   let changes: string[] = [];
   const addChange = (field: string, oldVal: any, newVal: any) => {
     if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
       changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
     }
   };
-  
+
   addChange("First Name", existingReferral.firstName, newData.firstName);
   addChange("Last Name", existingReferral.lastName, newData.lastName);
   addChange("Phone", existingReferral.phone, newData.phone);
@@ -616,7 +616,7 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
   addChange("Last 4 SSN", existingReferral.last4SSN, newData.last4SSN);
   addChange("Grade", existingReferral.grade, newData.grade);
 
-  
+
   const oldReferralTypes = existingReferral.referralType.join(",");
   const newReferralTypes = newData.referralType.join(",");
   if (oldReferralTypes !== newReferralTypes) {
@@ -641,7 +641,7 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
 
   revalidatePath("/admin/bhreferrals");
   revalidatePath(`/admin/bhreferrals/${referralId}`);
-  
+
   return true;
 }
 
@@ -756,4 +756,90 @@ export async function deleteBHReferral(referralId: number) {
 
   revalidatePath("/admin/bhreferrals");
   revalidatePath("/admin/reports");
+}
+
+export async function getBHReferralNotes(referralId: number) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return [];
+
+  // Both Admin and User can view notes, but User can only view if it's their referral
+  if (currentUser.role !== "Admin") {
+    const referral = await prisma.mentalHealthReferral.findUnique({
+      where: { id: referralId },
+      select: { companyAcctId: true },
+    });
+    const userRecord = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { acctId: true },
+    });
+    if (!referral || !userRecord || referral.companyAcctId !== userRecord.acctId) {
+      return [];
+    }
+  }
+
+  const notes = await prisma.bHReferralNote.findMany({
+    where: { referralId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          contactFirstName: true,
+          contactLastName: true,
+        },
+      },
+    },
+  });
+
+  return notes;
+}
+
+export async function addBHReferralNote(referralId: number, noteText: string, status?: string) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  const newNote = await prisma.bHReferralNote.create({
+    data: {
+      referralId,
+      note: noteText,
+      status,
+      createdBy: currentUser.id,
+    },
+  });
+
+  revalidatePath(`/admin/bhreferrals/${referralId}`);
+  revalidatePath(`/user/bhreferrals/${referralId}`);
+  return newNote;
+}
+
+export async function editBHReferralNote(noteId: number, noteText: string) {
+  const currentUser = await getCurrentUser();
+  const { t } = await getServerTranslation();
+
+  if (!currentUser || currentUser.role !== "Admin") {
+    throw new Error(t("common.errors.unauthorized"));
+  }
+
+  const existingNote = await prisma.bHReferralNote.findUnique({
+    where: { id: noteId },
+  });
+
+  if (!existingNote) {
+    throw new Error("Note not found");
+  }
+
+  // Optionally ensure only the creator can edit, or any admin can edit. We assume any admin.
+  const updatedNote = await prisma.bHReferralNote.update({
+    where: { id: noteId },
+    data: {
+      note: noteText,
+    },
+  });
+
+  revalidatePath(`/admin/bhreferrals/${existingNote.referralId}`);
+  revalidatePath(`/user/bhreferrals/${existingNote.referralId}`);
+  return updatedNote;
 }

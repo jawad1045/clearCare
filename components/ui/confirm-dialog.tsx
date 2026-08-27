@@ -18,6 +18,7 @@ interface ConfirmDialogProps {
   title?: string
   description?: string
   confirmLabel?: string
+  children?: React.ReactNode
 }
 
 export function ConfirmDialog({
@@ -27,6 +28,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  children,
 }: ConfirmDialogProps) {
   const { t } = useTranslation()
 
@@ -37,6 +39,7 @@ export function ConfirmDialog({
           <DialogTitle>{title ?? t("common.confirmSubmissionTitle")}</DialogTitle>
           <DialogDescription>{description ?? t("common.confirmSubmissionDescription")}</DialogDescription>
         </DialogHeader>
+        {children && <div className="py-4">{children}</div>}
         <DialogFooter>
           <Button variant="outline" type="button" onClick={onCancel}>
             {t("common.cancel")}

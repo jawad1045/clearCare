@@ -18,6 +18,7 @@ import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import { EditReferralForm } from "./admin-edit-referral-form";
 import type { StatusHistoryEntry } from "@/types/status-history";
+import { NotesTab } from "./notes-tab";
 
 type Referral = {
   id: number;
@@ -463,7 +464,7 @@ function ManageTab({
 
 export function ReferralDetailTabs({ referral, isBH = false, fetchStatusHistory }: Props) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<"view" | "manage" | "edit">("view");
+  const [tab, setTab] = useState<"view" | "manage" | "edit" | "notes">("view");
 
   return (
     <div className="space-y-4">
@@ -503,6 +504,17 @@ export function ReferralDetailTabs({ referral, isBH = false, fetchStatusHistory 
           <Edit className="h-4 w-4" />
           {t("common.edit")}
         </button>
+        <button
+          onClick={() => setTab("notes")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            tab === "notes"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          Admin Notes
+        </button>
 
       </div>
 
@@ -513,6 +525,7 @@ export function ReferralDetailTabs({ referral, isBH = false, fetchStatusHistory 
           <EditReferralForm referralId={referral.id} initialData={referral as any} onSuccess={() => setTab("view")} />
         </div>
       )}
+      {tab === "notes" && <NotesTab referralId={referral.id} currentStatus={referral.status} isBH={isBH} isAdmin={true} />}
     </div>
   );
 }
