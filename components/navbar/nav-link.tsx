@@ -35,7 +35,7 @@ export function NavLinks({ menu, role, name }: any) {
       {/* ========================================== */}
       {/* DESKTOP NAVIGATION                         */}
       {/* ========================================== */}
-      <nav className="hidden md:flex items-center w-full h-full p-4 gap-8 text-sm text-sidebar-foreground">
+      <nav className="hidden md:flex items-center w-full h-full px-4 py-2 gap-4 text-sm text-sidebar-foreground">
         {menu.map((item: any) =>
           item.children ? (
             <DropdownMenu key={item.labelKey}>

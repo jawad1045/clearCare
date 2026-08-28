@@ -6,6 +6,7 @@ export const adminMenu = [
     { labelKey: "nav.users", href: "/admin/users" },
     { labelKey: "nav.referrals", href: "/admin/referrals" },
     { labelKey: "nav.bhReferrals", href: "/admin/bhreferrals" },
+    { labelKey: "nav.notes", href: "/admin/notes" },
     { labelKey: "nav.settings", href: "/admin/settings" },
 ] as const;
 
@@ -13,4 +14,5 @@ export const userMenu = [
     { labelKey: "nav.dashboard", href: "/user" },
     { labelKey: "nav.referrals", href: "/user/referrals" },
     { labelKey: "nav.bhReferrals", href: "/user/bhreferrals" },
+    { labelKey: "nav.notes", href: "/user/notes" },
 ] as const;
