@@ -280,7 +280,8 @@
   },
   "referrals": {
     "referralTypeNewIopBattery": "New IOP Battery",
-    "referralTypeIndividualIopTherapy": "Individual IOP Therapy",
+    "referralTypeNewOpBattery": "New OP Battery",
+    "referralTypeIndividualIopOpTherapy": "Individual IOP/OP Therapy",
     "referralTypeGeneralTherapy": "General Therapy",
     "referralTypeCouplesTherapy": "Couples Therapy",
     "referralTypeMedicationManagement": "Medication Management",

@@ -41,9 +41,10 @@ const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "1
 // ── Referral Type: now a multi-select checkbox group (per Isaiah House feedback) ──
 const BH_REFERRAL_TYPES = [
   "New IOP (Battery)",
+  "New OP (Battery)",
   "Psych. Evaluation (Youth)",
   "Psych. Evaluation (Adult)",
-  "Individual IOP Therapy",
+  "Individual IOP/OP Therapy",
   "General Therapy",
   "Couples Therapy",
   "Medication Management (MAT)",
@@ -64,9 +65,10 @@ const BH_REFERRAL_TYPES = [
 //   referrals.referralTypeElderCareNow
 const BH_REFERRAL_TYPE_LABEL_KEYS: Record<(typeof BH_REFERRAL_TYPES)[number], TranslationKey> = {
   "New IOP (Battery)": "referrals.referralTypeNewIopBattery",
+  "New OP (Battery)": "referrals.referralTypeNewOpBattery",
   "Psych. Evaluation (Youth)": "referrals.referralTypePsychYouth",
   "Psych. Evaluation (Adult)": "referrals.referralTypePsychAdult",
-  "Individual IOP Therapy": "referrals.referralTypeIndividualIopTherapy",
+  "Individual IOP/OP Therapy": "referrals.referralTypeIndividualIopOpTherapy",
   "General Therapy": "referrals.referralTypeGeneralTherapy",
   "Couples Therapy": "referrals.referralTypeCouplesTherapy",
   "Medication Management (MAT)": "referrals.referralTypeMedicationManagement",

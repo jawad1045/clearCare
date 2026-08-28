@@ -25,9 +25,10 @@ const SERVICE_TYPE = "Medical";
 // Updated per Isaiah House feedback — matches BH_REFERRAL_TYPES in create-bh-referral-form.tsx
 const VALID_REFERRAL_TYPES = [
   "New IOP (Battery)",
+  "New OP (Battery)",
   "Psych. Evaluation (Youth)",
   "Psych. Evaluation (Adult)",
-  "Individual IOP Therapy",
+  "Individual IOP/OP Therapy",
   "General Therapy",
   "Couples Therapy",
   "Medication Management (MAT)",
