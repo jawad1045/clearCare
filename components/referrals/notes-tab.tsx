@@ -90,9 +90,9 @@ export function NotesTab({ referralId, isBH, isAdmin, currentStatus }: { referra
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="space-y-1.5">
-          <CardTitle>Admin Notes</CardTitle>
+          <CardTitle>{t("notesTab.title")}</CardTitle>
           <CardDescription>
-            {isAdmin ? "Add and manage internal notes for this referral." : "Internal notes from administrators."}
+            {isAdmin ? t("notesTab.descriptionAdmin") : t("notesTab.descriptionUser")}
           </CardDescription>
         </div>
         <div>
@@ -115,13 +115,13 @@ export function NotesTab({ referralId, isBH, isAdmin, currentStatus }: { referra
         {isAdmin && (
           <div className="space-y-3">
             <Textarea
-              placeholder="Type a new note..."
+              placeholder={t("notesTab.addNotePlaceholder")}
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
               disabled={isSubmitting}
             />
             <Button onClick={handleAdd} disabled={isSubmitting || !newNote.trim()}>
-              <Plus className="mr-2 h-4 w-4" /> Add Note
+              <Plus className="mr-2 h-4 w-4" /> {t("notesTab.addNoteBtn")}
             </Button>
           </div>
         )}
@@ -131,17 +131,17 @@ export function NotesTab({ referralId, isBH, isAdmin, currentStatus }: { referra
             <TableHeader>
               <TableRow>
                 <TableHead className="w-35 text-xs">{t("common.date")}</TableHead>
-                <TableHead className="text-xs">Author</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs">Note</TableHead>
-                {isAdmin && <TableHead className="text-xs text-right">Actions</TableHead>}
+                <TableHead className="text-xs">{t("notesTab.author")}</TableHead>
+                <TableHead className="text-xs">{t("notesTab.status")}</TableHead>
+                <TableHead className="text-xs">{t("notesTab.noteToggle")}</TableHead>
+                {isAdmin && <TableHead className="text-xs text-right">{t("notesTab.actions")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {notes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center">
-                    <p className="text-sm text-muted-foreground italic">No notes found.</p>
+                    <p className="text-sm text-muted-foreground italic">{t("notesTab.noNotesFound")}</p>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -181,10 +181,10 @@ export function NotesTab({ referralId, isBH, isAdmin, currentStatus }: { referra
                           />
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleEdit(note.id)} disabled={isSubmitting || !editNoteText.trim()}>
-                              <Check className="mr-1 h-3.5 w-3.5" /> Save
+                              <Check className="mr-1 h-3.5 w-3.5" /> {t("notesTab.save")}
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setEditingId(null)} disabled={isSubmitting}>
-                              <X className="mr-1 h-3.5 w-3.5" /> Cancel
+                              <X className="mr-1 h-3.5 w-3.5" /> {t("notesTab.cancel")}
                             </Button>
                           </div>
                         </div>
@@ -199,7 +199,7 @@ export function NotesTab({ referralId, isBH, isAdmin, currentStatus }: { referra
                             setEditingId(note.id);
                             setEditNoteText(note.note);
                           }}>
-                            <Edit2 className="h-3.5 w-3.5" />
+                            {t("notesTab.edit")}
                           </Button>
                         )}
                       </TableCell>

@@ -145,14 +145,14 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
       accessorKey: "createdAt",
       header: ({ column }) => (
         <Button variant="ghost" className="px-0 font-semibold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Status date <ArrowUpDown className="ml-2 h-4 w-4" />
+          {t("notesTab.statusDate")} <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => <span className="text-sm">{formatDateTime(row.original.createdAt)}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("notesTab.status"),
       cell: ({ row }) => {
         const status = row.original.status;
         if (!status) return <span className="text-muted-foreground italic">—</span>;
@@ -173,28 +173,28 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
     },
     {
       accessorKey: "referralId",
-      header: "Pat ID",
+      header: t("notesTab.patId"),
       cell: ({ row }) => <span className="font-medium text-primary">#{row.original.referralId}</span>,
     },
     {
       id: "patient",
-      header: "Patient",
+      header: t("notesTab.patient"),
       cell: ({ row }) => <span className="font-medium">{row.original.patientFirstName} {row.original.patientLastName}</span>,
     },
     {
       accessorKey: "referName",
-      header: "Referrer",
+      header: t("notesTab.referrer"),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.referName}</span>,
     },
     {
       id: "noteToggle",
-      header: "Note (toggle)",
+      header: t("notesTab.noteToggle"),
       cell: ({ row }) => {
         const note = row.original;
         const isExpanded = expandedNotes.has(note.noteId);
         
         if (!note.note) {
-          return <span className="text-muted-foreground italic text-sm">No note</span>;
+          return <span className="text-muted-foreground italic text-sm">{t("notesTab.noNote")}</span>;
         }
 
         return (
@@ -205,7 +205,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
               onClick={() => toggleNote(note.noteId)}
               className="h-8 gap-1.5 font-normal shadow-sm"
             >
-              {isExpanded ? "Hide" : "Show"}
+              {isExpanded ? t("notesTab.hide") : t("notesTab.show")}
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 width="24" 
@@ -246,7 +246,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
               className="h-8 px-3 font-normal shadow-sm"
               onClick={() => openEditModal(note)}
             >
-              Edit
+              {t("notesTab.edit")}
             </Button>
           </div>
         );
@@ -281,12 +281,12 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
         <div className="flex flex-wrap gap-3 overflow-x-auto">
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="All Referral Types" />
+              <SelectValue placeholder={t("notesTab.allReferralTypes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Referral Types</SelectItem>
-              <SelectItem value="Medical">Medical Referrals</SelectItem>
-              <SelectItem value="BH">Behavioral Health</SelectItem>
+              <SelectItem value="all">{t("notesTab.allReferralTypes")}</SelectItem>
+              <SelectItem value="Medical">{t("notesTab.medicalReferrals")}</SelectItem>
+              <SelectItem value="BH">{t("notesTab.behavioralHealth")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -306,13 +306,13 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
 
           <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
             <SelectTrigger className="w-28">
-              <SelectValue placeholder="Rows" />
+              <SelectValue placeholder={t("notesTab.rows")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="10">10 / page</SelectItem>
-              <SelectItem value="20">20 / page</SelectItem>
-              <SelectItem value="50">50 / page</SelectItem>
-              <SelectItem value="100">100 / page</SelectItem>
+              <SelectItem value="10">10 {t("notesTab.perPage")}</SelectItem>
+              <SelectItem value="20">20 {t("notesTab.perPage")}</SelectItem>
+              <SelectItem value="50">50 {t("notesTab.perPage")}</SelectItem>
+              <SelectItem value="100">100 {t("notesTab.perPage")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -320,7 +320,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
         <div className="flex items-center gap-2 shrink-0">
           <Input
             className="w-56"
-            placeholder="Search notes..."
+            placeholder={t("notesTab.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -354,7 +354,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  No notes found.
+                  {t("notesTab.noNotesFound")}
                 </TableCell>
               </TableRow>
             )}
@@ -372,26 +372,26 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
       <Dialog open={!!editingNote} onOpenChange={(open) => !open && setEditingNote(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit Note</DialogTitle>
+            <DialogTitle>{t("notesTab.editNote")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Textarea
               value={editNoteText}
               onChange={(e) => setEditNoteText(e.target.value)}
               className="min-h-[120px]"
-              placeholder="Enter note text..."
+              placeholder={t("notesTab.enterNoteText")}
               disabled={isSubmitting}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingNote(null)} disabled={isSubmitting}>
-              Cancel
+              {t("notesTab.cancel")}
             </Button>
             <Button onClick={handleSaveEdit} disabled={isSubmitting || !editNoteText.trim()}>
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Save Changes
+              {t("notesTab.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
