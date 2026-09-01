@@ -45,6 +45,22 @@ export function columns(
     },
 
     {
+      accessorKey: "patientId",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() =>
+            column.toggleSorting(column.getIsSorted() === "asc")
+          }
+        >
+          Patient ID
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <>{row.original.patientId || "-"}</>,
+    },
+
+    {
       id: "client",
       accessorFn: (row) =>
         `${row.firstName ?? ""} ${row.lastName ?? ""}`,

@@ -135,6 +135,10 @@ export function AdminBHReferralsTable({
           .includes(q) ||
 
         String(r.id)
+          .includes(q) ||
+
+        (r.patientId || "")
+          .toLowerCase()
           .includes(q)
       )
       : [...referrals];
@@ -254,7 +258,8 @@ export function AdminBHReferralsTable({
         "Patient Last Name",
         "Phone",
         "Email",
-        "Last 4 SSN",
+        "SSN",
+        "Patient ID",
         "Gender",
         "Grade",
         "Referral Type",
@@ -276,7 +281,8 @@ export function AdminBHReferralsTable({
         r.lastName,
         r.phone,
         r.email || "",
-        r.last4SSN || "",
+        r.ssn || "",
+        r.patientId || "",
         r.gender,
         r.grade || "",
         Array.isArray(r.referralType) ? r.referralType.join(", ") : (r.referralType || ""),

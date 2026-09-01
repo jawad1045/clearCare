@@ -3,7 +3,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
-import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createNotification } from "@/action/notification.action";
@@ -20,6 +19,8 @@ import {
 } from "@/lib/slack";
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
+import { generatePatientId } from "@/lib/patient-id";
+import { encryptString } from "@/lib/encryption";
 
 const DRUG_TEST_SERVICES = ["Drug Test (IOP)", "Drug Test (OP)"];
 
@@ -170,7 +171,7 @@ export async function createReferral(formData: FormData) {
   }
 
   const ssn = formData.get("ssn") as string;
-  const encryptedSSN = await bcrypt.hash(ssn, 10);
+  const encryptedSSN = encryptString(ssn);
 
   if (!user.acctId) {
     throw new Error(t("referrals.errorNoCompanyAssociated"));
@@ -211,6 +212,7 @@ export async function createReferral(formData: FormData) {
       race: formData.get("race") as string,
       gender: formData.get("gender") as string,
       ssn: encryptedSSN,
+      patientId: generatePatientId(ssn),
       status: (formData.get("status") as string) || "Pending",
       notes: formData.get("notes") as string,
       referName: `${user.contactFirstName} ${user.contactLastName}`,
@@ -671,7 +673,14 @@ export async function updateReferralDetails(referralId: number, formData: FormDa
     methodOfContact: formData.getAll("contactMethod").join(",") || null,
     datePatientContact: parsedContactDate,
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
-  };
+  } as any;
+
+  const ssnRaw = formData.get("ssn") as string;
+  if (ssnRaw) {
+    newData.ssn = encryptString(ssnRaw);
+    newData.patientId = generatePatientId(ssnRaw);
+    addChange("SSN", existingReferral.ssn, encryptString(ssnRaw));
+  }
 
   addChange("Service Type", existingReferral.serviceType, newData.serviceType);
   addChange("Priority", existingReferral.priority, newData.priority);
@@ -776,7 +785,14 @@ export async function userUpdateReferralDetails(referralId: number, formData: Fo
     methodOfContact: formData.getAll("contactMethod").join(",") || null,
     datePatientContact: parsedContactDate,
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
-  };
+  } as any;
+
+  const ssnRaw = formData.get("ssn") as string;
+  if (ssnRaw) {
+    newData.ssn = encryptString(ssnRaw);
+    newData.patientId = generatePatientId(ssnRaw);
+    addChange("SSN", existingReferral.ssn, encryptString(ssnRaw));
+  }
 
   addChange("Service Type", existingReferral.serviceType, newData.serviceType);
   addChange("Priority", existingReferral.priority, newData.priority);

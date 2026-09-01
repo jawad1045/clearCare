@@ -76,7 +76,8 @@ const globalFilterFn: FilterFn<Referral> = (row, _columnId, filterValue) => {
     `${r.parentFirstName ?? ""} ${r.parentLastName ?? ""}`.toLowerCase().includes(q) ||
     r.serviceType.toLowerCase().includes(q) ||
     r.status.toLowerCase().includes(q) ||
-    String(r.id).includes(q)
+    String(r.id).includes(q) ||
+    (r.patientId || "").toLowerCase().includes(q)
   );
 };
 

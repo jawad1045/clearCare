@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { ResultUploader } from "@/components/referrals/result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
+import { decryptString } from "@/lib/encryption";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filters";
 import { useTranslation } from "@/locale/use-translation";
@@ -29,6 +30,7 @@ type Referral = {
   parentPhone: string | null;
   patientFirstName: string;
   patientLastName: string;
+  patientId: string | null;
   dob: Date;
   grade: string | null;
   race: string;
@@ -101,6 +103,7 @@ function ReferralSummaryCard({ referral }: { referral: Referral }) {
       <CardContent className="pt-4">
         <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
           <InfoRow label={t("common.fullName")} value={`${referral.patientFirstName} ${referral.patientLastName}`} />
+          <InfoRow label="Patient ID" value={referral.patientId} />
           <InfoRow
             label={t("referrals.submittedByLabel")}
             value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`}
@@ -287,7 +290,7 @@ function ViewTab({ referral }: { referral: Referral }) {
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
             <InfoRow label={t("referrals.raceLabel")} value={referral.race} />
-            <InfoRow label={t("referrals.ssnLabel")} value="••••••••••" />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? `••••-••-${decryptString(referral.ssn).slice(-4)}` : "—"} />
           </CardContent>
         </Card>
 

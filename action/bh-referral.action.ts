@@ -19,6 +19,8 @@ import {
 } from "@/lib/slack";
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
+import { generatePatientId } from "@/lib/patient-id";
+import { encryptString } from "@/lib/encryption";
 
 const SERVICE_TYPE = "Medical";
 
@@ -185,9 +187,9 @@ export async function createBHReferral(formData: FormData) {
     throw new Error(t("referrals.errorMaxFilesAllowed"));
   }
 
-  const last4SSN = (formData.get("last4SSN") as string) ?? "";
-  if (last4SSN.length !== 4) {
-    throw new Error(t("referrals.errorLast4SsnOnly"));
+  const ssn = (formData.get("ssn") as string) ?? "";
+  if (!ssn) {
+    throw new Error(t("referrals.errorLast4SsnOnly")); // Maybe keep or change message
   }
 
   // Form now submits one or more "referralTypes" entries (checkbox multi-select)
@@ -216,7 +218,8 @@ export async function createBHReferral(formData: FormData) {
       firstName: formData.get("firstName") as string,
       lastName: formData.get("lastName") as string,
       phone: formData.get("phone") as string,
-      last4SSN,
+      ssn: encryptString(ssn),
+      patientId: generatePatientId(ssn),
       email: (formData.get("email") as string) || null,
       gender: formData.get("gender") as string,
       grade: grade || null,
@@ -593,14 +596,20 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
     phone: formData.get("phone") as string,
-    last4SSN: formData.get("last4SSN") as string,
+    ssn: formData.get("ssn") as string,
     email: (formData.get("email") as string) || null,
     gender: formData.get("gender") as string,
     grade: (formData.get("grade") as string) || null,
     referralType: referralTypes,
 
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
-  };
+  } as any;
+
+  const ssnRaw = formData.get("ssn") as string;
+  if (ssnRaw) {
+    newData.ssn = encryptString(ssnRaw);
+    newData.patientId = generatePatientId(ssnRaw);
+  }
 
   let changes: string[] = [];
   const addChange = (field: string, oldVal: any, newVal: any) => {
@@ -614,7 +623,7 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
   addChange("Phone", existingReferral.phone, newData.phone);
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
-  addChange("Last 4 SSN", existingReferral.last4SSN, newData.last4SSN);
+  addChange("SSN", existingReferral.ssn, newData.ssn);
   addChange("Grade", existingReferral.grade, newData.grade);
 
 
@@ -684,14 +693,20 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
     phone: formData.get("phone") as string,
-    last4SSN: formData.get("last4SSN") as string,
+    ssn: formData.get("ssn") as string,
     email: (formData.get("email") as string) || null,
     gender: formData.get("gender") as string,
     grade: (formData.get("grade") as string) || null,
     referralType: referralTypes,
     notes: (formData.get("notes") as string) || null,
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
-  };
+  } as any;
+
+  const ssnRaw = formData.get("ssn") as string;
+  if (ssnRaw) {
+    newData.ssn = encryptString(ssnRaw);
+    newData.patientId = generatePatientId(ssnRaw);
+  }
 
   let changes: string[] = [];
   const addChange = (field: string, oldVal: any, newVal: any) => {
@@ -705,7 +720,7 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
   addChange("Phone", existingReferral.phone, newData.phone);
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
-  addChange("Last 4 SSN", existingReferral.last4SSN, newData.last4SSN);
+  addChange("SSN", existingReferral.ssn, newData.ssn);
   addChange("Grade", existingReferral.grade, newData.grade);
   addChange("Notes", existingReferral.notes, newData.notes);
 

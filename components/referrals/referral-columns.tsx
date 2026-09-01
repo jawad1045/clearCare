@@ -27,6 +27,7 @@ import type { StatusHistoryEntry } from "@/types/status-history";
 
 export type Referral = {
   id: number;
+  patientId: string | null;
   patientFirstName: string;
   patientLastName: string;
   serviceType: string;
@@ -82,7 +83,26 @@ export const referralColumns = (
  )
 },
 
+{
+ accessorKey:"patientId",
 
+ header:({column})=>(
+   <Button
+    variant="ghost"
+    className="px-0"
+    onClick={()=>column.toggleSorting(
+      column.getIsSorted()==="asc"
+    )}
+   >
+    Patient ID
+    <ArrowUpDown className="ml-2 h-4 w-4"/>
+   </Button>
+ ),
+
+ cell:({row})=>(
+   <>{row.original.patientId || "-"}</>
+ )
+},
 
 {
  id:"patient",

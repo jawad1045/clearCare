@@ -124,6 +124,7 @@ export const REFERRAL_HEADERS = [
   "Service Type",
   "Patient First Name",
   "Patient Last Name",
+  "Patient ID",
   "DOB",
   "Grade",
   "Race",
@@ -158,6 +159,7 @@ export function getReferralExportRows(
     r.serviceType,
     r.patientFirstName,
     r.patientLastName,
+    r.patientId ?? "",
     fmtDate(r.dob),
     r.grade ?? "",
     r.race,
@@ -195,8 +197,9 @@ export const MENTAL_HEALTH_REFERRAL_HEADERS = [
   "First Name",
   "Last Name",
   "Phone",
-  "Last 4 SSN",
   "Email",
+  "SSN",
+  "Patient ID",
   "Gender",
   "Status",
   "Referral Type",
@@ -211,8 +214,10 @@ export const MENTAL_HEALTH_REFERRAL_HEADERS = [
 ];
 
 export function getMentalHealthReferralExportRows(
-  referrals: MentalHealthReferralWithRelations[]
+  referrals: MentalHealthReferralWithRelations[],
+  options: { revealSSN?: boolean } = {}
 ): any[][] {
+  const { revealSSN = false } = options;
   return referrals.map((r) => [
     r.id,
     r.company?.organization ?? "",
@@ -220,8 +225,9 @@ export function getMentalHealthReferralExportRows(
     r.firstName,
     r.lastName,
     r.phone,
-    r.last4SSN,
     r.email ?? "",
+    revealSSN ? r.ssn : maskSSN(r.ssn),
+    r.patientId ?? "",
     r.gender,
     r.status,
     r.referralType ?? "",

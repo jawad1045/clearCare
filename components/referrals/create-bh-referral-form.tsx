@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { formatPhoneInput } from "@/lib/utils";
+import { formatPhoneInput, formatSSNInput } from "@/lib/utils";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -88,11 +88,7 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           .string()
           .min(1, t("common.validation.phoneRequired"))
           .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
-        last4SSN: z
-          .string()
-          .min(1, t("referrals.last4SsnRequired"))
-          .max(4, t("referrals.last4SsnMax"))
-          .regex(/^\d{4}$/, t("referrals.last4SsnFormat")),
+        ssn: z.string().regex(/^\d{4}$/, t("referrals.errorLast4SsnOnly")),
         email: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
         gender: z.string().min(1, t("referrals.genderRequired")),
         grade: z.string().optional(),
@@ -151,7 +147,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
       firstName: "",
       lastName: "",
       phone: "",
-      last4SSN: "",
+      ssn: "",
       email: "",
       gender: "",
       grade: "",
@@ -187,7 +183,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
     formData.set("firstName", values.firstName);
     formData.set("lastName", values.lastName);
     formData.set("phone", values.phone);
-    formData.set("last4SSN", values.last4SSN);
+    formData.set("ssn", values.ssn);
     formData.set("email", values.email ?? "");
     formData.set("gender", values.gender);
     formData.set("grade", values.grade ?? "");
@@ -371,22 +367,16 @@ export function CreateBHReferralForm({ referrerName }: Props) {
               )}
             </Field>
 
-            <Field
-              label={t("referrals.last4SsnLabel")}
-              required
-              error={errors.last4SSN?.message}
-            >
+            <Field label={t("referrals.ssnLabel")} required error={errors.ssn?.message}>
               <Input
-                {...register("last4SSN", {
+                {...register("ssn", {
                   onChange: (e) => {
-                    e.target.value = e.target.value
-                      .replace(/\D/g, "")
-                      .slice(0, 4);
+                    e.target.value = e.target.value.replace(/\D/g, "");
                   },
                 })}
                 inputMode="numeric"
                 maxLength={4}
-                placeholder={t("referrals.last4SsnPlaceholder")}
+                placeholder="1234"
                 className="border-border bg-background focus-visible:ring-primary"
               />
             </Field>

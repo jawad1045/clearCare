@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { BHResultUploader } from "@/components/referrals/bh-result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
+import { decryptString } from "@/lib/encryption";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
@@ -24,7 +25,8 @@ type MentalHealthReferral = {
   firstName: string;
   lastName: string;
   phone: string;
-  last4SSN: string;
+  ssn: string;
+  patientId: string | null;
   email: string | null;
   gender: string;
   status: string;
@@ -91,6 +93,7 @@ function ReferralSummaryCard({ referral }: { referral: MentalHealthReferral }) {
       <CardContent className="pt-4">
         <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
           <InfoRow label={t("common.fullName")} value={`${referral.firstName} ${referral.lastName}`} />
+          <InfoRow label="Patient ID" value={referral.patientId} />
           <InfoRow
             label={t("referrals.submittedByLabel")}
             value={`${referral.user.contactFirstName} ${referral.user.contactLastName}`}
@@ -273,7 +276,7 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("common.phone")} value={referral.phone} />
             <InfoRow label={t("common.email")} value={referral.email} />
-            <InfoRow label={t("referrals.last4SsnLabel")} value={`••${referral.last4SSN}`} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn).slice(-4) : "—"} />
           </CardContent>
         </Card>
 

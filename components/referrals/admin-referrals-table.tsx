@@ -151,6 +151,11 @@ export function AdminReferralsTable({
         r.status
           .toLowerCase()
           .includes(q)
+        ||
+
+        (r.patientId || "")
+          .toLowerCase()
+          .includes(q)
       )
 
       :
@@ -286,6 +291,7 @@ export function AdminReferralsTable({
         "Referral ID",
         "Patient First Name",
         "Patient Last Name",
+        "Patient ID",
         "Date of Birth",
         "Service Type",
         "Priority",
@@ -314,6 +320,7 @@ export function AdminReferralsTable({
         r.id,
         r.patientFirstName,
         r.patientLastName,
+        r.patientId || "",
         r.dob ? formatDate(r.dob) : "",
         r.serviceType,
         r.priority || "",

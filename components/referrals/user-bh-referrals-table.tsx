@@ -89,7 +89,8 @@ const globalFilterFn: FilterFn<BHReferral> = (
       .toLowerCase()
       .includes(q) ||
     r.status.toLowerCase().includes(q) ||
-    String(r.id).includes(q)
+    String(r.id).includes(q) ||
+    (r.patientId || "").toLowerCase().includes(q)
   );
 };
 
