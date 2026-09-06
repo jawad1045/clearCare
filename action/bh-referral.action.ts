@@ -22,7 +22,10 @@ import { formatDateTime } from "@/lib/format-date";
 import { generatePatientId } from "@/lib/patient-id";
 import { encryptString } from "@/lib/encryption";
 
-const SERVICE_TYPE = "Medical";
+// FIX: was "Medical" — this was overriding the Service Type shown in every
+// BH referral notification/email/Slack message, regardless of which BH
+// referral type(s) were actually selected on the form.
+const SERVICE_TYPE = "Behavioral Health";
 
 // Updated per Isaiah House feedback — matches BH_REFERRAL_TYPES in create-bh-referral-form.tsx
 const VALID_REFERRAL_TYPES = [
