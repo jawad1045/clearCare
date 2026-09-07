@@ -15,6 +15,9 @@ export function calcAge(isoDate: string): string {
   return String(age);
 }
 
+export const ageCalculator = calcAge;
+export const calculateAge = calcAge;
+
 /** Auto-formats input to MM/DD/YYYY and returns { display, iso } */
 export function formatDobInput(raw: string): { display: string; iso: string } {
   const digits = raw.replace(/\D/g, "").slice(0, 8);

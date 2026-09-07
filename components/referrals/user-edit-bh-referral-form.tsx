@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { formatPhoneInput, formatSSNInput } from "@/lib/utils";
+import { calcAge, formatPhoneInput, formatSSNInput } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { AttachmentUploader } from "@/components/referrals/attachment-uploader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -73,6 +74,7 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
         referralTypes: z.array(z.string()).min(1, t("referrals.referralTypeRequired")),
         firstName: z.string().min(1, t("common.validation.firstNameRequired")),
         lastName: z.string().min(1, t("common.validation.lastNameRequired")),
+        dob: z.string().min(1, t("referrals.dobRequired")),
         phone: z
           .string()
           .min(1, t("common.validation.phoneRequired"))
@@ -126,6 +128,9 @@ export function UserEditBHReferralForm({ referralId, initialData, onSuccess }: P
   const [attachments, setAttachments] = useState<string[]>(initialData?.clientAttachments || []);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<BHReferralFormValues | null>(null);
+  const [age, setAge] = useState(
+    initialData?.dob ? calcAge(new Date(initialData.dob).toISOString()) : ""
+  );
 
   const {
     register,
@@ -139,6 +144,7 @@ export function UserEditBHReferralForm({ referralId, initialData, onSuccess }: P
       referralTypes: initialData?.referralType || [],
       firstName: initialData?.firstName || "",
       lastName: initialData?.lastName || "",
+      dob: initialData?.dob ? new Date(initialData.dob).toISOString().split("T")[0] : "",
       phone: initialData?.phone || "",
       ssn: initialData?.ssn || "",
       email: initialData?.email || "",
@@ -175,6 +181,7 @@ export function UserEditBHReferralForm({ referralId, initialData, onSuccess }: P
     (values.referralTypes ?? []).forEach((rt) => formData.append("referralTypes", rt));
     formData.set("firstName", values.firstName);
     formData.set("lastName", values.lastName);
+    formData.set("dob", values.dob);
     formData.set("phone", values.phone);
     formData.set("ssn", values.ssn);
     formData.set("email", values.email ?? "");
@@ -327,6 +334,28 @@ export function UserEditBHReferralForm({ referralId, initialData, onSuccess }: P
                 {...register("lastName")}
                 placeholder={t("referrals.clientLastNamePlaceholder")}
                 className="border-border bg-background focus-visible:ring-primary"
+              />
+            </Field>
+
+            <Field label={t("referrals.dobLabel")} required error={errors.dob?.message}>
+              <DatePicker
+                name="dob_display"
+                required
+                initialDate={initialData?.dob}
+                onDateChange={(iso) => {
+                  setValue("dob", iso, { shouldValidate: true });
+                  setAge(iso ? calcAge(iso) : "");
+                }}
+                className="border-border bg-background focus-visible:ring-primary"
+              />
+            </Field>
+
+            <Field label={t("referrals.ageLabel")}>
+              <Input
+                value={age}
+                placeholder={t("referrals.agePlaceholder")}
+                readOnly
+                className="border-border bg-muted/40 text-muted-foreground focus-visible:ring-0 cursor-default"
               />
             </Field>
 

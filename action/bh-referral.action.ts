@@ -214,12 +214,19 @@ export async function createBHReferral(formData: FormData) {
 
   const grade = ((formData.get("grade") as string) || "").trim();
 
+  const rawDob = formData.get("dob") as string;
+  const parsedDob = rawDob ? new Date(rawDob) : null;
+  if (!parsedDob || isNaN(parsedDob.getTime())) {
+    throw new Error(t("referrals.errorInvalidDob"));
+  }
+
   const bhReferral = await prisma.mentalHealthReferral.create({
     data: {
       userId: user.id,
       companyAcctId: user.acctId,
       firstName: formData.get("firstName") as string,
       lastName: formData.get("lastName") as string,
+      dob: parsedDob,
       phone: formData.get("phone") as string,
       ssn: encryptString(ssn),
       patientId: generatePatientId(ssn),
@@ -595,9 +602,16 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
 
   const referralTypes = formData.getAll("referralTypes") as string[];
 
+  const rawDob = formData.get("dob") as string;
+  const parsedDob = rawDob ? new Date(rawDob) : null;
+  if (rawDob && (!parsedDob || isNaN(parsedDob.getTime()))) {
+    throw new Error(t("referrals.errorInvalidDob"));
+  }
+
   const newData = {
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
+    dob: parsedDob !== null ? parsedDob : existingReferral.dob,
     phone: formData.get("phone") as string,
     ssn: formData.get("ssn") as string,
     email: (formData.get("email") as string) || null,
@@ -623,6 +637,11 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
 
   addChange("First Name", existingReferral.firstName, newData.firstName);
   addChange("Last Name", existingReferral.lastName, newData.lastName);
+  addChange(
+    "DOB",
+    existingReferral.dob ? existingReferral.dob.toISOString().split("T")[0] : null,
+    newData.dob ? newData.dob.toISOString().split("T")[0] : null
+  );
   addChange("Phone", existingReferral.phone, newData.phone);
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
@@ -692,9 +711,16 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
 
   const referralTypes = formData.getAll("referralTypes") as string[];
 
+  const rawDob = formData.get("dob") as string;
+  const parsedDob = rawDob ? new Date(rawDob) : null;
+  if (rawDob && (!parsedDob || isNaN(parsedDob.getTime()))) {
+    throw new Error(t("referrals.errorInvalidDob"));
+  }
+
   const newData = {
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
+    dob: parsedDob !== null ? parsedDob : existingReferral.dob,
     phone: formData.get("phone") as string,
     ssn: formData.get("ssn") as string,
     email: (formData.get("email") as string) || null,
@@ -720,6 +746,11 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
 
   addChange("First Name", existingReferral.firstName, newData.firstName);
   addChange("Last Name", existingReferral.lastName, newData.lastName);
+  addChange(
+    "DOB",
+    existingReferral.dob ? existingReferral.dob.toISOString().split("T")[0] : null,
+    newData.dob ? newData.dob.toISOString().split("T")[0] : null
+  );
   addChange("Phone", existingReferral.phone, newData.phone);
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);

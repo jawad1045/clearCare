@@ -103,6 +103,7 @@ model MentalHealthReferral {
   companyAcctId     Int       @map("Company_Acct_ID")
   firstName         String    @map("First_Name") @db.VarChar(100)
   lastName          String    @map("Last_Name") @db.VarChar(100)
+  dob               DateTime? @map("DOB") @db.Date
   phone             String    @db.VarChar(20)
   ssn               String    @default("") @map("SSN") @db.VarChar(255)
   patientId         String?   @map("Patient_ID") @db.VarChar(50)

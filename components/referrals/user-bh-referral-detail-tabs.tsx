@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { decryptString } from "@/lib/encryption";
+import { calcAge } from "@/lib/utils";
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import { UserEditBHReferralForm } from "./user-edit-bh-referral-form";
@@ -21,6 +22,7 @@ type MentalHealthReferral = {
   id: number;
   firstName: string;
   lastName: string;
+  dob?: Date | null;
   phone: string;
   ssn: string;
   patientId: string | null;
@@ -133,6 +135,11 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
+            <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
+            <InfoRow
+              label={t("referrals.ageLabel")}
+              value={referral.dob ? calcAge(new Date(referral.dob).toISOString()) : "—"}
+            />
             <InfoRow label={t("common.phone")} value={referral.phone} />
             <InfoRow label={t("common.email")} value={referral.email} />
             <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn).slice(-4) : "—"} />
