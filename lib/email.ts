@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { formatDateTime } from "@/lib/format-date";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.RESEND_FROM_EMAIL ?? "admin@healthworkspros.net";
@@ -333,5 +334,115 @@ export async function sendStatusChangedToUser(opts: {
         }
       </table>
     `),
+  });
+}
+
+export type PendingReferralDigestItem = {
+  id: number;
+  type: "Medical" | "Behavioral Health";
+  patientName: string;
+  companyName: string;
+  referName: string;
+  dateOfReferral: Date;
+  serviceTypeOrReferralType: string;
+};
+
+export async function sendPendingReferralsDigestEmail(opts: {
+  toEmail: string;
+  medicalCount: number;
+  bhCount: number;
+  totalPending: number;
+  items: PendingReferralDigestItem[];
+}) {
+  const formattedDate = formatDateTime(new Date());
+
+  const rows = opts.items
+    .slice(0, 50)
+    .map(
+      (item, idx) => `
+      <tr style="background:${idx % 2 === 0 ? "#ffffff" : "#f9fafb"};">
+        <td style="padding:10px 8px;border:1px solid #e5e7eb;font-size:12px;font-weight:bold;color:#111827;">#${item.id}</td>
+        <td style="padding:10px 8px;border:1px solid #e5e7eb;font-size:12px;">
+          <span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;background:${
+            item.type === "Medical" ? "#dbeafe;color:#1e40af" : "#f3e8ff;color:#6b21a8"
+          };">
+            ${item.type}
+          </span>
+        </td>
+        <td style="padding:10px 8px;border:1px solid #e5e7eb;font-size:12px;font-weight:600;color:#111827;">${item.patientName}</td>
+        <td style="padding:10px 8px;border:1px solid #e5e7eb;font-size:12px;color:#4b5563;">${item.companyName}</td>
+        <td style="padding:10px 8px;border:1px solid #e5e7eb;font-size:12px;color:#4b5563;">${item.referName}</td>
+        <td style="padding:10px 8px;border:1px solid #e5e7eb;font-size:12px;color:#6b7280;">${item.dateOfReferral ? formatDateTime(item.dateOfReferral) : "—"}</td>
+      </tr>`
+    )
+    .join("");
+
+  const moreNotice =
+    opts.items.length > 50
+      ? `<p style="font-size:12px;color:#6b7280;margin-top:8px;">Showing 50 of ${opts.items.length} pending referrals. Log in to the portal to view all.</p>`
+      : "";
+
+  return await resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: `Daily Pending Referrals Summary: ${opts.totalPending} Pending (${opts.medicalCount} Medical, ${opts.bhCount} BH)`,
+    html: baseLayout(
+      "Daily Pending Referrals Summary",
+      `
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;margin-top:0;">
+        This is your automated 24-hour summary of remaining pending referrals awaiting review as of <strong>${formattedDate}</strong>.
+      </p>
+
+      <!-- Summary Stat Cards -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-collapse:collapse;">
+        <tr>
+          <td width="32%" style="padding:12px;background:#fef3c7;border-radius:6px;border:1px solid #fde68a;text-align:center;">
+            <div style="font-size:24px;font-weight:bold;color:#92400e;">${opts.totalPending}</div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#b45309;margin-top:2px;">Total Pending</div>
+          </td>
+          <td width="2%"></td>
+          <td width="32%" style="padding:12px;background:#dbeafe;border-radius:6px;border:1px solid #bfdbfe;text-align:center;">
+            <div style="font-size:24px;font-weight:bold;color:#1e40af;">${opts.medicalCount}</div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#1d4ed8;margin-top:2px;">Medical</div>
+          </td>
+          <td width="2%"></td>
+          <td width="32%" style="padding:12px;background:#f3e8ff;border-radius:6px;border:1px solid #e9d5ff;text-align:center;">
+            <div style="font-size:24px;font-weight:bold;color:#6b21a8;">${opts.bhCount}</div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#7e22ce;margin-top:2px;">Behavioral Health</div>
+          </td>
+        </tr>
+      </table>
+
+      ${
+        opts.totalPending === 0
+          ? `<p style="color:#16a34a;font-size:14px;font-weight:600;padding:16px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;">
+              All caught up! There are currently no pending referrals remaining.
+             </p>`
+          : `
+          <div style="margin-top:24px;">
+            <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:8px;">
+              Pending Referrals Awaiting Review (${opts.totalPending})
+            </div>
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#1C2D35;color:#ffffff;">
+                  <th style="padding:8px;font-size:11px;text-align:left;border:1px solid #1C2D35;">ID</th>
+                  <th style="padding:8px;font-size:11px;text-align:left;border:1px solid #1C2D35;">Type</th>
+                  <th style="padding:8px;font-size:11px;text-align:left;border:1px solid #1C2D35;">Patient</th>
+                  <th style="padding:8px;font-size:11px;text-align:left;border:1px solid #1C2D35;">Company</th>
+                  <th style="padding:8px;font-size:11px;text-align:left;border:1px solid #1C2D35;">Referrer</th>
+                  <th style="padding:8px;font-size:11px;text-align:left;border:1px solid #1C2D35;">Submitted</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+            ${moreNotice}
+          </div>
+          `
+      }
+    `
+    ),
   });
 }

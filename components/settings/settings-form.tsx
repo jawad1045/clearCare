@@ -13,6 +13,7 @@ import { updateSessionTimeoutMinutes } from "@/action/settings.action";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useTranslation } from "@/locale/use-translation";
 import type { TranslationKey } from "@/locale/config";
+import { SendPendingDigestButton } from "@/components/referrals/send-pending-digest-button";
 
 const NOTIF_KEY = "hwp:notif-prefs";
 
@@ -80,6 +81,16 @@ function NotificationsSection() {
             </div>
           </div>
         ))}
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 gap-3 bg-muted/20">
+          <div className="space-y-0.5">
+            <Label className="text-base font-medium">24-Hour Pending Referrals Alert</Label>
+            <p className="text-sm text-muted-foreground">
+              Automated daily summary email of all remaining pending Medical and Behavioral Health referrals.
+            </p>
+          </div>
+          <SendPendingDigestButton buttonVariant="default" buttonSize="sm" />
+        </div>
       </div>
     </div>
   );
