@@ -72,10 +72,21 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [filterReferrer, setFilterReferrer] = useState("all");
 
   useEffect(() => {
     setNotes(initialNotes);
   }, [initialNotes]);
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [search, filterStatus, filterType, filterReferrer]);
+
+  const uniqueReferrers = useMemo(() => {
+    return Array.from(
+      new Set(notes.map((n) => n.referName?.trim()).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [notes]);
 
   const filteredNotes = useMemo(() => {
     let result = notes;
@@ -99,9 +110,13 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
     if (filterType !== "all") {
       result = result.filter(n => n.type === filterType);
     }
+
+    if (filterReferrer !== "all") {
+      result = result.filter(n => n.referName === filterReferrer);
+    }
     
     return result;
-  }, [notes, search, filterStatus, filterType]);
+  }, [notes, search, filterStatus, filterType, filterReferrer]);
 
   const toggleNote = (noteId: string) => {
     setExpandedNotes(prev => {
@@ -198,7 +213,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
         }
 
         return (
-          <div className="space-y-2 min-w-[200px]">
+          <div className="space-y-2 min-w-50">
             <Button 
               variant="outline" 
               size="sm" 
@@ -304,6 +319,22 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
             </SelectContent>
           </Select>
 
+          {isAdmin && (
+            <Select value={filterReferrer} onValueChange={setFilterReferrer}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder={t("notesTab.allReferrers")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("notesTab.allReferrers")}</SelectItem>
+                {uniqueReferrers.map((refName) => (
+                  <SelectItem key={refName} value={refName}>
+                    {refName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
             <SelectTrigger className="w-28">
               <SelectValue placeholder={t("notesTab.rows")} />
@@ -370,7 +401,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
       />
 
       <Dialog open={!!editingNote} onOpenChange={(open) => !open && setEditingNote(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>{t("notesTab.editNote")}</DialogTitle>
           </DialogHeader>
@@ -378,7 +409,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
             <Textarea
               value={editNoteText}
               onChange={(e) => setEditNoteText(e.target.value)}
-              className="min-h-[120px]"
+              className="min-h-30"
               placeholder={t("notesTab.enterNoteText")}
               disabled={isSubmitting}
             />
