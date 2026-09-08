@@ -45,6 +45,7 @@ export type BHReferral = {
   company: {
     organization: string;
   };
+  referName?: string | null;
 };
 
 
@@ -314,7 +315,7 @@ export const columns = (
             asChild
             size="sm"
             variant="outline"
-            className="w-[80px]"
+            className="w-20"
           >
             <Link
               href={`${basePath}/${referral.id}`}
@@ -332,7 +333,7 @@ export const columns = (
               asChild
               size="sm"
               variant="outline"
-              className="gap-1.5 w-[140px]"
+              className="gap-1.5 w-35"
             >
               <Link
                 href={referral.pdfReport}
@@ -352,7 +353,7 @@ export const columns = (
               asChild
               size="sm"
               variant="outline"
-              className="gap-1.5 text-muted-foreground w-[140px]"
+              className="gap-1.5 text-muted-foreground w-35"
             >
               <Link
                 href={`${basePath}/${referral.id}`}
@@ -381,7 +382,7 @@ function DeleteBHReferralButton({ referralId, t }: { referralId: number, t: Tran
       <Button
         size="sm"
         variant="destructive"
-        className="gap-1.5 w-[90px]"
+        className="gap-1.5 w-22.5"
         onClick={() => setOpen(true)}
         disabled={isPending}
       >

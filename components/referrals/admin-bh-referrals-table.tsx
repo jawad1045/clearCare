@@ -82,6 +82,9 @@ export function AdminBHReferralsTable({
   const [filterOrg, setFilterOrg] =
     useState("all");
 
+  const [filterReferrer, setFilterReferrer] =
+    useState("all");
+
   const [filterMonth, setFilterMonth] =
     useState("all");
 
@@ -105,6 +108,16 @@ export function AdminBHReferralsTable({
 
   }, [referrals]);
 
+  const referrers = useMemo(() => {
+    return Array.from(
+      new Set(
+        referrals
+          .map((r) => r.referName?.trim())
+          .filter((name): name is string => Boolean(name))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [referrals]);
+
 
 
 
@@ -123,6 +136,10 @@ export function AdminBHReferralsTable({
           .includes(q) ||
 
         `${r.user.contactFirstName} ${r.user.contactLastName}`
+          .toLowerCase()
+          .includes(q) ||
+
+        (r.referName || "")
           .toLowerCase()
           .includes(q) ||
 
@@ -165,6 +182,16 @@ export function AdminBHReferralsTable({
 
 
 
+    if (filterReferrer !== "all") {
+      result =
+        result.filter(
+          (r) =>
+            (r.referName?.trim() || "") === filterReferrer
+        );
+    }
+
+
+
     if (filterMonth !== "all") {
 
       const monthIndex =
@@ -190,6 +217,7 @@ export function AdminBHReferralsTable({
     search,
     filterStatus,
     filterOrg,
+    filterReferrer,
     filterMonth,
   ]);
 
@@ -243,7 +271,7 @@ export function AdminBHReferralsTable({
 
   // Reset to page 1 whenever a filter/search changes so we don't land
   // on a now-empty page.
-  const filterKey = `${search}|${filterStatus}|${filterOrg}|${filterMonth}`;
+  const filterKey = `${search}|${filterStatus}|${filterOrg}|${filterReferrer}|${filterMonth}`;
   const prevFilterKey = useRef(filterKey);
   if (prevFilterKey.current !== filterKey) {
     prevFilterKey.current = filterKey;
@@ -422,6 +450,33 @@ export function AdminBHReferralsTable({
               </SelectContent>
 
 
+            </Select>
+            <Select
+              value={filterReferrer}
+              onValueChange={setFilterReferrer}
+            >
+              <SelectTrigger className="w-44">
+                <SelectValue
+                  placeholder={
+                    t("notesTab.allReferrers")
+                  }
+                />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("notesTab.allReferrers")}
+                </SelectItem>
+
+                {referrers.map((referrer) => (
+                  <SelectItem
+                    key={referrer}
+                    value={referrer}
+                  >
+                    {referrer}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <Select
               value={filterMonth}

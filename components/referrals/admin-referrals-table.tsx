@@ -90,6 +90,10 @@ export function AdminReferralsTable({
     useState("all");
 
 
+  const [filterReferrer, setFilterReferrer] =
+    useState("all");
+
+
   const [filterMonth, setFilterMonth] =
     useState("all");
 
@@ -114,6 +118,16 @@ export function AdminReferralsTable({
 
   }, [referrals]);
 
+  const referrers = useMemo(() => {
+    return Array.from(
+      new Set(
+        referrals
+          .map(r => r.referName?.trim())
+          .filter((name): name is string => Boolean(name))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [referrals]);
+
 
 
   const filtered = useMemo(() => {
@@ -134,6 +148,11 @@ export function AdminReferralsTable({
         ||
 
         `${r.user.contactFirstName} ${r.user.contactLastName}`
+          .toLowerCase()
+          .includes(q)
+        ||
+
+        (r.referName || "")
           .toLowerCase()
           .includes(q)
         ||
@@ -200,6 +219,18 @@ export function AdminReferralsTable({
 
 
 
+    if(filterReferrer !== "all") {
+
+      result =
+        result.filter(
+          r =>
+            (r.referName?.trim() || "") === filterReferrer
+        );
+
+    }
+
+
+
     if(filterMonth !== "all") {
 
       const index =
@@ -226,6 +257,7 @@ export function AdminReferralsTable({
     filterService,
     filterStatus,
     filterOrg,
+    filterReferrer,
     filterMonth
   ]);
 
@@ -278,7 +310,7 @@ export function AdminReferralsTable({
 
   // Reset to first page whenever a filter/search changes so we don't
   // land on a now-empty page.
-  const filterKey = `${search}|${filterService}|${filterStatus}|${filterOrg}|${filterMonth}`;
+  const filterKey = `${search}|${filterService}|${filterStatus}|${filterOrg}|${filterReferrer}|${filterMonth}`;
   const prevFilterKey = useRef(filterKey);
   if (prevFilterKey.current !== filterKey) {
     prevFilterKey.current = filterKey;
@@ -514,6 +546,34 @@ export function AdminReferralsTable({
               </SelectContent>
 
 
+            </Select>
+ 
+            <Select
+              value={filterReferrer}
+              onValueChange={setFilterReferrer}
+            >
+              <SelectTrigger className="w-44">
+                <SelectValue
+                  placeholder={
+                    t("notesTab.allReferrers")
+                  }
+                />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("notesTab.allReferrers")}
+                </SelectItem>
+
+                {referrers.map(referrer => (
+                  <SelectItem
+                    key={referrer}
+                    value={referrer}
+                  >
+                    {referrer}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
 
 
