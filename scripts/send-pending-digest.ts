@@ -2,10 +2,11 @@ import "dotenv/config";
 import { checkAndSendPendingReferralsDigest } from "@/action/pending-digest.action";
 
 async function main() {
-  const targetEmail = process.argv[2];
+  const rawArgs = process.argv.slice(2);
+  const targetEmail = rawArgs.length > 0 ? rawArgs.join(", ") : undefined;
   console.log("⏳ Starting 24h pending referrals digest execution...");
   if (targetEmail) {
-    console.log(`Target email override: ${targetEmail}`);
+    console.log(`Target email(s): ${targetEmail}`);
   }
 
   const result = await checkAndSendPendingReferralsDigest(targetEmail);

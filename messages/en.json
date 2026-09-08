@@ -493,6 +493,7 @@
   },
   "settings": {
     "notificationsNav": "Notifications",
+    "pendingRecipientsNav": "Pending Report Emails",
     "systemNav": "System",
     "notificationsTitle": "Notifications",
     "notificationsSubtitle": "Configure how you receive notifications from the portal.",

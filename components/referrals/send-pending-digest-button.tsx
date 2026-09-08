@@ -15,7 +15,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { checkAndSendPendingReferralsDigest, getPendingReferralsCounts } from "@/action/pending-digest.action";
+import {
+  checkAndSendPendingReferralsDigest,
+  getPendingReferralsCounts,
+  getDefaultPendingDigestRecipients,
+} from "@/action/pending-digest.action";
 
 type Props = {
   buttonVariant?: "default" | "outline" | "secondary";
@@ -41,8 +45,14 @@ export function SendPendingDigestButton({
     if (newOpen) {
       setLoadingCounts(true);
       try {
-        const c = await getPendingReferralsCounts();
+        const [c, defaultRecipients] = await Promise.all([
+          getPendingReferralsCounts(),
+          !email ? getDefaultPendingDigestRecipients() : Promise.resolve(""),
+        ]);
         setCounts(c);
+        if (defaultRecipients && !email) {
+          setEmail(defaultRecipients);
+        }
       } catch {
         // ignore error fetching counts preview
       } finally {
@@ -109,18 +119,18 @@ export function SendPendingDigestButton({
 
           <div className="space-y-1.5">
             <Label htmlFor="digest-email" className="text-xs font-semibold">
-              Recipient Email Address
+              Recipient Email Address(es)
             </Label>
             <Input
               id="digest-email"
-              type="email"
-              placeholder="Leave blank to use default admin/system email"
+              type="text"
+              placeholder="e.g. email1@example.com, email2@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="text-sm"
             />
             <p className="text-[11px] text-muted-foreground">
-              If left blank, the digest will be sent to the configured notification recipient or the primary system administrator.
+              Separate multiple emails with commas. If left blank, the digest will be sent to the configured notification recipient(s) or system administrator.
             </p>
           </div>
         </div>

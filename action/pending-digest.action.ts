@@ -1,7 +1,16 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { sendPendingReferralsDigestEmail, PendingReferralDigestItem } from "@/lib/email";
+import {
+  sendPendingReferralsDigestEmail,
+  PendingReferralDigestItem,
+  PENDING_REPORT_RECIPIENTS,
+} from "@/lib/email";
+import {
+  getStoredPendingReportRecipients,
+  getLastDigestSentAt,
+  setLastDigestSentAt,
+} from "@/lib/pending-recipients";
 
 declare global {
   var __lastPendingDigestSentAt: number | undefined;
@@ -26,11 +35,55 @@ export async function getPendingReferralsCounts() {
   };
 }
 
+function parseEmailList(raw?: string | string[] | null): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .flatMap((item) => parseEmailList(item))
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0);
+  }
+
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+
+  // Support JSON array format, e.g. '["email1@gmail.com", "email2@gmail.com"]'
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((e) => String(e).trim())
+          .filter((e) => e.length > 0);
+      }
+    } catch {
+      // fallback to delimiter splitting if JSON parsing fails
+    }
+  }
+
+  return trimmed
+    .split(/[,;]+/)
+    .map((e) => e.trim())
+    .filter((e) => e.length > 0);
+}
+
+/**
+ * Returns the default recipient email(s) configured for pending referral alerts.
+ */
+export async function getDefaultPendingDigestRecipients(): Promise<string> {
+  const recipients = await getStoredPendingReportRecipients();
+  if (recipients.length > 0) {
+    return recipients.join(", ");
+  }
+
+  return process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "admin@healthworkspros.net";
+}
+
 /**
  * Server action to gather all remaining pending Medical and BH referrals
- * and send a 24-hour summary email to the designated recipient.
+ * and send a 24-hour summary email to the designated recipient(s).
  */
-export async function checkAndSendPendingReferralsDigest(targetEmailOverride?: string) {
+export async function checkAndSendPendingReferralsDigest(targetEmailOverride?: string | string[]) {
   // 1. Fetch pending Medical referrals
   const medicalReferrals = await prisma.referral.findMany({
     where: { status: "Pending" },
@@ -57,21 +110,20 @@ export async function checkAndSendPendingReferralsDigest(targetEmailOverride?: s
   const bhCount = bhReferrals.length;
   const totalPending = medicalCount + bhCount;
 
-  // 3. Resolve target recipient email
-  let recipientEmail = (targetEmailOverride || process.env.PENDING_NOTIFICATION_EMAIL || "").trim();
+  // 3. Resolve target recipient emails
+  let recipientEmails = parseEmailList(targetEmailOverride);
 
-  if (!recipientEmail) {
-    const adminUser = await prisma.user.findFirst({
-      where: { userRole: "Admin", isActive: true },
-      select: { contactEmail: true },
-    });
-    if (adminUser?.contactEmail) {
-      recipientEmail = adminUser.contactEmail;
-    }
+  // If no override was supplied, use stored recipients (no db)
+  if (recipientEmails.length === 0) {
+    recipientEmails = await getStoredPendingReportRecipients();
   }
 
-  if (!recipientEmail) {
-    recipientEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "admin@healthworkspros.net";
+  if (recipientEmails.length === 0) {
+    recipientEmails = [process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "admin@healthworkspros.net"];
+  }
+
+  if (recipientEmails.length === 0) {
+    recipientEmails = [process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "admin@healthworkspros.net"];
   }
 
   // 4. Map referral items for the email digest
@@ -98,22 +150,24 @@ export async function checkAndSendPendingReferralsDigest(targetEmailOverride?: s
 
   // 5. Send digest email via Resend
   await sendPendingReferralsDigestEmail({
-    toEmail: recipientEmail,
+    toEmail: recipientEmails.length === 1 ? recipientEmails[0] : recipientEmails,
     medicalCount,
     bhCount,
     totalPending,
     items,
   });
 
-  // Record timestamp of this run
-  globalThis.__lastPendingDigestSentAt = Date.now();
+  // Record timestamp of this run both in memory and on disk
+  const now = Date.now();
+  globalThis.__lastPendingDigestSentAt = now;
+  await setLastDigestSentAt(now);
 
   return {
     success: true,
     totalPending,
     medicalCount,
     bhCount,
-    sentTo: recipientEmail,
+    sentTo: recipientEmails.join(", "),
     timestamp: new Date().toISOString(),
   };
 }
@@ -122,7 +176,9 @@ export async function checkAndSendPendingReferralsDigest(targetEmailOverride?: s
  * Checks if 24 hours have elapsed since the last digest email and triggers the action if due.
  */
 export async function triggerPendingDigestIfDue24h() {
-  const lastSent = globalThis.__lastPendingDigestSentAt || 0;
+  const fileLastSent = await getLastDigestSentAt();
+  const memLastSent = globalThis.__lastPendingDigestSentAt || 0;
+  const lastSent = Math.max(fileLastSent, memLastSent);
   const now = Date.now();
 
   if (now - lastSent >= TWENTY_FOUR_HOURS_MS) {
@@ -136,17 +192,21 @@ export async function triggerPendingDigestIfDue24h() {
   };
 }
 
-// Initialize continuous 24h background timer in the running Node process
+// Background checker interval: runs every 15 minutes to test if 24 hours have elapsed
+const CHECK_INTERVAL_MS = 15 * 60 * 1000;
+
 if (typeof window === "undefined" && !globalThis.__pendingDigestTimerInitialized) {
   globalThis.__pendingDigestTimerInitialized = true;
 
-  // Background interval running every 24 hours
   setInterval(async () => {
     try {
-      await checkAndSendPendingReferralsDigest();
+      await triggerPendingDigestIfDue24h();
     } catch (err) {
-      console.error("24h automatic pending referrals digest error:", err);
+      console.error("24h automatic pending referrals digest check error:", err);
     }
-  }, TWENTY_FOUR_HOURS_MS);
+  }, CHECK_INTERVAL_MS);
+
+  // Also check immediately upon server initialization
+  triggerPendingDigestIfDue24h().catch(() => {});
 }
 

@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, BellOff, Settings2, Save, Clock } from "lucide-react";
+import { Bell, BellOff, Settings2, Save, Clock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { updateSessionTimeoutMinutes } from "@/action/settings.action";
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useTranslation } from "@/locale/use-translation";
 import type { TranslationKey } from "@/locale/config";
 import { SendPendingDigestButton } from "@/components/referrals/send-pending-digest-button";
+import { PendingRecipientsForm } from "@/components/settings/pending-recipients-form";
 
 const NOTIF_KEY = "hwp:notif-prefs";
 
@@ -29,6 +30,7 @@ const defaultNotifPrefs: NotifPrefs = {
 
 const navItems = [
   { id: "notifications", labelKey: "settings.notificationsNav", icon: Bell },
+  { id: "pendingRecipients", labelKey: "settings.pendingRecipientsNav", icon: Mail },
   { id: "system", labelKey: "settings.systemNav", icon: Settings2 },
 ] as const;
 
@@ -243,6 +245,7 @@ export function SettingsForm({ initialSessionTimeoutMinutes, portalName, support
 
   const sectionMap: Record<NavId, React.ReactNode> = {
     notifications: <NotificationsSection />,
+    pendingRecipients: <PendingRecipientsForm />,
     system: <SystemSection initialSessionTimeoutMinutes={initialSessionTimeoutMinutes} portalName={portalName} supportEmail={supportEmail} />,
   };
 

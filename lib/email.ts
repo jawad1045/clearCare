@@ -7,6 +7,15 @@ const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "HWP Clear-Care® Portal";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://clearcarenj.com";
 const LOGO_URL = `${APP_URL}/logo.png`;
 
+/**
+ * Default recipients for the 24-hour pending referrals summary report.
+ * Add or modify your recipient email addresses directly in this array.
+ */
+export const PENDING_REPORT_RECIPIENTS: string[] = [
+  "rehanemis@gmail.com",
+  "jawadmughal1045@gmail.com",
+];
+
 function baseLayout(title: string, body: string) {
   return `
 <!DOCTYPE html>
@@ -348,7 +357,7 @@ export type PendingReferralDigestItem = {
 };
 
 export async function sendPendingReferralsDigestEmail(opts: {
-  toEmail: string;
+  toEmail: string | string[];
   medicalCount: number;
   bhCount: number;
   totalPending: number;
@@ -382,7 +391,7 @@ export async function sendPendingReferralsDigestEmail(opts: {
       ? `<p style="font-size:12px;color:#6b7280;margin-top:8px;">Showing 50 of ${opts.items.length} pending referrals. Log in to the portal to view all.</p>`
       : "";
 
-  return await resend.emails.send({
+  const res = await resend.emails.send({
     from: FROM,
     to: opts.toEmail,
     subject: `Daily Pending Referrals Summary: ${opts.totalPending} Pending (${opts.medicalCount} Medical, ${opts.bhCount} BH)`,
@@ -445,4 +454,10 @@ export async function sendPendingReferralsDigestEmail(opts: {
     `
     ),
   });
+
+  if (res.error) {
+    throw new Error(res.error.message || "Failed to send pending referrals digest email via Resend.");
+  }
+
+  return res;
 }

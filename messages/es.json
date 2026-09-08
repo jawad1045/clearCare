@@ -493,6 +493,7 @@
   },
   "settings": {
     "notificationsNav": "Notificaciones",
+    "pendingRecipientsNav": "Correos de Reporte Pendiente",
     "systemNav": "Sistema",
     "notificationsTitle": "Notificaciones",
     "notificationsSubtitle": "Configura cómo recibes notificaciones del portal.",
