@@ -20,7 +20,7 @@ import {
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 import { generatePatientId } from "@/lib/patient-id";
-import { encryptString } from "@/lib/encryption";
+import { encryptString, decryptString } from "@/lib/encryption";
 
 const DRUG_TEST_SERVICES = ["Drug Test (IOP)", "Drug Test (OP)"];
 
@@ -679,7 +679,10 @@ export async function updateReferralDetails(referralId: number, formData: FormDa
   if (ssnRaw) {
     newData.ssn = encryptString(ssnRaw);
     newData.patientId = generatePatientId(ssnRaw);
-    addChange("SSN", existingReferral.ssn, encryptString(ssnRaw));
+    const existingSSNDecrypted = decryptString(existingReferral.ssn);
+    if (existingSSNDecrypted !== ssnRaw) {
+      addChange("SSN", existingSSNDecrypted ? `••••-••-${existingSSNDecrypted.slice(-4)}` : "None", `••••-••-${ssnRaw.slice(-4)}`);
+    }
   }
 
   addChange("Service Type", existingReferral.serviceType, newData.serviceType);
@@ -693,7 +696,7 @@ export async function updateReferralDetails(referralId: number, formData: FormDa
   addChange("Parent First Name", existingReferral.parentFirstName, newData.parentFirstName);
   addChange("Parent Last Name", existingReferral.parentLastName, newData.parentLastName);
   addChange("Parent Email", existingReferral.parentEmail, newData.parentEmail);
-  addChange("Parent Phone", existingReferral.parentPhone, newData.parentPhone);
+  addChange("Parent Phone", decryptString(existingReferral.parentPhone), decryptString(newData.parentPhone));
   addChange("Contact Method", existingReferral.methodOfContact, newData.methodOfContact);
   addChange("Contact Date", existingReferral.datePatientContact ? existingReferral.datePatientContact.toISOString().split('T')[0] : null, newData.datePatientContact ? newData.datePatientContact.toISOString().split('T')[0] : null);
 
@@ -791,7 +794,10 @@ export async function userUpdateReferralDetails(referralId: number, formData: Fo
   if (ssnRaw) {
     newData.ssn = encryptString(ssnRaw);
     newData.patientId = generatePatientId(ssnRaw);
-    addChange("SSN", existingReferral.ssn, encryptString(ssnRaw));
+    const existingSSNDecrypted = decryptString(existingReferral.ssn);
+    if (existingSSNDecrypted !== ssnRaw) {
+      addChange("SSN", existingSSNDecrypted ? `••••-••-${existingSSNDecrypted.slice(-4)}` : "None", `••••-••-${ssnRaw.slice(-4)}`);
+    }
   }
 
   addChange("Service Type", existingReferral.serviceType, newData.serviceType);
@@ -805,7 +811,7 @@ export async function userUpdateReferralDetails(referralId: number, formData: Fo
   addChange("Parent First Name", existingReferral.parentFirstName, newData.parentFirstName);
   addChange("Parent Last Name", existingReferral.parentLastName, newData.parentLastName);
   addChange("Parent Email", existingReferral.parentEmail, newData.parentEmail);
-  addChange("Parent Phone", existingReferral.parentPhone, newData.parentPhone);
+  addChange("Parent Phone", decryptString(existingReferral.parentPhone), decryptString(newData.parentPhone));
   addChange("Contact Method", existingReferral.methodOfContact, newData.methodOfContact);
   addChange("Contact Date", existingReferral.datePatientContact ? existingReferral.datePatientContact.toISOString().split('T')[0] : null, newData.datePatientContact ? newData.datePatientContact.toISOString().split('T')[0] : null);
   addChange("Notes", existingReferral.notes, newData.notes);

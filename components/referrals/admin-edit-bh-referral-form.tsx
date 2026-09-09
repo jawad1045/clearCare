@@ -8,6 +8,7 @@ import { ArrowRight, ChevronDown, Lock, X } from "lucide-react";
 
 import { updateBHReferralDetails } from "@/action/bh-referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { decryptString } from "@/lib/encryption";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,8 +146,8 @@ export function EditBHReferralForm({ referralId, initialData, onSuccess }: Props
       firstName: initialData?.firstName || "",
       lastName: initialData?.lastName || "",
       dob: initialData?.dob ? new Date(initialData.dob).toISOString().split("T")[0] : "",
-      phone: initialData?.phone || "",
-      ssn: initialData?.ssn || "",
+      phone: initialData?.phone ? decryptString(initialData.phone) : "",
+      ssn: initialData?.ssn ? decryptString(initialData.ssn) : "",
       email: initialData?.email || "",
       gender: initialData?.gender || "",
       grade: initialData?.grade || "",

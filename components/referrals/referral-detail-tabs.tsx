@@ -290,7 +290,7 @@ function ViewTab({ referral }: { referral: Referral }) {
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
             <InfoRow label={t("referrals.raceLabel")} value={referral.race} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? `••••-••-${decryptString(referral.ssn).slice(-4)}` : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn) : "—"} />
           </CardContent>
         </Card>
 
@@ -305,7 +305,7 @@ function ViewTab({ referral }: { referral: Referral }) {
             <InfoRow label={t("common.firstName")} value={referral.parentFirstName} />
             <InfoRow label={t("common.lastName")} value={referral.parentLastName} />
             <InfoRow label={t("common.email")} value={referral.parentEmail} />
-            <InfoRow label={t("common.phone")} value={referral.parentPhone} />
+            <InfoRow label={t("common.phone")} value={referral.parentPhone ? decryptString(referral.parentPhone) : "—"} />
           </CardContent>
         </Card>
 

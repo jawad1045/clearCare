@@ -281,9 +281,9 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
               label={t("referrals.ageLabel")}
               value={referral.dob ? calcAge(new Date(referral.dob).toISOString()) : "—"}
             />
-            <InfoRow label={t("common.phone")} value={referral.phone} />
+            <InfoRow label={t("common.phone")} value={referral.phone ? decryptString(referral.phone) : "—"} />
             <InfoRow label={t("common.email")} value={referral.email} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn).slice(-4) : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn) : "—"} />
           </CardContent>
         </Card>
 

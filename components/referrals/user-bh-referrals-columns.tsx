@@ -14,6 +14,7 @@ import {
   getStatusColor,
   getStatusLabel,
 } from "@/lib/referral-statuses";
+import { decryptString } from "@/lib/encryption";
 
 import { useTranslation } from "@/locale/use-translation";
 
@@ -95,7 +96,7 @@ export function columns(
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => row.original.phone,
+      cell: ({ row }) => decryptString(row.original.phone) || "—",
     },
 
     {

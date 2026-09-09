@@ -20,7 +20,7 @@ import {
 import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 import { generatePatientId } from "@/lib/patient-id";
-import { encryptString } from "@/lib/encryption";
+import { encryptString, decryptString } from "@/lib/encryption";
 
 // FIX: was "Medical" — this was overriding the Service Type shown in every
 // BH referral notification/email/Slack message, regardless of which BH
@@ -622,18 +622,22 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
   } as any;
 
-  const ssnRaw = formData.get("ssn") as string;
-  if (ssnRaw) {
-    newData.ssn = encryptString(ssnRaw);
-    newData.patientId = generatePatientId(ssnRaw);
-  }
-
   let changes: string[] = [];
   const addChange = (field: string, oldVal: any, newVal: any) => {
     if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
       changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
     }
   };
+
+  const ssnRaw = formData.get("ssn") as string;
+  if (ssnRaw) {
+    newData.ssn = encryptString(ssnRaw);
+    newData.patientId = generatePatientId(ssnRaw);
+    const existingSSNDecrypted = decryptString(existingReferral.ssn);
+    if (existingSSNDecrypted !== ssnRaw) {
+      addChange("SSN", existingSSNDecrypted || "None", ssnRaw || "None");
+    }
+  }
 
   addChange("First Name", existingReferral.firstName, newData.firstName);
   addChange("Last Name", existingReferral.lastName, newData.lastName);
@@ -642,10 +646,9 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
     existingReferral.dob ? existingReferral.dob.toISOString().split("T")[0] : null,
     newData.dob ? newData.dob.toISOString().split("T")[0] : null
   );
-  addChange("Phone", existingReferral.phone, newData.phone);
+  addChange("Phone", decryptString(existingReferral.phone), decryptString(newData.phone));
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
-  addChange("SSN", existingReferral.ssn, newData.ssn);
   addChange("Grade", existingReferral.grade, newData.grade);
 
 
@@ -731,18 +734,22 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
     clientAttachments: uploadedFiles.length > 0 ? uploadedFiles : existingReferral.clientAttachments,
   } as any;
 
-  const ssnRaw = formData.get("ssn") as string;
-  if (ssnRaw) {
-    newData.ssn = encryptString(ssnRaw);
-    newData.patientId = generatePatientId(ssnRaw);
-  }
-
   let changes: string[] = [];
   const addChange = (field: string, oldVal: any, newVal: any) => {
     if (oldVal !== newVal && !(oldVal === null && newVal === "") && !(oldVal === "" && newVal === null)) {
       changes.push(`${field}: ${oldVal || "None"} -> ${newVal || "None"}`);
     }
   };
+
+  const ssnRaw = formData.get("ssn") as string;
+  if (ssnRaw) {
+    newData.ssn = encryptString(ssnRaw);
+    newData.patientId = generatePatientId(ssnRaw);
+    const existingSSNDecrypted = decryptString(existingReferral.ssn);
+    if (existingSSNDecrypted !== ssnRaw) {
+      addChange("SSN", existingSSNDecrypted || "None", ssnRaw || "None");
+    }
+  }
 
   addChange("First Name", existingReferral.firstName, newData.firstName);
   addChange("Last Name", existingReferral.lastName, newData.lastName);
@@ -751,10 +758,9 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
     existingReferral.dob ? existingReferral.dob.toISOString().split("T")[0] : null,
     newData.dob ? newData.dob.toISOString().split("T")[0] : null
   );
-  addChange("Phone", existingReferral.phone, newData.phone);
+  addChange("Phone", decryptString(existingReferral.phone), decryptString(newData.phone));
   addChange("Email", existingReferral.email, newData.email);
   addChange("Gender", existingReferral.gender, newData.gender);
-  addChange("SSN", existingReferral.ssn, newData.ssn);
   addChange("Grade", existingReferral.grade, newData.grade);
   addChange("Notes", existingReferral.notes, newData.notes);
 

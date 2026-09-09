@@ -18,6 +18,7 @@ import {
 } from "@/lib/referral-statuses";
 import { StatusHistoryHoverCell } from "@/components/status-history-hover-cell";
 import type { StatusHistoryEntry } from "@/types/status-history";
+import { decryptString } from "@/lib/encryption";
 
 
 type TranslationFunction = (
@@ -188,8 +189,11 @@ export const columns = (
 
   {
     accessorKey: "phone",
-
     header: () => t("common.phone"),
+    cell: ({ row }) => {
+      const phone = row.getValue("phone") as string;
+      return decryptString(phone) || "—";
+    },
   },
 
 

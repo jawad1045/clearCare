@@ -50,6 +50,7 @@ import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 import { getBHReferralStatusHistory } from "@/action/bh-referral.action";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
+import { decryptString } from "@/lib/encryption";
 
 
 
@@ -307,9 +308,9 @@ export function AdminBHReferralsTable({
         r.id,
         r.firstName,
         r.lastName,
-        r.phone,
+        r.phone ? decryptString(r.phone) : "",
         r.email || "",
-        r.ssn || "",
+        r.ssn ? decryptString(r.ssn) : "",
         r.patientId || "",
         r.gender,
         r.grade || "",

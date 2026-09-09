@@ -8,6 +8,7 @@ import { ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 
 import { updateReferralDetails } from "@/action/referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { decryptString } from "@/lib/encryption";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,13 +191,13 @@ export function EditReferralForm({ referralId, initialData, onSuccess }: Props) 
       parentFirstName: initialData?.parentFirstName || "",
       parentLastName: initialData?.parentLastName || "",
       parentEmail: initialData?.parentEmail || "",
-      parentPhone: initialData?.parentPhone || "",
+      parentPhone: initialData?.parentPhone ? decryptString(initialData.parentPhone) : "",
       patientFirstName: initialData?.patientFirstName || "",
       patientLastName: initialData?.patientLastName || "",
       dob: initialData?.dob ? new Date(initialData.dob).toISOString().split('T')[0] : "",
       race: initialData?.race || "",
       gender: initialData?.gender || "",
-      ssn: initialData?.ssn || "",
+      ssn: initialData?.ssn ? decryptString(initialData.ssn) : "",
       type: initialData?.type || "",
       priority: initialData?.priority || "",
       referrerName: initialData?.referName || "",

@@ -5,8 +5,8 @@ const ALGORITHM = 'aes-256-cbc';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '12345678901234567890123456789012'; 
 const IV_LENGTH = 16; 
 
-export function encryptString(text: string): string {
-  if (!text) return text;
+export function encryptString(text?: string | null): string {
+  if (!text) return text ?? '';
   if (text.startsWith('ENC:')) return text;
   
   const iv = crypto.randomBytes(IV_LENGTH);
@@ -16,8 +16,8 @@ export function encryptString(text: string): string {
   return 'ENC:' + iv.toString('hex') + ':' + encrypted.toString('hex');
 }
 
-export function decryptString(text: string): string {
-  if (!text) return text;
+export function decryptString(text?: string | null): string {
+  if (!text) return text ?? '';
   if (!text.startsWith('ENC:')) return text;
   
   try {

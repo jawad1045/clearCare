@@ -5,6 +5,7 @@ import type {
   MentalHealthReferral,
 } from "@/lib/generated/prisma/client";
 import { formatDate as fmtDate, formatDateTime as fmtDateTime } from "@/lib/format-date";
+import { decryptString } from "@/lib/encryption";
 
 function fmtBool(value?: boolean | null): string {
   return value ? "Yes" : "No";
@@ -152,35 +153,38 @@ export function getReferralExportRows(
   options: { revealSSN?: boolean } = {}
 ): any[][] {
   const { revealSSN = false } = options;
-  return referrals.map((r) => [
-    r.id,
-    r.company?.organization ?? "",
-    r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
-    r.serviceType,
-    r.patientFirstName,
-    r.patientLastName,
-    r.patientId ?? "",
-    fmtDate(r.dob),
-    r.grade ?? "",
-    r.race,
-    r.gender,
-    revealSSN ? r.ssn : maskSSN(r.ssn),
-    r.type ?? "",
-    r.priority ?? "",
-    r.status,
-    r.parentFirstName ?? "",
-    r.parentLastName ?? "",
-    r.parentEmail ?? "",
-    r.parentPhone ?? "",
-    r.referName,
-    fmtDate(r.dateOfReferral),
-    fmtDate(r.datePatientContact),
-    r.methodOfContact ?? "",
-    r.pdfResult ?? "",
-    fmtList(r.clientAttachments),
-    r.notes ?? "",
-    fmtDateTime(r.lastUpdated),
-  ]);
+  return referrals.map((r) => {
+    const ssnDecrypted = decryptString(r.ssn);
+    return [
+      r.id,
+      r.company?.organization ?? "",
+      r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
+      r.serviceType,
+      r.patientFirstName,
+      r.patientLastName,
+      r.patientId ?? "",
+      fmtDate(r.dob),
+      r.grade ?? "",
+      r.race,
+      r.gender,
+      revealSSN ? ssnDecrypted : maskSSN(ssnDecrypted),
+      r.type ?? "",
+      r.priority ?? "",
+      r.status,
+      r.parentFirstName ?? "",
+      r.parentLastName ?? "",
+      r.parentEmail ?? "",
+      r.parentPhone ? decryptString(r.parentPhone) : "",
+      r.referName,
+      fmtDate(r.dateOfReferral),
+      fmtDate(r.datePatientContact),
+      r.methodOfContact ?? "",
+      r.pdfResult ?? "",
+      fmtList(r.clientAttachments),
+      r.notes ?? "",
+      fmtDateTime(r.lastUpdated),
+    ];
+  });
 }
 
 /* ------------------------- Mental Health Referrals --------------------------- */
@@ -219,27 +223,30 @@ export function getMentalHealthReferralExportRows(
   options: { revealSSN?: boolean } = {}
 ): any[][] {
   const { revealSSN = false } = options;
-  return referrals.map((r) => [
-    r.id,
-    r.company?.organization ?? "",
-    r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
-    r.firstName,
-    r.lastName,
-    fmtDate(r.dob),
-    r.phone,
-    r.email ?? "",
-    revealSSN ? r.ssn : maskSSN(r.ssn),
-    r.patientId ?? "",
-    r.gender,
-    r.status,
-    r.referralType ?? "",
-    r.grade ?? "",
-    fmtDate(r.appointmentDate),
-    r.referName,
-    fmtDate(r.dateOfReferral),
-    r.pdfReport ?? "",
-    fmtList(r.clientAttachments),
-    r.notes ?? "",
-    fmtDateTime(r.lastUpdated),
-  ]);
+  return referrals.map((r) => {
+    const ssnDecrypted = decryptString(r.ssn);
+    return [
+      r.id,
+      r.company?.organization ?? "",
+      r.user ? `${r.user.contactFirstName} ${r.user.contactLastName}` : "",
+      r.firstName,
+      r.lastName,
+      fmtDate(r.dob),
+      r.phone ? decryptString(r.phone) : "",
+      r.email ?? "",
+      revealSSN ? ssnDecrypted : maskSSN(ssnDecrypted),
+      r.patientId ?? "",
+      r.gender,
+      r.status,
+      r.referralType ?? "",
+      r.grade ?? "",
+      fmtDate(r.appointmentDate),
+      r.referName,
+      fmtDate(r.dateOfReferral),
+      r.pdfReport ?? "",
+      fmtList(r.clientAttachments),
+      r.notes ?? "",
+      fmtDateTime(r.lastUpdated),
+    ];
+  });
 }

@@ -52,6 +52,7 @@ import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 import { getReferralStatusHistory } from "@/action/referral.action";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
+import { decryptString } from "@/lib/encryption";
 
 
 
@@ -361,10 +362,10 @@ export function AdminReferralsTable({
         r.parentFirstName || "",
         r.parentLastName || "",
         r.parentEmail || "",
-        r.parentPhone || "",
+        r.parentPhone ? decryptString(r.parentPhone) : "",
         r.race || "",
         r.gender || "",
-        r.ssn || "",
+        r.ssn ? decryptString(r.ssn) : "",
         r.type || "",
         r.referName || "",
         r.datePatientContact ? formatDate(r.datePatientContact) : "",
