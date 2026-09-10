@@ -29,26 +29,38 @@ export function DatePicker({
 }: DatePickerProps) {
   const [selected, setSelected] = React.useState<Date | undefined>(() => {
     if (!initialDate) return undefined;
+    const match = initialDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
     const d = new Date(initialDate);
     return isNaN(d.getTime()) ? undefined : d;
   });
   
   const [display, setDisplay] = React.useState(() => {
     if (!initialDate) return "";
+    const match = initialDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[2]}/${match[3]}/${match[1]}`;
+    }
     const d = new Date(initialDate);
     if (isNaN(d.getTime())) return "";
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${mm}/${dd}/${d.getFullYear()}`;
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    return `${mm}/${dd}/${d.getUTCFullYear()}`;
   });
   
   const [iso, setIso] = React.useState(() => {
     if (!initialDate) return "";
+    const match = initialDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[1]}-${match[2]}-${match[3]}`;
+    }
     const d = new Date(initialDate);
     if (isNaN(d.getTime())) return "";
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${d.getFullYear()}-${mm}-${dd}`;
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    return `${d.getUTCFullYear()}-${mm}-${dd}`;
   });
   
   const [open, setOpen] = React.useState(false)
@@ -80,12 +92,15 @@ export function DatePicker({
     const { display: fmt, iso: isoStr } = formatDobInput(e.target.value)
     setDisplay(fmt)
     if (isoStr) {
-      const d = new Date(isoStr)
-      if (!isNaN(d.getTime())) {
-        setSelected(d)
-        setIso(isoStr)
-        onDateChange?.(isoStr)
-        return
+      const match = isoStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        if (!isNaN(d.getTime())) {
+          setSelected(d);
+          setIso(isoStr);
+          onDateChange?.(isoStr);
+          return;
+        }
       }
     }
     setSelected(undefined)

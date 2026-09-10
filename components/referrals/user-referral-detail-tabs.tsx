@@ -148,7 +148,7 @@ function ViewTab({ referral }: { referral: Referral }) {
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
             <InfoRow label={t("referrals.raceLabel")} value={referral.race} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn) : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? `••••-••-${decryptString(referral.ssn).replace(/\D/g, "").slice(-4)}` : "—"} />
           </CardContent>
         </Card>
 

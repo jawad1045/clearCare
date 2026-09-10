@@ -192,7 +192,7 @@ export async function createBHReferral(formData: FormData) {
 
   const ssn = (formData.get("ssn") as string) ?? "";
   if (!ssn) {
-    throw new Error(t("referrals.errorLast4SsnOnly")); // Maybe keep or change message
+    throw new Error(t("referrals.ssnRequired"));
   }
 
   // Form now submits one or more "referralTypes" entries (checkbox multi-select)

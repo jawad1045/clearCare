@@ -6,12 +6,23 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function calcAge(isoDate: string): string {
+  if (!isoDate) return "";
+  const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const today = new Date();
+  if (match) {
+    const birthYear = parseInt(match[1], 10);
+    const birthMonth = parseInt(match[2], 10) - 1;
+    const birthDay = parseInt(match[3], 10);
+    let age = today.getFullYear() - birthYear;
+    const m = today.getMonth() - birthMonth;
+    if (m < 0 || (m === 0 && today.getDate() < birthDay)) age--;
+    return String(age);
+  }
   const date = new Date(isoDate);
   if (isNaN(date.getTime())) return "";
-  const today = new Date();
-  let age = today.getFullYear() - date.getFullYear();
-  const m = today.getMonth() - date.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < date.getDate())) age--;
+  let age = today.getFullYear() - date.getUTCFullYear();
+  const m = today.getMonth() - date.getUTCMonth();
+  if (m < 0 || (m === 0 && today.getDate() < date.getUTCDate())) age--;
   return String(age);
 }
 

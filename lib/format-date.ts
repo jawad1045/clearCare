@@ -21,8 +21,31 @@ export function formatDate(
   timeZone: string = APP_TIMEZONE
 ): string {
   if (!date) return "";
+
+  // If it's a date string like "1986-04-28" or "1986-04-28T00:00:00..."
+  if (typeof date === "string") {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})(?:T00:00:00(?:\.000)?Z?)?$/);
+    if (match) {
+      return `${match[2]}/${match[3]}/${match[1]}`;
+    }
+  }
+
   const d = typeof date === "string" ? new Date(date) : date;
   if (isNaN(d.getTime())) return "";
+
+  // If the Date object has time 00:00:00.000 UTC (typical for pure date columns like DOB from Prisma @db.Date),
+  // format using UTC so negative timezones (like US Eastern EDT/EST) do not roll back to the previous day.
+  if (
+    d.getUTCHours() === 0 &&
+    d.getUTCMinutes() === 0 &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0
+  ) {
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    const yyyy = d.getUTCFullYear();
+    return `${mm}/${dd}/${yyyy}`;
+  }
 
   return new Intl.DateTimeFormat("en-US", {
     timeZone,

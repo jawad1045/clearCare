@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, ChevronDown, Lock, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Lock, X, Eye, EyeOff } from "lucide-react";
 
 import { createBHReferral } from "@/action/bh-referral.action";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -90,7 +90,7 @@ function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
           .string()
           .min(1, t("common.validation.phoneRequired"))
           .regex(/^\(\d{3}\) \d{3}-\d{4}$/, t("common.validation.phoneInvalid")),
-        ssn: z.string().regex(/^\d{4}$/, t("referrals.errorLast4SsnOnly")),
+        ssn: z.string().min(1, t("referrals.ssnRequired")),
         email: z.string().email(t("common.validation.emailInvalid")).optional().or(z.literal("")),
         gender: z.string().min(1, t("referrals.genderRequired")),
         grade: z.string().optional(),
@@ -135,6 +135,7 @@ export function CreateBHReferralForm({ referrerName }: Props) {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<BHReferralFormValues | null>(null);
+  const [showSSN, setShowSSN] = useState(false);
   const [age, setAge] = useState("");
 
   const {
@@ -394,17 +395,26 @@ export function CreateBHReferralForm({ referrerName }: Props) {
             </Field>
 
             <Field label={t("referrals.ssnLabel")} required error={errors.ssn?.message}>
-              <Input
-                {...register("ssn", {
-                  onChange: (e) => {
-                    e.target.value = e.target.value.replace(/\D/g, "");
-                  },
-                })}
-                inputMode="numeric"
-                maxLength={4}
-                placeholder="1234"
-                className="border-border bg-background focus-visible:ring-primary"
-              />
+              <div className="relative">
+                <Input
+                  type={showSSN ? "text" : "password"}
+                  {...register("ssn", {
+                    onChange: (e) => {
+                      e.target.value = formatSSNInput(e.target.value);
+                    },
+                  })}
+                  placeholder={t("referrals.ssnPlaceholder")}
+                  maxLength={11}
+                  className="border-border bg-background pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSSN(!showSSN)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showSSN ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </Field>
 
             <Field

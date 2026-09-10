@@ -283,7 +283,7 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
             />
             <InfoRow label={t("common.phone")} value={referral.phone ? decryptString(referral.phone) : "—"} />
             <InfoRow label={t("common.email")} value={referral.email} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn) : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn).replace(/\D/g, "").slice(-4) : "—"} />
           </CardContent>
         </Card>
 
