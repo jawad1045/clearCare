@@ -13,7 +13,7 @@ import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { BHResultUploader } from "@/components/referrals/bh-result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
 import { decryptString } from "@/lib/encryption";
-import { calcAge } from "@/lib/utils";
+import { calcAge, formatSSNFull } from "@/lib/utils";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
@@ -283,7 +283,7 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
             />
             <InfoRow label={t("common.phone")} value={referral.phone ? decryptString(referral.phone) : "—"} />
             <InfoRow label={t("common.email")} value={referral.email} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn).replace(/\D/g, "").slice(-4) : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? formatSSNFull(decryptString(referral.ssn)) : "—"} />
           </CardContent>
         </Card>
 

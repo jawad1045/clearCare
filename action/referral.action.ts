@@ -21,6 +21,7 @@ import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 import { generatePatientId } from "@/lib/patient-id";
 import { encryptString, decryptString } from "@/lib/encryption";
+import { formatSSNMasked } from "@/lib/utils";
 
 const DRUG_TEST_SERVICES = ["Drug Test (IOP)", "Drug Test (OP)"];
 
@@ -681,7 +682,7 @@ export async function updateReferralDetails(referralId: number, formData: FormDa
     newData.patientId = generatePatientId(ssnRaw);
     const existingSSNDecrypted = decryptString(existingReferral.ssn);
     if (existingSSNDecrypted !== ssnRaw) {
-      addChange("SSN", existingSSNDecrypted ? `••••-••-${existingSSNDecrypted.slice(-4)}` : "None", `••••-••-${ssnRaw.slice(-4)}`);
+      addChange("SSN", existingSSNDecrypted ? formatSSNMasked(existingSSNDecrypted) : "None", formatSSNMasked(ssnRaw));
     }
   }
 
@@ -796,7 +797,7 @@ export async function userUpdateReferralDetails(referralId: number, formData: Fo
     newData.patientId = generatePatientId(ssnRaw);
     const existingSSNDecrypted = decryptString(existingReferral.ssn);
     if (existingSSNDecrypted !== ssnRaw) {
-      addChange("SSN", existingSSNDecrypted ? `••••-••-${existingSSNDecrypted.slice(-4)}` : "None", `••••-••-${ssnRaw.slice(-4)}`);
+      addChange("SSN", existingSSNDecrypted ? formatSSNMasked(existingSSNDecrypted) : "None", formatSSNMasked(ssnRaw));
     }
   }
 

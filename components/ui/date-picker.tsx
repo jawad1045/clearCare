@@ -14,8 +14,115 @@ interface DatePickerProps {
   onDateChange?: (iso: string) => void
   className?: string
   disabled?: boolean
-  initialDate?: string
+  initialDate?: string | Date | null
   allowFutureDates?: boolean
+}
+
+function parseInitialDate(initialDate?: string | Date | null): {
+  date: Date | undefined;
+  display: string;
+  iso: string;
+} {
+  if (!initialDate) {
+    return { date: undefined, display: "", iso: "" };
+  }
+
+  // If it's a Date instance
+  if (initialDate instanceof Date || Object.prototype.toString.call(initialDate) === "[object Date]") {
+    const d = initialDate as Date;
+    if (isNaN(d.getTime())) {
+      return { date: undefined, display: "", iso: "" };
+    }
+
+    const isUtcMidnight =
+      d.getUTCHours() === 0 &&
+      d.getUTCMinutes() === 0 &&
+      d.getUTCSeconds() === 0 &&
+      d.getUTCMilliseconds() === 0;
+
+    const y = isUtcMidnight ? d.getUTCFullYear() : d.getFullYear();
+    const m = isUtcMidnight ? d.getUTCMonth() : d.getMonth();
+    const day = isUtcMidnight ? d.getUTCDate() : d.getDate();
+
+    const mm = String(m + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    const yyyy = String(y);
+
+    return {
+      date: new Date(y, m, day),
+      display: `${mm}/${dd}/${yyyy}`,
+      iso: `${yyyy}-${mm}-${dd}`,
+    };
+  }
+
+  // If it's a string
+  if (typeof initialDate === "string") {
+    const trimmed = initialDate.trim();
+    if (!trimmed) {
+      return { date: undefined, display: "", iso: "" };
+    }
+
+    // Matches YYYY-MM-DD or YYYY-MM-DDT...
+    const ymdMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymdMatch) {
+      const y = Number(ymdMatch[1]);
+      const m = Number(ymdMatch[2]) - 1;
+      const day = Number(ymdMatch[3]);
+      const mm = ymdMatch[2];
+      const dd = ymdMatch[3];
+      const yyyy = ymdMatch[1];
+      const localDate = new Date(y, m, day);
+      if (!isNaN(localDate.getTime())) {
+        return {
+          date: localDate,
+          display: `${mm}/${dd}/${yyyy}`,
+          iso: `${yyyy}-${mm}-${dd}`,
+        };
+      }
+    }
+
+    // Matches MM/DD/YYYY
+    const mdyMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (mdyMatch) {
+      const m = Number(mdyMatch[1]) - 1;
+      const day = Number(mdyMatch[2]);
+      const y = Number(mdyMatch[3]);
+      const localDate = new Date(y, m, day);
+      if (!isNaN(localDate.getTime())) {
+        return {
+          date: localDate,
+          display: `${mdyMatch[1]}/${mdyMatch[2]}/${mdyMatch[3]}`,
+          iso: `${mdyMatch[3]}-${mdyMatch[1]}-${mdyMatch[2]}`,
+        };
+      }
+    }
+
+    // Fallback date parsing
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      const isUtcMidnight =
+        d.getUTCHours() === 0 &&
+        d.getUTCMinutes() === 0 &&
+        d.getUTCSeconds() === 0 &&
+        d.getUTCMilliseconds() === 0;
+
+      const y = isUtcMidnight ? d.getUTCFullYear() : d.getFullYear();
+      const m = isUtcMidnight ? d.getUTCMonth() : d.getMonth();
+      const day = isUtcMidnight ? d.getUTCDate() : d.getDate();
+
+      const mm = String(m + 1).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      const yyyy = String(y);
+
+      return {
+        date: new Date(y, m, day),
+        display: `${mm}/${dd}/${yyyy}`,
+        iso: `${yyyy}-${mm}-${dd}`,
+      };
+    }
+  }
+
+  return { date: undefined, display: "", iso: "" };
 }
 
 export function DatePicker({
@@ -27,41 +134,21 @@ export function DatePicker({
   initialDate,
   allowFutureDates,
 }: DatePickerProps) {
-  const [selected, setSelected] = React.useState<Date | undefined>(() => {
-    if (!initialDate) return undefined;
-    const match = initialDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const initialParsed = React.useMemo(() => parseInitialDate(initialDate), [initialDate]);
+
+  const [selected, setSelected] = React.useState<Date | undefined>(initialParsed.date);
+  const [display, setDisplay] = React.useState(initialParsed.display);
+  const [iso, setIso] = React.useState(initialParsed.iso);
+
+  const prevInitialKeyRef = React.useRef(initialParsed.iso);
+  React.useEffect(() => {
+    if (prevInitialKeyRef.current !== initialParsed.iso) {
+      prevInitialKeyRef.current = initialParsed.iso;
+      setSelected(initialParsed.date);
+      setDisplay(initialParsed.display);
+      setIso(initialParsed.iso);
     }
-    const d = new Date(initialDate);
-    return isNaN(d.getTime()) ? undefined : d;
-  });
-  
-  const [display, setDisplay] = React.useState(() => {
-    if (!initialDate) return "";
-    const match = initialDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      return `${match[2]}/${match[3]}/${match[1]}`;
-    }
-    const d = new Date(initialDate);
-    if (isNaN(d.getTime())) return "";
-    const dd = String(d.getUTCDate()).padStart(2, "0");
-    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-    return `${mm}/${dd}/${d.getUTCFullYear()}`;
-  });
-  
-  const [iso, setIso] = React.useState(() => {
-    if (!initialDate) return "";
-    const match = initialDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      return `${match[1]}-${match[2]}-${match[3]}`;
-    }
-    const d = new Date(initialDate);
-    if (isNaN(d.getTime())) return "";
-    const dd = String(d.getUTCDate()).padStart(2, "0");
-    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-    return `${d.getUTCFullYear()}-${mm}-${dd}`;
-  });
+  }, [initialParsed]);
   
   const [open, setOpen] = React.useState(false)
 

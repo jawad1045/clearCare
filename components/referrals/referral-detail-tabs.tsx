@@ -13,6 +13,7 @@ import { UpdateStatusForm } from "@/components/referrals/status-selector";
 import { ResultUploader } from "@/components/referrals/result-uploader";
 import { parseAttachment } from "@/lib/parse-attachment";
 import { decryptString } from "@/lib/encryption";
+import { formatSSNFull } from "@/lib/utils";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { SERVICE_TYPE_LABEL_KEYS, getPriorityLabel } from "@/lib/referral-filters";
 import { useTranslation } from "@/locale/use-translation";
@@ -290,7 +291,7 @@ function ViewTab({ referral }: { referral: Referral }) {
           <CardContent className="pt-4 space-y-3">
             <InfoRow label={t("referrals.dateOfBirthLabel")} value={formatDate(referral.dob)} />
             <InfoRow label={t("referrals.raceLabel")} value={referral.race} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? `••••-••-${decryptString(referral.ssn).replace(/\D/g, "").slice(-4)}` : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? formatSSNFull(decryptString(referral.ssn)) : "—"} />
           </CardContent>
         </Card>
 

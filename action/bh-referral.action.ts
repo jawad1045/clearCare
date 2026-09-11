@@ -21,6 +21,7 @@ import { getServerTranslation } from "@/locale/server";
 import { formatDateTime } from "@/lib/format-date";
 import { generatePatientId } from "@/lib/patient-id";
 import { encryptString, decryptString } from "@/lib/encryption";
+import { formatSSNMasked } from "@/lib/utils";
 
 // FIX: was "Medical" — this was overriding the Service Type shown in every
 // BH referral notification/email/Slack message, regardless of which BH
@@ -635,7 +636,7 @@ export async function updateBHReferralDetails(referralId: number, formData: Form
     newData.patientId = generatePatientId(ssnRaw);
     const existingSSNDecrypted = decryptString(existingReferral.ssn);
     if (existingSSNDecrypted !== ssnRaw) {
-      addChange("SSN", existingSSNDecrypted || "None", ssnRaw || "None");
+      addChange("SSN", existingSSNDecrypted ? formatSSNMasked(existingSSNDecrypted) : "None", formatSSNMasked(ssnRaw));
     }
   }
 
@@ -747,7 +748,7 @@ export async function userUpdateBHReferralDetails(referralId: number, formData: 
     newData.patientId = generatePatientId(ssnRaw);
     const existingSSNDecrypted = decryptString(existingReferral.ssn);
     if (existingSSNDecrypted !== ssnRaw) {
-      addChange("SSN", existingSSNDecrypted || "None", ssnRaw || "None");
+      addChange("SSN", existingSSNDecrypted ? formatSSNMasked(existingSSNDecrypted) : "None", formatSSNMasked(ssnRaw));
     }
   }
 

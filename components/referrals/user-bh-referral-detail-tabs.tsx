@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { parseAttachment } from "@/lib/parse-attachment";
 import { getStatusColor, getStatusLabel } from "@/lib/referral-statuses";
 import { decryptString } from "@/lib/encryption";
-import { calcAge } from "@/lib/utils";
+import { calcAge, formatSSNMasked } from "@/lib/utils";
 import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import { UserEditBHReferralForm } from "./user-edit-bh-referral-form";
@@ -142,7 +142,7 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
             />
             <InfoRow label={t("common.phone")} value={referral.phone ? decryptString(referral.phone) : "—"} />
             <InfoRow label={t("common.email")} value={referral.email} />
-            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? decryptString(referral.ssn).replace(/\D/g, "").slice(-4) : "—"} />
+            <InfoRow label={t("referrals.ssnLabel")} value={referral.ssn ? formatSSNMasked(decryptString(referral.ssn)) : "—"} />
           </CardContent>
         </Card>
 
