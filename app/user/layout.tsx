@@ -16,6 +16,10 @@ export default async function RootLayout({
     redirect("/");
   }
 
+  if (user.role === "Admin") {
+    redirect("/admin");
+  }
+
   const dbUser = await getUserById(user.id);
 
   if (dbUser?.mustChangePassword) {
@@ -28,7 +32,7 @@ export default async function RootLayout({
   return (
     <div className="min-h-full flex flex-col">
       <IdleTimeoutWatcher timeoutMinutes={sessionTimeoutMinutes} />
-      <Navbar role={user.role === "Admin" ? "admin" : "user"} name={name} />
+      <Navbar role="user" name={name} />
       {children}
     </div>
   );

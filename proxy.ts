@@ -37,6 +37,10 @@ export async function proxy(request: NextRequest) {
       if (sessionExpired) url.searchParams.set('expired', '1')
       return NextResponse.redirect(url)
     }
+
+    if (currentUser.role === 'Admin') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
   }
 
   return NextResponse.next()
@@ -45,7 +49,9 @@ export async function proxy(request: NextRequest) {
 // 4. Configure the matcher to only trigger on your protected dashboards
 export const config = {
   matcher: [
+    '/admin',
     '/admin/:path*',
+    '/user',
     '/user/:path*',
     '/',
   ],
