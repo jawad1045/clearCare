@@ -44,6 +44,7 @@ type GlobalNote = {
   id: number;
   noteId: string;
   type: "Medical" | "BH";
+  serviceType: string;
   note: string;
   status: string | null;
   createdAt: Date;
@@ -70,9 +71,11 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [patientSearch, setPatientSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [filterReferrer, setFilterReferrer] = useState("all");
+  const [filterPatient, setFilterPatient] = useState("all");
 
   useEffect(() => {
     setNotes(initialNotes);
@@ -80,7 +83,7 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
 
   useEffect(() => {
     setPageIndex(0);
-  }, [search, filterStatus, filterType, filterReferrer]);
+  }, [search, patientSearch, filterStatus, filterType, filterReferrer, filterPatient]);
 
   const uniqueReferrers = useMemo(() => {
     return Array.from(
@@ -88,16 +91,38 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
     ).sort((a, b) => a.localeCompare(b));
   }, [notes]);
 
+  const uniquePatients = useMemo(() => {
+    return Array.from(
+      new Set(
+        notes
+          .map((n) => `${n.patientFirstName} ${n.patientLastName}`.trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [notes]);
+
   const filteredNotes = useMemo(() => {
     let result = notes;
     
+    if (patientSearch.trim()) {
+      const q = patientSearch.toLowerCase();
+      result = result.filter(
+        n =>
+          n.patientFirstName.toLowerCase().includes(q) ||
+          n.patientLastName.toLowerCase().includes(q) ||
+          `${n.patientFirstName} ${n.patientLastName}`.toLowerCase().includes(q)
+      );
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         n => 
           n.patientFirstName.toLowerCase().includes(q) ||
           n.patientLastName.toLowerCase().includes(q) ||
+          `${n.patientFirstName} ${n.patientLastName}`.toLowerCase().includes(q) ||
           n.referName.toLowerCase().includes(q) ||
+          (n.serviceType && n.serviceType.toLowerCase().includes(q)) ||
           (n.note && n.note.toLowerCase().includes(q)) ||
           n.referralId.toString().includes(q)
       );
@@ -114,9 +139,15 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
     if (filterReferrer !== "all") {
       result = result.filter(n => n.referName === filterReferrer);
     }
+
+    if (filterPatient !== "all") {
+      result = result.filter(
+        n => `${n.patientFirstName} ${n.patientLastName}`.trim() === filterPatient
+      );
+    }
     
     return result;
-  }, [notes, search, filterStatus, filterType, filterReferrer]);
+  }, [notes, search, patientSearch, filterStatus, filterType, filterReferrer, filterPatient]);
 
   const toggleNote = (noteId: string) => {
     setExpandedNotes(prev => {
@@ -167,7 +198,11 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
     },
     {
       accessorKey: "status",
-      header: t("notesTab.status"),
+      header: ({ column }) => (
+        <Button variant="ghost" className="px-0 font-semibold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          {t("notesTab.status")} <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const status = row.original.status;
         if (!status) return <span className="text-muted-foreground italic">—</span>;
@@ -188,17 +223,47 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
     },
     {
       accessorKey: "referralId",
-      header: t("notesTab.patId"),
+      header: ({ column }) => (
+        <Button variant="ghost" className="px-0 font-semibold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          {t("notesTab.patId")} <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => <span className="font-medium text-primary">#{row.original.referralId}</span>,
     },
     {
       id: "patient",
-      header: t("notesTab.patient"),
+      accessorFn: (row) => `${row.patientFirstName} ${row.patientLastName}`,
+      header: ({ column }) => (
+        <Button variant="ghost" className="px-0 font-semibold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          {t("notesTab.patient")} <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => <span className="font-medium">{row.original.patientFirstName} {row.original.patientLastName}</span>,
     },
     {
+      accessorKey: "serviceType",
+      header: ({ column }) => (
+        <Button variant="ghost" className="px-0 font-semibold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          {t("notesTab.serviceType")} <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const serviceType = row.original.serviceType;
+        if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
+        return (
+          <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground ring-1 ring-inset ring-border/50 max-w-50 truncate" title={serviceType}>
+            {serviceType}
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: "referName",
-      header: t("notesTab.referrer"),
+      header: ({ column }) => (
+        <Button variant="ghost" className="px-0 font-semibold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          {t("notesTab.referrer")} <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.referName}</span>,
     },
     {
@@ -319,6 +384,20 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
             </SelectContent>
           </Select>
 
+          <Select value={filterPatient} onValueChange={setFilterPatient}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder={t("notesTab.allPatients")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("notesTab.allPatients")}</SelectItem>
+              {uniquePatients.map((patient) => (
+                <SelectItem key={patient} value={patient}>
+                  {patient}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {isAdmin && (
             <Select value={filterReferrer} onValueChange={setFilterReferrer}>
               <SelectTrigger className="w-44">
@@ -348,9 +427,15 @@ export function AdminNotesTable({ notes: initialNotes, basePath = "/admin" }: { 
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <Input
-            className="w-56"
+            className="w-48"
+            placeholder={t("notesTab.searchPatientPlaceholder")}
+            value={patientSearch}
+            onChange={(e) => setPatientSearch(e.target.value)}
+          />
+          <Input
+            className="w-48"
             placeholder={t("notesTab.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}

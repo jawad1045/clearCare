@@ -30,6 +30,7 @@ export async function getAllAdminNotes() {
         id: n.id,
         noteId: `med-${n.id}`,
         type: "Medical" as const,
+        serviceType: n.referral.serviceType || "Medical",
         note: n.note,
         status: n.status,
         createdAt: n.createdAt,
@@ -42,6 +43,9 @@ export async function getAllAdminNotes() {
         id: n.id,
         noteId: `bh-${n.id}`,
         type: "BH" as const,
+        serviceType: Array.isArray(n.referral.referralType) && n.referral.referralType.length > 0
+          ? n.referral.referralType.join(", ")
+          : "Behavioral Health",
         note: n.note,
         status: n.status,
         createdAt: n.createdAt,
@@ -106,6 +110,7 @@ export async function getAllUserNotes() {
         id: n.id,
         noteId: `med-${n.id}`,
         type: "Medical" as const,
+        serviceType: n.referral.serviceType || "Medical",
         note: n.note,
         status: n.status,
         createdAt: n.createdAt,
@@ -118,6 +123,9 @@ export async function getAllUserNotes() {
         id: n.id,
         noteId: `bh-${n.id}`,
         type: "BH" as const,
+        serviceType: Array.isArray(n.referral.referralType) && n.referral.referralType.length > 0
+          ? n.referral.referralType.join(", ")
+          : "Behavioral Health",
         note: n.note,
         status: n.status,
         createdAt: n.createdAt,
