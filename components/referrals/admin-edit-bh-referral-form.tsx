@@ -40,33 +40,10 @@ const GENDER_LABEL_KEYS: Record<(typeof GENDERS)[number], TranslationKey> = {
 
 const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] as const;
 
-const BH_REFERRAL_TYPES = [
-  "New IOP (Battery)",
-  "New OP (Battery)",
-  "Psych. Evaluation (Youth)",
-  "Psych. Evaluation (Adult)",
-  "Individual IOP/OP Therapy",
-  "General Therapy",
-  "Couples Therapy",
-  "Medication Management (MAT)",
-  "EAP",
-  "Neuro-Development Eval.",
-  "Neurological Eval.",
-] as const;
-
-const BH_REFERRAL_TYPE_LABEL_KEYS: Record<(typeof BH_REFERRAL_TYPES)[number], TranslationKey> = {
-  "New IOP (Battery)": "referrals.referralTypeNewIopBattery",
-  "New OP (Battery)": "referrals.referralTypeNewOpBattery",
-  "Psych. Evaluation (Youth)": "referrals.referralTypePsychYouth",
-  "Psych. Evaluation (Adult)": "referrals.referralTypePsychAdult",
-  "Individual IOP/OP Therapy": "referrals.referralTypeIndividualIopOpTherapy",
-  "General Therapy": "referrals.referralTypeGeneralTherapy",
-  "Couples Therapy": "referrals.referralTypeCouplesTherapy",
-  "Medication Management (MAT)": "referrals.referralTypeMedicationManagement",
-  "EAP": "referrals.referralTypeEap",
-  "Neuro-Development Eval.": "referrals.referralTypeNeuroDevelopmental",
-  "Neurological Eval.": "referrals.referralTypeNeurological",
-};
+import {
+  BH_REFERRAL_TYPES,
+  BH_REFERRAL_TYPE_LABEL_KEYS,
+} from "@/lib/referral-filters";
 
 function useBHReferralSchema(t: ReturnType<typeof useTranslation>["t"]) {
   return useMemo(

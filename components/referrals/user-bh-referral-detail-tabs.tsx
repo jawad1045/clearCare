@@ -17,6 +17,7 @@ import { useTranslation } from "@/locale/use-translation";
 import { useLocalFormatDate } from "@/hooks/use-local-format-date";
 import { UserEditBHReferralForm } from "./user-edit-bh-referral-form";
 import { NotesTab } from "./notes-tab";
+import { BH_REFERRAL_TYPE_LABEL_KEYS } from "@/lib/referral-filters";
 
 type MentalHealthReferral = {
   id: number;
@@ -177,7 +178,22 @@ function ViewTab({ referral }: { referral: MentalHealthReferral }) {
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-3">
-            <InfoRow label={t("referrals.referralTypeLabel")} value={referral.referralType?.join(", ")} />
+            <InfoRow
+              label={t("referrals.referralTypeLabel")}
+              value={
+                referral.referralType && referral.referralType.length > 0
+                  ? referral.referralType
+                      .map((rt) => {
+                        const key =
+                          BH_REFERRAL_TYPE_LABEL_KEYS[
+                            rt as keyof typeof BH_REFERRAL_TYPE_LABEL_KEYS
+                          ];
+                        return key ? t(key) : rt;
+                      })
+                      .join(", ")
+                  : "—"
+              }
+            />
             <InfoRow label={t("referrals.appointmentDate")} value={formatDate(referral.appointmentDate)} />
           </CardContent>
         </Card>

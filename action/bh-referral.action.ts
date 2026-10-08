@@ -42,6 +42,9 @@ const VALID_REFERRAL_TYPES = [
   "Elder Care NOW®",
   "Neuro-Development Eval.",
   "Neurological Eval.",
+  "Behavioral Assistant",
+  "Family/Parent Coaching",
+  "Other",
 ] as const;
 
 async function getAdmins() {
